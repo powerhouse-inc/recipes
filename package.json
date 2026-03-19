@@ -1,0 +1,13 @@
+{
+  "name": "@powerhousedao/recipes",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
