@@ -1,0 +1,19 @@
+{
+  "name": "@powerhousedao/example-full-text-search",
+  "version": "0.0.0",
+  "description": "Example: Full-text search processor for Powerhouse Reactor",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "document-model": "6.0.0-dev.84",
+    "@powerhousedao/reactor": "6.0.0-dev.84",
+    "kysely": "^0.28.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}

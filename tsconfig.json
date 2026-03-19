@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "discord-webhook-processor" },
+    { "path": "full-text-search" }
+  ]
+}
