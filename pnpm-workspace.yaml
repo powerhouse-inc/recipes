@@ -1,3 +1,4 @@
 packages:
   - discord-webhook-processor
   - full-text-search
+  - subscription-cli
