@@ -4,6 +4,7 @@
     { "path": "batch-progress" },
     { "path": "discord-webhook-processor" },
     { "path": "full-text-search" },
+    { "path": "rate-limiter" },
     { "path": "subscription-cli" }
   ]
 }

@@ -2,4 +2,5 @@ packages:
   - batch-progress
   - discord-webhook-processor
   - full-text-search
+  - rate-limiter
   - subscription-cli

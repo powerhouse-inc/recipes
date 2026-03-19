@@ -1,0 +1,20 @@
+{
+  "name": "@powerhousedao/example-rate-limiter",
+  "version": "0.0.0",
+  "description": "Example: Rate-limiting processor and auth gate for Powerhouse Reactor",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "document-model": "6.0.0-dev.84",
+    "@powerhousedao/reactor": "6.0.0-dev.84"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "vitest": "^4.1.0"
+  }
+}
