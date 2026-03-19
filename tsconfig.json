@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "batch-progress" },
     { "path": "discord-webhook-processor" },
     { "path": "full-text-search" },
     { "path": "subscription-cli" }

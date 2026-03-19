@@ -12,6 +12,31 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  batch-progress:
+    dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.4.0
+        version: 0.4.0
+      '@powerhousedao/reactor':
+        specifier: 6.0.0-dev.84
+        version: 6.0.0-dev.84(@electric-sql/pglite@0.4.0)(document-drive@6.0.0-dev.84)(document-model@6.0.0-dev.84)
+      cli-progress:
+        specifier: ^3.12.0
+        version: 3.12.0
+      document-drive:
+        specifier: 6.0.0-dev.84
+        version: 6.0.0-dev.84
+      document-model:
+        specifier: 6.0.0-dev.84
+        version: 6.0.0-dev.84
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.15
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
+
   discord-webhook-processor:
     dependencies:
       '@powerhousedao/reactor':
@@ -563,6 +588,10 @@ packages:
   clean-stack@2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
     engines: {node: '>=6'}
+
+  cli-progress@3.12.0:
+    resolution: {integrity: sha512-tRkV3HJ1ASwm19THiiLIXLO7Im7wlTuKnvkYaTkyoAPefqjNg7W7DHKUlGRxy9vxDvbyCYQkQozvptuMkGCg8A==}
+    engines: {node: '>=4'}
 
   cluster-key-slot@1.1.2:
     resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
@@ -1800,8 +1829,7 @@ snapshots:
       indent-string: 4.0.0
     optional: true
 
-  ansi-regex@5.0.1:
-    optional: true
+  ansi-regex@5.0.1: {}
 
   aproba@2.1.0:
     optional: true
@@ -1884,6 +1912,10 @@ snapshots:
 
   clean-stack@2.2.0:
     optional: true
+
+  cli-progress@3.12.0:
+    dependencies:
+      string-width: 4.2.3
 
   cluster-key-slot@1.1.2:
     optional: true
@@ -1973,8 +2005,7 @@ snapshots:
 
   drange@1.1.1: {}
 
-  emoji-regex@8.0.0:
-    optional: true
+  emoji-regex@8.0.0: {}
 
   encoding@0.1.13:
     dependencies:
@@ -2166,8 +2197,7 @@ snapshots:
   ip-address@10.1.0:
     optional: true
 
-  is-fullwidth-code-point@3.0.0:
-    optional: true
+  is-fullwidth-code-point@3.0.0: {}
 
   is-lambda@1.0.1:
     optional: true
@@ -2673,7 +2703,6 @@ snapshots:
       emoji-regex: 8.0.0
       is-fullwidth-code-point: 3.0.0
       strip-ansi: 6.0.1
-    optional: true
 
   string_decoder@1.1.1:
     dependencies:
@@ -2687,7 +2716,6 @@ snapshots:
   strip-ansi@6.0.1:
     dependencies:
       ansi-regex: 5.0.1
-    optional: true
 
   strip-json-comments@2.0.1:
     optional: true

@@ -1,0 +1,23 @@
+{
+  "name": "@powerhousedao/batch-progress",
+  "version": "1.0.0",
+  "description": "Batch document creation with real-time progress tracking via Reactor EventBus",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.4.0",
+    "@powerhousedao/reactor": "6.0.0-dev.84",
+    "cli-progress": "^3.12.0",
+    "document-drive": "6.0.0-dev.84",
+    "document-model": "6.0.0-dev.84"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0"
+  }
+}
