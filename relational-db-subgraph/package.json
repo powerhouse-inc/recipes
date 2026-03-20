@@ -1,20 +1,24 @@
 {
-  "name": "@powerhousedao/example-discord-webhook-processor",
+  "name": "@powerhousedao/example-relational-db-subgraph",
   "version": "0.0.0",
-  "description": "Example: Discord webhook processor for Powerhouse Reactor",
+  "description": "Example: RelationalDbProcessor with Kysely migrations, typed schema, and GraphQL subgraph",
   "license": "AGPL-3.0-only",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "start": "node --import tsx demo.ts"
+    "start": "node --import tsx src/demo.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.0",
     "@powerhousedao/reactor": "6.0.0-dev.84",
     "document-drive": "6.0.0-dev.84",
-    "document-model": "6.0.0-dev.84"
+    "document-model": "6.0.0-dev.84",
+    "graphql": "^16.11.0",
+    "graphql-yoga": "^5.12.0",
+    "kysely": "^0.28.13",
+    "kysely-pglite": "^0.6.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

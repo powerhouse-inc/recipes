@@ -1,6 +1,13 @@
 packages:
+  - audit-trail
   - batch-progress
+  - cross-document-reactor
+  - custom-read-model
   - discord-webhook-processor
+  - document-snapshot-exporter
   - full-text-search
   - rate-limiter
+  - relational-db-subgraph
+  - signed-operations-verifier
   - subscription-cli
+  - sync-health-monitor

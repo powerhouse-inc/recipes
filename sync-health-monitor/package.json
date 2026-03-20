@@ -1,26 +1,26 @@
 {
-  "name": "@powerhousedao/example-full-text-search",
-  "version": "0.0.0",
-  "description": "Example: Full-text search processor for Powerhouse Reactor",
+  "name": "@powerhousedao/sync-health-monitor",
+  "version": "1.0.0",
+  "description": "Sync health dashboard via EventBus subscriptions with GraphQL subgraph",
   "license": "AGPL-3.0-only",
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "start": "tsx src/index.ts",
     "test": "vitest run",
-    "start": "node --import tsx demo.ts"
+    "build": "tsc"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.0",
     "@powerhousedao/reactor": "6.0.0-dev.84",
     "document-drive": "6.0.0-dev.84",
     "document-model": "6.0.0-dev.84",
-    "kysely": "^0.28.13",
-    "kysely-pglite": "^0.6.1"
+    "graphql": "^16.10.0",
+    "graphql-yoga": "^5.10.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "tsx": "^4.0.0",
-    "vitest": "^4.1.0"
+    "tsx": "^4.19.0",
+    "vitest": "^3.1.0"
   }
 }

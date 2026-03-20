@@ -1,0 +1,22 @@
+{
+  "name": "@powerhousedao/example-signed-operations-verifier",
+  "version": "0.0.0",
+  "description": "Example: Verify operation signatures and signer identity chains in Powerhouse documents",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/verify-operations.ts"
+  },
+  "dependencies": {
+    "document-model": "6.0.0-dev.84",
+    "@renown/sdk": "6.0.0-dev.84"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}

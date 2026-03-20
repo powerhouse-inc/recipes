@@ -1,20 +1,19 @@
 {
-  "name": "@powerhousedao/example-discord-webhook-processor",
+  "name": "@powerhousedao/example-custom-read-model",
   "version": "0.0.0",
-  "description": "Example: Discord webhook processor for Powerhouse Reactor",
+  "description": "Example: Custom IReadModel with ReactorBuilder for a document-count-per-type materialized view",
   "license": "AGPL-3.0-only",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "start": "node --import tsx demo.ts"
+    "start": "node --import tsx src/index.ts"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.4.0",
-    "@powerhousedao/reactor": "6.0.0-dev.84",
+    "document-model": "6.0.0-dev.84",
     "document-drive": "6.0.0-dev.84",
-    "document-model": "6.0.0-dev.84"
+    "@powerhousedao/reactor": "6.0.0-dev.84"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

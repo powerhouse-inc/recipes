@@ -7,14 +7,19 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts"
   },
   "dependencies": {
-    "document-model": "6.0.0-dev.84",
-    "@powerhousedao/reactor": "6.0.0-dev.84"
+    "@electric-sql/pglite": "^0.4.0",
+    "@powerhousedao/reactor": "6.0.0-dev.84",
+    "@renown/sdk": "6.0.0-dev.84",
+    "document-drive": "6.0.0-dev.84",
+    "document-model": "6.0.0-dev.84"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
     "vitest": "^4.1.0"
   }
 }

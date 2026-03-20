@@ -1,0 +1,159 @@
+{
+  "header": {
+    "id": "ef36b440-08ad-408f-89f7-9be640eaef12",
+    "sig": {
+      "nonce": "",
+      "publicKey": {}
+    },
+    "meta": {},
+    "name": "",
+    "slug": "ef36b440-08ad-408f-89f7-9be640eaef12",
+    "branch": "main",
+    "revision": {
+      "document": 2
+    },
+    "documentType": "powerhouse/document-model",
+    "createdAtUtcIso": "2026-03-20T12:39:04.198Z",
+    "protocolVersions": {
+      "base-reducer": 2
+    },
+    "lastModifiedAtUtcIso": "2026-03-20T12:39:04.198Z"
+  },
+  "state": {
+    "auth": {},
+    "document": {
+      "hash": {
+        "encoding": "base64",
+        "algorithm": "sha1"
+      },
+      "version": 0
+    },
+    "global": {
+      "id": "",
+      "name": "",
+      "author": {
+        "name": "",
+        "website": ""
+      },
+      "extension": "",
+      "description": "",
+      "specifications": [
+        {
+          "state": {
+            "local": {
+              "schema": "",
+              "examples": [],
+              "initialValue": ""
+            },
+            "global": {
+              "schema": "",
+              "examples": [],
+              "initialValue": ""
+            }
+          },
+          "modules": [],
+          "version": 1,
+          "changeLog": []
+        }
+      ]
+    },
+    "local": {}
+  },
+  "operations": [
+    {
+      "index": 0,
+      "timestampUtcMs": "2026-03-20T12:39:04.198Z",
+      "hash": "",
+      "skip": 0,
+      "id": "42c598d49c9c3ef4a5866db8db7f0b32",
+      "action": {
+        "id": "57247194-1049-415c-ab67-fc9c78a9b870",
+        "type": "CREATE_DOCUMENT",
+        "input": {
+          "meta": {},
+          "name": "",
+          "slug": "",
+          "model": "powerhouse/document-model",
+          "branch": "main",
+          "signing": {
+            "nonce": "",
+            "publicKey": {},
+            "signature": "ef36b440-08ad-408f-89f7-9be640eaef12",
+            "documentType": "powerhouse/document-model",
+            "createdAtUtcIso": "2026-03-20T12:39:04.198Z"
+          },
+          "version": 0,
+          "documentId": "ef36b440-08ad-408f-89f7-9be640eaef12",
+          "protocolVersions": {
+            "base-reducer": 2
+          }
+        },
+        "scope": "document",
+        "timestampUtcMs": "2026-03-20T12:39:04.198Z"
+      },
+      "scope": "document"
+    },
+    {
+      "index": 1,
+      "timestampUtcMs": "2026-03-20T12:39:04.198Z",
+      "hash": "",
+      "skip": 0,
+      "id": "0979af2ccb20cf67a677ee11c68120df",
+      "action": {
+        "id": "209ff5ce-1eee-4d00-8bd8-b0aff879131e",
+        "type": "UPGRADE_DOCUMENT",
+        "input": {
+          "model": "powerhouse/document-model",
+          "toVersion": 0,
+          "documentId": "ef36b440-08ad-408f-89f7-9be640eaef12",
+          "fromVersion": 0,
+          "initialState": {
+            "auth": {},
+            "local": {},
+            "global": {
+              "id": "",
+              "name": "",
+              "author": {
+                "name": "",
+                "website": ""
+              },
+              "extension": "",
+              "description": "",
+              "specifications": [
+                {
+                  "state": {
+                    "local": {
+                      "schema": "",
+                      "examples": [],
+                      "initialValue": ""
+                    },
+                    "global": {
+                      "schema": "",
+                      "examples": [],
+                      "initialValue": ""
+                    }
+                  },
+                  "modules": [],
+                  "version": 1,
+                  "changeLog": []
+                }
+              ]
+            },
+            "document": {
+              "hash": {
+                "encoding": "base64",
+                "algorithm": "sha1"
+              },
+              "version": 0
+            }
+          }
+        },
+        "scope": "document",
+        "timestampUtcMs": "2026-03-20T12:39:04.198Z"
+      },
+      "scope": "document"
+    }
+  ],
+  "exportedAt": "2026-03-20T12:39:04.225Z",
+  "mode": "reactor"
+}

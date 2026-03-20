@@ -1,10 +1,17 @@
 {
   "files": [],
   "references": [
+    { "path": "audit-trail" },
     { "path": "batch-progress" },
+    { "path": "cross-document-reactor" },
+    { "path": "custom-read-model" },
     { "path": "discord-webhook-processor" },
+    { "path": "document-snapshot-exporter" },
     { "path": "full-text-search" },
     { "path": "rate-limiter" },
-    { "path": "subscription-cli" }
+    { "path": "relational-db-subgraph" },
+    { "path": "signed-operations-verifier" },
+    { "path": "subscription-cli" },
+    { "path": "sync-health-monitor" }
   ]
 }

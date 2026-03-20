@@ -38,7 +38,8 @@ export class SearchProcessor implements IProcessor {
         string,
         unknown
       >;
-      const title = typeof state.name === "string" ? state.name : "";
+      const header = state.header as Record<string, unknown> | undefined;
+      const title = typeof header?.name === "string" ? header.name : "";
       const content = flattenToSearchableText(state);
 
       await sql`
