@@ -8,6 +8,7 @@ packages:
   - full-text-search
   - rate-limiter
   - relational-db-subgraph
+  - saga
   - signed-operations-verifier
   - subscription-cli
   - sync-health-monitor

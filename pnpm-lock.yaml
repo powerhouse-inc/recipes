@@ -22,7 +22,7 @@ importers:
         version: 6.0.0-dev.84(@electric-sql/pglite@0.4.0)(document-drive@6.0.0-dev.84)(document-model@6.0.0-dev.84)
       '@renown/sdk':
         specifier: 6.0.0-dev.84
-        version: 6.0.0-dev.84(typescript@5.9.3)(zod@4.3.6)
+        version: 6.0.0-dev.84(typescript@5.9.3)
       document-drive:
         specifier: 6.0.0-dev.84
         version: 6.0.0-dev.84
@@ -209,7 +209,7 @@ importers:
         version: 6.0.0-dev.84(@electric-sql/pglite@0.4.0)(document-drive@6.0.0-dev.84)(document-model@6.0.0-dev.84)
       '@renown/sdk':
         specifier: 6.0.0-dev.84
-        version: 6.0.0-dev.84(typescript@5.9.3)(zod@4.3.6)
+        version: 6.0.0-dev.84(typescript@5.9.3)
       document-drive:
         specifier: 6.0.0-dev.84
         version: 6.0.0-dev.84
@@ -264,11 +264,39 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0(@types/node@22.19.15)(vite@8.0.1(@types/node@22.19.15)(esbuild@0.27.4)(tsx@4.21.0))
 
+  saga:
+    dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.4.0
+        version: 0.4.0
+      '@powerhousedao/reactor':
+        specifier: 6.0.0-dev.84
+        version: 6.0.0-dev.84(@electric-sql/pglite@0.4.0)(document-drive@6.0.0-dev.84)(document-model@6.0.0-dev.84)
+      document-drive:
+        specifier: 6.0.0-dev.84
+        version: 6.0.0-dev.84
+      document-model:
+        specifier: 6.0.0-dev.84
+        version: 6.0.0-dev.84
+      kysely:
+        specifier: ^0.28.13
+        version: 0.28.13
+      kysely-pglite:
+        specifier: ^0.6.1
+        version: 0.6.1(@electric-sql/pglite@0.4.0)(kysely@0.28.13)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.15
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
+
   signed-operations-verifier:
     dependencies:
       '@renown/sdk':
         specifier: 6.0.0-dev.84
-        version: 6.0.0-dev.84(typescript@5.9.3)(zod@4.3.6)
+        version: 6.0.0-dev.84(typescript@5.9.3)
       document-model:
         specifier: 6.0.0-dev.84
         version: 6.0.0-dev.84
@@ -2688,7 +2716,7 @@ snapshots:
 
   '@adraffy/ens-normalize@1.10.0': {}
 
-  '@didtools/cacao@3.0.1(typescript@5.9.3)(zod@4.3.6)':
+  '@didtools/cacao@3.0.1(typescript@5.9.3)':
     dependencies:
       '@didtools/codecs': 3.0.0
       '@didtools/siwx': 2.0.0
@@ -2696,7 +2724,7 @@ snapshots:
       caip: 1.1.1
       multiformats: 13.4.2
       uint8arrays: 5.1.0
-      viem: 1.21.4(typescript@5.9.3)(zod@4.3.6)
+      viem: 1.21.4(typescript@5.9.3)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -2709,10 +2737,10 @@ snapshots:
       multiformats: 13.4.2
       uint8arrays: 5.1.0
 
-  '@didtools/key-did@1.0.0(typescript@5.9.3)(zod@4.3.6)':
+  '@didtools/key-did@1.0.0(typescript@5.9.3)':
     dependencies:
-      dids: 5.0.3(typescript@5.9.3)(zod@4.3.6)
-      key-did-provider-ed25519: 4.0.2(typescript@5.9.3)(zod@4.3.6)
+      dids: 5.0.3(typescript@5.9.3)
+      key-did-provider-ed25519: 4.0.2(typescript@5.9.3)
       key-did-resolver: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -2720,9 +2748,9 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@didtools/pkh-ethereum@0.6.0(typescript@5.9.3)(zod@4.3.6)':
+  '@didtools/pkh-ethereum@0.6.0(typescript@5.9.3)':
     dependencies:
-      '@didtools/cacao': 3.0.1(typescript@5.9.3)(zod@4.3.6)
+      '@didtools/cacao': 3.0.1(typescript@5.9.3)
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
       '@stablelib/random': 1.0.2
@@ -3070,9 +3098,9 @@ snapshots:
       '@redis/client': 1.6.1
     optional: true
 
-  '@renown/sdk@6.0.0-dev.84(typescript@5.9.3)(zod@4.3.6)':
+  '@renown/sdk@6.0.0-dev.84(typescript@5.9.3)':
     dependencies:
-      '@didtools/key-did': 1.0.0(typescript@5.9.3)(zod@4.3.6)
+      '@didtools/key-did': 1.0.0(typescript@5.9.3)
       did-jwt: 8.0.18
       did-jwt-vc: 4.0.16
       did-key-creator: 1.2.0
@@ -3404,10 +3432,9 @@ snapshots:
   abbrev@1.1.1:
     optional: true
 
-  abitype@0.9.8(typescript@5.9.3)(zod@4.3.6):
+  abitype@0.9.8(typescript@5.9.3):
     optionalDependencies:
       typescript: 5.9.3
-      zod: 4.3.6
 
   agent-base@6.0.2:
     dependencies:
@@ -3697,11 +3724,11 @@ snapshots:
 
   did-resolver@4.1.0: {}
 
-  dids@5.0.3(typescript@5.9.3)(zod@4.3.6):
+  dids@5.0.3(typescript@5.9.3):
     dependencies:
-      '@didtools/cacao': 3.0.1(typescript@5.9.3)(zod@4.3.6)
+      '@didtools/cacao': 3.0.1(typescript@5.9.3)
       '@didtools/codecs': 3.0.0
-      '@didtools/pkh-ethereum': 0.6.0(typescript@5.9.3)(zod@4.3.6)
+      '@didtools/pkh-ethereum': 0.6.0(typescript@5.9.3)
       '@stablelib/random': 1.0.2
       codeco: 1.4.3
       dag-jose-utils: 4.0.0
@@ -4115,11 +4142,11 @@ snapshots:
       readable-stream: 2.3.8
       setimmediate: 1.0.5
 
-  key-did-provider-ed25519@4.0.2(typescript@5.9.3)(zod@4.3.6):
+  key-did-provider-ed25519@4.0.2(typescript@5.9.3):
     dependencies:
       '@noble/curves': 1.9.7
       did-jwt: 7.4.7
-      dids: 5.0.3(typescript@5.9.3)(zod@4.3.6)
+      dids: 5.0.3(typescript@5.9.3)
       fast-json-stable-stringify: 2.1.0
       rpc-utils: 0.6.2
       uint8arrays: 5.1.0
@@ -4914,14 +4941,14 @@ snapshots:
 
   varint@6.0.0: {}
 
-  viem@1.21.4(typescript@5.9.3)(zod@4.3.6):
+  viem@1.21.4(typescript@5.9.3):
     dependencies:
       '@adraffy/ens-normalize': 1.10.0
       '@noble/curves': 1.2.0
       '@noble/hashes': 1.3.2
       '@scure/bip32': 1.3.2
       '@scure/bip39': 1.2.1
-      abitype: 0.9.8(typescript@5.9.3)(zod@4.3.6)
+      abitype: 0.9.8(typescript@5.9.3)
       isows: 1.0.3(ws@8.13.0)
       ws: 8.13.0
     optionalDependencies:
