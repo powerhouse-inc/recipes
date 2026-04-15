@@ -10,6 +10,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 | [batch-progress](./batch-progress) | Batch document creation with real-time progress tracking via Reactor EventBus |
 | [cross-document-reactor](./cross-document-reactor) | Event-driven cross-document automation using ReactorClient subscriptions to dispatch actions across related documents |
 | [custom-read-model](./custom-read-model) | Custom IReadModel with ReactorBuilder for a document-count-per-type materialized view |
+| [db-migrate](./db-migrate) | PostgreSQL database export, import, and migration scripts using Docker (no local pg tools required) |
 | [discord-webhook-processor](./discord-webhook-processor) | Reactor processor that forwards document operations to a Discord webhook as rich embeds |
 | [document-snapshot-exporter](./document-snapshot-exporter) | CLI tool for reliable read-after-write export of document state to JSON using IReactor consistency tokens |
 | [full-text-search](./full-text-search) | Reactor processor that maintains a PostgreSQL full-text search index over document state |

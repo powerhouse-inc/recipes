@@ -21,3 +21,5 @@ Thumbs.db
 
 # Tools
 hotseat.json
+.hotseat/worktrees
+.hotseat

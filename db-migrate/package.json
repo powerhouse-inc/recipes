@@ -1,0 +1,12 @@
+{
+  "name": "@powerhousedao/db-migrate",
+  "version": "1.0.0",
+  "description": "PostgreSQL database export, import, and migration scripts using Docker (no local pg tools required)",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "scripts": {
+    "export": "./export.sh",
+    "import": "./import.sh",
+    "migrate": "./migrate.sh"
+  }
+}

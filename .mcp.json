@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "hotseat": {
+      "command": "./.hotseat/bin/hotseat-mcp"
+    }
+  }
+}

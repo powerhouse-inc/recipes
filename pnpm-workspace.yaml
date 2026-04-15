@@ -1,6 +1,7 @@
 packages:
   - audit-trail
   - batch-progress
+  - db-migrate
   - cross-document-reactor
   - custom-read-model
   - discord-webhook-processor
