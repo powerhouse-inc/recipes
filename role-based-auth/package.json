@@ -1,0 +1,23 @@
+{
+  "name": "@powerhousedao/example-role-based-auth",
+  "version": "0.0.0",
+  "description": "Example: Document model with creator-as-admin RBAC enforced inside the reducer",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts",
+    "generate": "node ../../powerhouse/clis/ph-cli/dist/cli.mjs generate"
+  },
+  "dependencies": {
+    "document-model": "6.0.0-dev.188",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}

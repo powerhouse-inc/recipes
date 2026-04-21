@@ -10,6 +10,7 @@
     { "path": "full-text-search" },
     { "path": "rate-limiter" },
     { "path": "relational-db-subgraph" },
+    { "path": "role-based-auth" },
     { "path": "signed-operations-verifier" },
     { "path": "subscription-cli" },
     { "path": "sync-health-monitor" }

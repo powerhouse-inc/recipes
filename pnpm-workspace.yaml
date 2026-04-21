@@ -9,6 +9,7 @@ packages:
   - full-text-search
   - rate-limiter
   - relational-db-subgraph
+  - role-based-auth
   - saga
   - signed-operations-verifier
   - subscription-cli

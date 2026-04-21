@@ -1,0 +1,207 @@
+{
+  "id": "powerhouse/role-based-auth",
+  "name": "Role Based Auth",
+  "extension": "rbauth",
+  "description": "Document with creator-as-admin RBAC enforced inside the reducer",
+  "author": {
+    "name": "Powerhouse",
+    "website": "https://powerhouse.inc"
+  },
+  "specifications": [
+    {
+      "version": 1,
+      "changeLog": [],
+      "state": {
+        "global": {
+          "schema": "type RoleBasedAuthState {\n  creator: String\n  admins: [String!]!\n  members: [String!]!\n  notes: [Note!]!\n}\n\ntype Note {\n  id: String!\n  author: String!\n  text: String!\n  createdAt: String!\n}",
+          "initialValue": "{\"creator\":null,\"admins\":[],\"members\":[],\"notes\":[]}",
+          "examples": []
+        },
+        "local": {
+          "schema": "",
+          "initialValue": "",
+          "examples": []
+        }
+      },
+      "modules": [
+        {
+          "id": "e3b0c442-98fc-1c14-9afb-f4c8996fb924",
+          "name": "access",
+          "description": "Authorization operations: bootstrap, role changes, and role-gated domain actions.",
+          "operations": [
+            {
+              "id": "0d1b2c3d-4e5f-6789-0abc-def012345001",
+              "name": "BOOTSTRAP",
+              "description": "First caller becomes creator and first admin. Can only be called once.",
+              "schema": "input BootstrapInput {\n  _placeholder: String\n}",
+              "template": "",
+              "reducer": "const address = action.context?.signer?.user?.address;\nif (!address) {\n  throw new NotAuthorizedError(\"User is not authenticated\");\n}\nif (state.creator) {\n  throw new AlreadyBootstrappedError(\"Document already bootstrapped\");\n}\nstate.creator = address;\nstate.admins.push(address);",
+              "errors": [
+                {
+                  "id": "notAuthorized",
+                  "name": "NotAuthorized",
+                  "code": "NOT_AUTHORIZED",
+                  "description": "Caller is not authenticated (missing signer context)",
+                  "template": ""
+                },
+                {
+                  "id": "alreadyBootstrapped",
+                  "name": "AlreadyBootstrapped",
+                  "code": "ALREADY_BOOTSTRAPPED",
+                  "description": "The document has already been bootstrapped",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            },
+            {
+              "id": "0d1b2c3d-4e5f-6789-0abc-def012345002",
+              "name": "GRANT_ADMIN",
+              "description": "Promote an address to admin. Caller must be an admin.",
+              "schema": "input GrantAdminInput {\n  address: String!\n}",
+              "template": "",
+              "reducer": "const address = action.context?.signer?.user?.address;\nif (!address) {\n  throw new NotAuthorizedError(\"User is not authenticated\");\n}\nif (!state.admins.includes(address)) {\n  throw new NotAdminError(`${address} is not an admin`);\n}\nconst target = action.input.address;\nif (state.admins.includes(target)) {\n  return;\n}\nstate.admins.push(target);\nstate.members = state.members.filter((m) => m !== target);",
+              "errors": [
+                {
+                  "id": "notAuthorized",
+                  "name": "NotAuthorized",
+                  "code": "NOT_AUTHORIZED",
+                  "description": "Caller is not authenticated",
+                  "template": ""
+                },
+                {
+                  "id": "notAdmin",
+                  "name": "NotAdmin",
+                  "code": "NOT_ADMIN",
+                  "description": "Caller is not an admin",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            },
+            {
+              "id": "0d1b2c3d-4e5f-6789-0abc-def012345003",
+              "name": "REVOKE_ADMIN",
+              "description": "Remove an address from admins. Cannot revoke the creator or the last admin.",
+              "schema": "input RevokeAdminInput {\n  address: String!\n}",
+              "template": "",
+              "reducer": "const address = action.context?.signer?.user?.address;\nif (!address) {\n  throw new NotAuthorizedError(\"User is not authenticated\");\n}\nif (!state.admins.includes(address)) {\n  throw new NotAdminError(`${address} is not an admin`);\n}\nconst target = action.input.address;\nif (target === state.creator) {\n  throw new CannotRevokeCreatorError(\"The creator cannot be demoted\");\n}\nif (state.admins.length === 1 && state.admins[0] === target) {\n  throw new LastAdminError(\"Cannot remove the last admin\");\n}\nstate.admins = state.admins.filter((a) => a !== target);",
+              "errors": [
+                {
+                  "id": "notAuthorized",
+                  "name": "NotAuthorized",
+                  "code": "NOT_AUTHORIZED",
+                  "description": "Caller is not authenticated",
+                  "template": ""
+                },
+                {
+                  "id": "notAdmin",
+                  "name": "NotAdmin",
+                  "code": "NOT_ADMIN",
+                  "description": "Caller is not an admin",
+                  "template": ""
+                },
+                {
+                  "id": "cannotRevokeCreator",
+                  "name": "CannotRevokeCreator",
+                  "code": "CANNOT_REVOKE_CREATOR",
+                  "description": "The creator cannot be demoted",
+                  "template": ""
+                },
+                {
+                  "id": "lastAdmin",
+                  "name": "LastAdmin",
+                  "code": "LAST_ADMIN",
+                  "description": "Cannot remove the last admin",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            },
+            {
+              "id": "0d1b2c3d-4e5f-6789-0abc-def012345004",
+              "name": "ADD_MEMBER",
+              "description": "Add an address as a member. Caller must be an admin.",
+              "schema": "input AddMemberInput {\n  address: String!\n}",
+              "template": "",
+              "reducer": "const address = action.context?.signer?.user?.address;\nif (!address) {\n  throw new NotAuthorizedError(\"User is not authenticated\");\n}\nif (!state.admins.includes(address)) {\n  throw new NotAdminError(`${address} is not an admin`);\n}\nconst target = action.input.address;\nif (state.admins.includes(target)) {\n  throw new AddressAlreadyAdminError(`${target} is already an admin`);\n}\nif (state.members.includes(target)) {\n  return;\n}\nstate.members.push(target);",
+              "errors": [
+                {
+                  "id": "notAuthorized",
+                  "name": "NotAuthorized",
+                  "code": "NOT_AUTHORIZED",
+                  "description": "Caller is not authenticated",
+                  "template": ""
+                },
+                {
+                  "id": "notAdmin",
+                  "name": "NotAdmin",
+                  "code": "NOT_ADMIN",
+                  "description": "Caller is not an admin",
+                  "template": ""
+                },
+                {
+                  "id": "addressAlreadyAdmin",
+                  "name": "AddressAlreadyAdmin",
+                  "code": "ADDRESS_ALREADY_ADMIN",
+                  "description": "Cannot add an admin as a member; revoke admin first",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            },
+            {
+              "id": "0d1b2c3d-4e5f-6789-0abc-def012345005",
+              "name": "REMOVE_MEMBER",
+              "description": "Remove an address from members. Caller must be an admin.",
+              "schema": "input RemoveMemberInput {\n  address: String!\n}",
+              "template": "",
+              "reducer": "const address = action.context?.signer?.user?.address;\nif (!address) {\n  throw new NotAuthorizedError(\"User is not authenticated\");\n}\nif (!state.admins.includes(address)) {\n  throw new NotAdminError(`${address} is not an admin`);\n}\nconst target = action.input.address;\nstate.members = state.members.filter((m) => m !== target);",
+              "errors": [
+                {
+                  "id": "notAuthorized",
+                  "name": "NotAuthorized",
+                  "code": "NOT_AUTHORIZED",
+                  "description": "Caller is not authenticated",
+                  "template": ""
+                },
+                {
+                  "id": "notAdmin",
+                  "name": "NotAdmin",
+                  "code": "NOT_ADMIN",
+                  "description": "Caller is not an admin",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            },
+            {
+              "id": "0d1b2c3d-4e5f-6789-0abc-def012345006",
+              "name": "WRITE_NOTE",
+              "description": "Append a note. Caller must be an admin or member. id and createdAt come from input (reducers must be deterministic).",
+              "schema": "input WriteNoteInput {\n  id: String!\n  text: String!\n  createdAt: String!\n}",
+              "template": "",
+              "reducer": "const address = action.context?.signer?.user?.address;\nif (!address) {\n  throw new NotAuthorizedError(\"User is not authenticated\");\n}\nconst isAdmin = state.admins.includes(address);\nconst isMember = state.members.includes(address);\nif (!isAdmin && !isMember) {\n  throw new NotAuthorizedError(`${address} has no role`);\n}\nstate.notes.push({\n  id: action.input.id,\n  author: address,\n  text: action.input.text,\n  createdAt: action.input.createdAt,\n});",
+              "errors": [
+                {
+                  "id": "notAuthorized",
+                  "name": "NotAuthorized",
+                  "code": "NOT_AUTHORIZED",
+                  "description": "Caller is not authenticated or has no role on this document",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

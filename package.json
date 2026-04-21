@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --build",
-    "test": "pnpm -r --filter='./audit-trail' --filter='./custom-read-model' --filter='./discord-webhook-processor' --filter='./full-text-search' --filter='./rate-limiter' --filter='./relational-db-subgraph' --filter='./signed-operations-verifier' --filter='./sync-health-monitor' test"
+    "test": "pnpm -r --filter='./audit-trail' --filter='./custom-read-model' --filter='./discord-webhook-processor' --filter='./full-text-search' --filter='./rate-limiter' --filter='./relational-db-subgraph' --filter='./role-based-auth' --filter='./signed-operations-verifier' --filter='./sync-health-monitor' test"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
