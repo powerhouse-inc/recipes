@@ -170,6 +170,28 @@ importers:
         specifier: ^4.19.0
         version: 4.21.0
 
+  drive-override:
+    dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.4.0
+        version: 0.4.0
+      '@powerhousedao/reactor':
+        specifier: 6.0.0-dev.84
+        version: 6.0.0-dev.84(@electric-sql/pglite@0.4.0)(document-drive@6.0.0-dev.84)(document-model@6.0.0-dev.84)
+      document-model:
+        specifier: 6.0.0-dev.84
+        version: 6.0.0-dev.84
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.15
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   full-text-search:
     dependencies:
       '@electric-sql/pglite':

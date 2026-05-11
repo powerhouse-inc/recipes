@@ -6,6 +6,7 @@ packages:
   - custom-read-model
   - discord-webhook-processor
   - document-snapshot-exporter
+  - drive-override
   - full-text-search
   - rate-limiter
   - relational-db-subgraph

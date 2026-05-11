@@ -1,0 +1,22 @@
+{
+  "name": "@powerhousedao/example-drive-override",
+  "version": "1.0.0",
+  "description": "Custom container document that tracks children via ADD_RELATIONSHIP instead of ADD_FILE",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.4.0",
+    "@powerhousedao/reactor": "6.0.0-dev.84",
+    "document-model": "6.0.0-dev.84"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3"
+  }
+}
