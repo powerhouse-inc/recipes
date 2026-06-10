@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.0",
-    "@powerhousedao/reactor": "6.0.0-dev.84",
+    "@powerhousedao/reactor": "catalog:",
     "cli-progress": "^3.12.0",
-    "document-drive": "6.0.0-dev.84",
-    "document-model": "6.0.0-dev.84"
+    "document-drive": "catalog:",
+    "document-model": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

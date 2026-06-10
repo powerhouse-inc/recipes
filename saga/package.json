@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.0",
-    "@powerhousedao/reactor": "6.0.0-dev.84",
-    "document-drive": "6.0.0-dev.84",
-    "document-model": "6.0.0-dev.84",
+    "@powerhousedao/reactor": "catalog:",
+    "document-drive": "catalog:",
+    "document-model": "catalog:",
     "kysely": "^0.28.13",
     "kysely-pglite": "^0.6.1"
   },

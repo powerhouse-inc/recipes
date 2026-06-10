@@ -1,3 +1,26 @@
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  msw: true
+  prisma: true
+  sqlite3: true
+
+# Latest version at which @powerhousedao/reactor, document-drive, document-model,
+# and @renown/sdk all exist on npm — document-drive is not published past
+# 6.0.2-staging.2, and document-model@6.0.0-dev.109 lacks the ./core export.
+catalog:
+  "@powerhousedao/reactor": 6.0.2-staging.2
+  "@renown/sdk": 6.0.2-staging.2
+  document-drive: 6.0.2-staging.2
+  document-model: 6.0.2-staging.2
+
+# For recipes that don't depend on document-drive/reactor and use the newer
+# document-model API (createAction, defaultBaseState, ...).
+catalogs:
+  stable:
+    document-model: 6.1.0
+
 packages:
   - audit-trail
   - batch-progress

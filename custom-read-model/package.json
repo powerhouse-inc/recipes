@@ -11,9 +11,9 @@
     "start": "node --import tsx src/index.ts"
   },
   "dependencies": {
-    "document-model": "6.0.0-dev.84",
-    "document-drive": "6.0.0-dev.84",
-    "@powerhousedao/reactor": "6.0.0-dev.84"
+    "document-model": "catalog:",
+    "document-drive": "catalog:",
+    "@powerhousedao/reactor": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

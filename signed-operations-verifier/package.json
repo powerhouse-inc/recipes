@@ -11,8 +11,8 @@
     "start": "node --import tsx src/verify-operations.ts"
   },
   "dependencies": {
-    "document-model": "6.0.0-dev.84",
-    "@renown/sdk": "6.0.0-dev.84"
+    "document-model": "catalog:",
+    "@renown/sdk": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
