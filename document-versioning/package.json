@@ -1,0 +1,22 @@
+{
+  "name": "@powerhousedao/example-document-versioning",
+  "version": "0.0.0",
+  "description": "Example: v1 to v2 document model schema migration with UpgradeManifest and a pure upgradeReducer",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts"
+  },
+  "dependencies": {
+    "document-model": "catalog:stable",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}

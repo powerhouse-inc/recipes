@@ -29,6 +29,7 @@ packages:
   - custom-read-model
   - discord-webhook-processor
   - document-snapshot-exporter
+  - document-versioning
   - drive-override
   - full-text-search
   - rate-limiter
