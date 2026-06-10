@@ -5,6 +5,13 @@ settings:
   excludeLinksFromLockfile: false
 
 catalogs:
+  analytics:
+    '@powerhousedao/analytics-engine-browser':
+      specifier: 6.1.0
+      version: 6.1.0
+    '@powerhousedao/analytics-engine-core':
+      specifier: 6.1.0
+      version: 6.1.0
   default:
     '@powerhousedao/reactor':
       specifier: 6.0.2-staging.2
@@ -31,6 +38,46 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  analytics-processor:
+    dependencies:
+      '@electric-sql/pglite':
+        specifier: 0.3.15
+        version: 0.3.15
+      '@powerhousedao/analytics-engine-browser':
+        specifier: catalog:analytics
+        version: 6.1.0
+      '@powerhousedao/analytics-engine-core':
+        specifier: catalog:analytics
+        version: 6.1.0
+      '@powerhousedao/reactor':
+        specifier: 'catalog:'
+        version: 6.0.2-staging.2(@electric-sql/pglite@0.3.15)(document-drive@6.0.2-staging.2)(document-model@6.0.2-staging.2)
+      document-drive:
+        specifier: 'catalog:'
+        version: 6.0.2-staging.2
+      document-model:
+        specifier: 'catalog:'
+        version: 6.0.2-staging.2
+      luxon:
+        specifier: ^3.7.2
+        version: 3.7.2
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@types/luxon':
+        specifier: ^3.4.2
+        version: 3.7.1
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.15
+      tsx:
+        specifier: ^4.0.0
+        version: 4.21.0
+      vitest:
+        specifier: ^4.1.0
+        version: 4.1.0(@types/node@22.19.15)(vite@8.0.1(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@22.19.15)(esbuild@0.27.4)(tsx@4.21.0))
+
   audit-trail:
     dependencies:
       '@electric-sql/pglite':
@@ -41,7 +88,7 @@ importers:
         version: 6.0.2-staging.2(@electric-sql/pglite@0.4.0)(document-drive@6.0.2-staging.2)(document-model@6.0.2-staging.2)
       '@renown/sdk':
         specifier: 'catalog:'
-        version: 6.0.2-staging.2(typescript@5.9.3)(zod@4.3.6)
+        version: 6.0.2-staging.2(typescript@5.9.3)
       document-drive:
         specifier: 'catalog:'
         version: 6.0.2-staging.2
@@ -252,7 +299,7 @@ importers:
         version: 6.0.2-staging.2(@electric-sql/pglite@0.4.0)(document-drive@6.0.2-staging.2)(document-model@6.0.2-staging.2)
       '@renown/sdk':
         specifier: 'catalog:'
-        version: 6.0.2-staging.2(typescript@5.9.3)(zod@4.3.6)
+        version: 6.0.2-staging.2(typescript@5.9.3)
       document-drive:
         specifier: 'catalog:'
         version: 6.0.2-staging.2
@@ -358,7 +405,7 @@ importers:
     dependencies:
       '@renown/sdk':
         specifier: 'catalog:'
-        version: 6.0.2-staging.2(typescript@5.9.3)(zod@4.3.6)
+        version: 6.0.2-staging.2(typescript@5.9.3)
       document-model:
         specifier: 'catalog:'
         version: 6.0.2-staging.2
@@ -458,6 +505,9 @@ packages:
   '@didtools/siwx@2.0.0':
     resolution: {integrity: sha512-eqBtI5dZrptXTCyadnhvU0di/KvumoByT7F8KB/8BLU7M1lltfEmvf/c5AnsyrWO9338ygCs2u5mKz1p1Zdj5A==}
     engines: {node: '>=14.14'}
+
+  '@electric-sql/pglite@0.3.15':
+    resolution: {integrity: sha512-Cj++n1Mekf9ETfdc16TlDi+cDDQF0W7EcbyRHYOAeZdsAe8M/FJg18itDTSwyHfar2WIezawM9o0EKaRGVKygQ==}
 
   '@electric-sql/pglite@0.4.0':
     resolution: {integrity: sha512-NBs9e2XwW0+pzUVNqsIRe+VOrP36zfJexI6EBuiPSn/6AcwQ/QE88QtbRfRNFJINqSagH7Rpn5e3Q7NypsVYWg==}
@@ -761,8 +811,14 @@ packages:
   '@oxc-project/types@0.120.0':
     resolution: {integrity: sha512-k1YNu55DuvAip/MGE1FTsIuU3FUCn6v/ujG9V7Nq5Df/kX2CWb13hhwD0lmJGMGqE+bE1MXvv9SZVnMzEXlWcg==}
 
+  '@powerhousedao/analytics-engine-browser@6.1.0':
+    resolution: {integrity: sha512-ftZ5nh71Hi80NOTpfJ4n/D4XvH5f+5CcmnE7nzOaLtJplIx5NoBipjZ5eHcDnXNjcI9QlI9Sd8MhojqUhGEgLw==}
+
   '@powerhousedao/analytics-engine-core@6.0.2-staging.2':
     resolution: {integrity: sha512-JITNWnjo2VZDo1ejqjoSRSgbJbSmybwAM5tpcB4e5+Sgo0M6wOd+O2136yTETIs33N8sTideQY1HA+upLdDwjg==}
+
+  '@powerhousedao/analytics-engine-core@6.1.0':
+    resolution: {integrity: sha512-y7JD3hcOipv4ds3XrqDi7S9xFXOKvi2s6lgRgkGceDXF4ixIvIAD32Edv0+wjaDtnWQg4I5ajkvcHfGjMd4P7A==}
 
   '@powerhousedao/reactor@6.0.2-staging.2':
     resolution: {integrity: sha512-gTuktb7e8lSR6wqhybSnMvZs/mSpfTsW8UqEvDt4sQPyuWP/0NqazwAE184mrkZ/PIsSZTCy2F07hgryNySuYA==}
@@ -1140,6 +1196,9 @@ packages:
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+
+  '@types/luxon@3.7.1':
+    resolution: {integrity: sha512-H3iskjFIAn5SlJU7OuxUmTEpebK6TKB8rxZShDslBMZJ5u9S//KM1sbdAisiSrqwLQncVjnpi2OK2J51h+4lsg==}
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
@@ -2976,7 +3035,7 @@ snapshots:
 
   '@babel/helper-validator-identifier@7.29.7': {}
 
-  '@didtools/cacao@3.0.1(typescript@5.9.3)(zod@4.3.6)':
+  '@didtools/cacao@3.0.1(typescript@5.9.3)':
     dependencies:
       '@didtools/codecs': 3.0.0
       '@didtools/siwx': 2.0.0
@@ -2984,7 +3043,7 @@ snapshots:
       caip: 1.1.1
       multiformats: 13.4.2
       uint8arrays: 5.1.0
-      viem: 1.21.4(typescript@5.9.3)(zod@4.3.6)
+      viem: 1.21.4(typescript@5.9.3)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -2997,10 +3056,10 @@ snapshots:
       multiformats: 13.4.2
       uint8arrays: 5.1.0
 
-  '@didtools/key-did@1.0.0(typescript@5.9.3)(zod@4.3.6)':
+  '@didtools/key-did@1.0.0(typescript@5.9.3)':
     dependencies:
-      dids: 5.0.3(typescript@5.9.3)(zod@4.3.6)
-      key-did-provider-ed25519: 4.0.2(typescript@5.9.3)(zod@4.3.6)
+      dids: 5.0.3(typescript@5.9.3)
+      key-did-provider-ed25519: 4.0.2(typescript@5.9.3)
       key-did-resolver: 4.0.0
     transitivePeerDependencies:
       - bufferutil
@@ -3008,9 +3067,9 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@didtools/pkh-ethereum@0.6.0(typescript@5.9.3)(zod@4.3.6)':
+  '@didtools/pkh-ethereum@0.6.0(typescript@5.9.3)':
     dependencies:
-      '@didtools/cacao': 3.0.1(typescript@5.9.3)(zod@4.3.6)
+      '@didtools/cacao': 3.0.1(typescript@5.9.3)
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
       '@stablelib/random': 1.0.2
@@ -3024,6 +3083,8 @@ snapshots:
   '@didtools/siwx@2.0.0':
     dependencies:
       codeco: 1.4.3
+
+  '@electric-sql/pglite@0.3.15': {}
 
   '@electric-sql/pglite@0.4.0': {}
 
@@ -3283,10 +3344,36 @@ snapshots:
 
   '@oxc-project/types@0.120.0': {}
 
+  '@powerhousedao/analytics-engine-browser@6.1.0':
+    dependencies:
+      '@electric-sql/pglite': 0.3.15
+      '@powerhousedao/analytics-engine-core': 6.1.0
+      change-case: 5.4.4
+      luxon: 3.7.2
+    transitivePeerDependencies:
+      - '@sentry/node-core'
+      - rolldown
+      - supports-color
+
   '@powerhousedao/analytics-engine-core@6.0.2-staging.2':
     dependencies:
       date-fns: 4.1.0
       luxon: 3.7.2
+
+  '@powerhousedao/analytics-engine-core@6.1.0':
+    dependencies:
+      '@powerhousedao/shared': 6.1.0
+      luxon: 3.7.2
+    transitivePeerDependencies:
+      - '@sentry/node-core'
+      - rolldown
+      - supports-color
+
+  '@powerhousedao/reactor@6.0.2-staging.2(@electric-sql/pglite@0.3.15)(document-drive@6.0.2-staging.2)(document-model@6.0.2-staging.2)':
+    dependencies:
+      '@electric-sql/pglite': 0.3.15
+      document-drive: 6.0.2-staging.2
+      document-model: 6.0.2-staging.2
 
   '@powerhousedao/reactor@6.0.2-staging.2(@electric-sql/pglite@0.4.0)(document-drive@6.0.2-staging.2)(document-model@6.0.2-staging.2)':
     dependencies:
@@ -3380,9 +3467,9 @@ snapshots:
       '@redis/client': 1.6.1
     optional: true
 
-  '@renown/sdk@6.0.2-staging.2(typescript@5.9.3)(zod@4.3.6)':
+  '@renown/sdk@6.0.2-staging.2(typescript@5.9.3)':
     dependencies:
-      '@didtools/key-did': 1.0.0(typescript@5.9.3)(zod@4.3.6)
+      '@didtools/key-did': 1.0.0(typescript@5.9.3)
       did-jwt: 8.0.18
       did-jwt-vc: 4.0.16
       did-key-creator: 1.2.0
@@ -3584,6 +3671,8 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/luxon@3.7.1': {}
+
   '@types/ms@2.1.0':
     optional: true
 
@@ -3719,10 +3808,9 @@ snapshots:
   abbrev@1.1.1:
     optional: true
 
-  abitype@0.9.8(typescript@5.9.3)(zod@4.3.6):
+  abitype@0.9.8(typescript@5.9.3):
     optionalDependencies:
       typescript: 5.9.3
-      zod: 4.3.6
 
   agent-base@6.0.2:
     dependencies:
@@ -4031,11 +4119,11 @@ snapshots:
 
   did-resolver@4.1.0: {}
 
-  dids@5.0.3(typescript@5.9.3)(zod@4.3.6):
+  dids@5.0.3(typescript@5.9.3):
     dependencies:
-      '@didtools/cacao': 3.0.1(typescript@5.9.3)(zod@4.3.6)
+      '@didtools/cacao': 3.0.1(typescript@5.9.3)
       '@didtools/codecs': 3.0.0
-      '@didtools/pkh-ethereum': 0.6.0(typescript@5.9.3)(zod@4.3.6)
+      '@didtools/pkh-ethereum': 0.6.0(typescript@5.9.3)
       '@stablelib/random': 1.0.2
       codeco: 1.4.3
       dag-jose-utils: 4.0.0
@@ -4483,11 +4571,11 @@ snapshots:
       readable-stream: 2.3.8
       setimmediate: 1.0.5
 
-  key-did-provider-ed25519@4.0.2(typescript@5.9.3)(zod@4.3.6):
+  key-did-provider-ed25519@4.0.2(typescript@5.9.3):
     dependencies:
       '@noble/curves': 1.9.7
       did-jwt: 7.4.7
-      dids: 5.0.3(typescript@5.9.3)(zod@4.3.6)
+      dids: 5.0.3(typescript@5.9.3)
       fast-json-stable-stringify: 2.1.0
       rpc-utils: 0.6.2
       uint8arrays: 5.1.0
@@ -5357,14 +5445,14 @@ snapshots:
 
   varint@6.0.0: {}
 
-  viem@1.21.4(typescript@5.9.3)(zod@4.3.6):
+  viem@1.21.4(typescript@5.9.3):
     dependencies:
       '@adraffy/ens-normalize': 1.10.0
       '@noble/curves': 1.2.0
       '@noble/hashes': 1.3.2
       '@scure/bip32': 1.3.2
       '@scure/bip39': 1.2.1
-      abitype: 0.9.8(typescript@5.9.3)(zod@4.3.6)
+      abitype: 0.9.8(typescript@5.9.3)
       isows: 1.0.3(ws@8.13.0)
       ws: 8.13.0
     optionalDependencies:

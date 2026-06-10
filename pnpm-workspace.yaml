@@ -21,7 +21,14 @@ catalogs:
   stable:
     document-model: 6.1.0
 
+  # Analytics-engine packages version independently of the reactor/document-drive
+  # compatibility group pinned in the default catalog.
+  analytics:
+    "@powerhousedao/analytics-engine-browser": 6.1.0
+    "@powerhousedao/analytics-engine-core": 6.1.0
+
 packages:
+  - analytics-processor
   - audit-trail
   - batch-progress
   - db-migrate

@@ -6,6 +6,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 
 | Project | Description |
 |---------|-------------|
+| [analytics-processor](./analytics-processor) | Reactor processor that maps expense-report operations into the analytics-engine time-series store, with aggregation queries by category, month, and currency |
 | [audit-trail](./audit-trail) | Reactor processor that builds an immutable audit log from ActionSigner context with a GraphQL subgraph |
 | [batch-progress](./batch-progress) | Batch document creation with real-time progress tracking via Reactor EventBus |
 | [cross-document-reactor](./cross-document-reactor) | Event-driven cross-document automation using ReactorClient subscriptions to dispatch actions across related documents |

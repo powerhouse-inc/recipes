@@ -1,16 +1,19 @@
 {
   "files": [],
   "references": [
+    { "path": "analytics-processor" },
     { "path": "audit-trail" },
     { "path": "batch-progress" },
     { "path": "cross-document-reactor" },
     { "path": "custom-read-model" },
     { "path": "discord-webhook-processor" },
     { "path": "document-snapshot-exporter" },
+    { "path": "drive-override" },
     { "path": "full-text-search" },
     { "path": "rate-limiter" },
     { "path": "relational-db-subgraph" },
     { "path": "role-based-auth" },
+    { "path": "saga" },
     { "path": "signed-operations-verifier" },
     { "path": "subscription-cli" },
     { "path": "sync-health-monitor" }
