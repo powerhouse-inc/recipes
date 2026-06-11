@@ -1,0 +1,105 @@
+import type { DocumentModelGlobalState } from "document-model";
+
+export const documentModel: DocumentModelGlobalState = {
+  id: "example/expense-report",
+  name: "Expense Report",
+  extension: "exprep",
+  description:
+    "Expense report with line items, used to demonstrate projecting operations into the analytics engine",
+  author: {
+    name: "Powerhouse",
+    website: "https://powerhouse.inc",
+  },
+  specifications: [
+    {
+      version: 1,
+      changeLog: [],
+      state: {
+        global: {
+          schema:
+            "type ExpenseReportState {\n  lineItems: [LineItem!]!\n}\n\ntype LineItem {\n  id: String!\n  amount: Float!\n  currency: String!\n  category: String!\n  date: String!\n}",
+          initialValue: '{"lineItems":[]}',
+          examples: [],
+        },
+        local: {
+          schema: "",
+          initialValue: "",
+          examples: [],
+        },
+      },
+      modules: [
+        {
+          id: "a1b2c3d4-0000-4000-8000-000000000001",
+          name: "line-items",
+          description: "Add, update, and delete expense line items.",
+          operations: [
+            {
+              id: "a1b2c3d4-0000-4000-8000-000000000101",
+              name: "ADD_LINE_ITEM",
+              description:
+                "Append a line item. id and date come from input (reducers must be deterministic). date is the expense date (business time), formatted as an ISO date such as 2025-01-15. category may be hierarchical via '/', e.g. 'Headcount/Salaries'.",
+              schema:
+                "input AddLineItemInput {\n  id: String!\n  amount: Float!\n  currency: String!\n  category: String!\n  date: String!\n}",
+              template: "",
+              reducer:
+                "if (state.lineItems.some((li) => li.id === action.input.id)) {\n  throw new DuplicateLineItemError(`Line item ${action.input.id} already exists`);\n}\nstate.lineItems.push({\n  id: action.input.id,\n  amount: action.input.amount,\n  currency: action.input.currency,\n  category: action.input.category,\n  date: action.input.date,\n});",
+              errors: [
+                {
+                  id: "duplicateLineItem",
+                  name: "DuplicateLineItem",
+                  code: "DUPLICATE_LINE_ITEM",
+                  description: "A line item with this id already exists",
+                  template: "",
+                },
+              ],
+              examples: [],
+              scope: "global",
+            },
+            {
+              id: "a1b2c3d4-0000-4000-8000-000000000102",
+              name: "UPDATE_LINE_ITEM",
+              description:
+                "Update fields of an existing line item by id. Omitted fields are left unchanged.",
+              schema:
+                "input UpdateLineItemInput {\n  id: String!\n  amount: Float\n  currency: String\n  category: String\n  date: String\n}",
+              template: "",
+              reducer:
+                "const item = state.lineItems.find((li) => li.id === action.input.id);\nif (!item) {\n  throw new LineItemNotFoundError(`Line item ${action.input.id} does not exist`);\n}\nif (action.input.amount != null) item.amount = action.input.amount;\nif (action.input.currency != null) item.currency = action.input.currency;\nif (action.input.category != null) item.category = action.input.category;\nif (action.input.date != null) item.date = action.input.date;",
+              errors: [
+                {
+                  id: "lineItemNotFoundUpdate",
+                  name: "LineItemNotFound",
+                  code: "LINE_ITEM_NOT_FOUND",
+                  description: "No line item with this id exists",
+                  template: "",
+                },
+              ],
+              examples: [],
+              scope: "global",
+            },
+            {
+              id: "a1b2c3d4-0000-4000-8000-000000000103",
+              name: "DELETE_LINE_ITEM",
+              description: "Remove a line item by id.",
+              schema: "input DeleteLineItemInput {\n  id: String!\n}",
+              template: "",
+              reducer:
+                "if (!state.lineItems.some((li) => li.id === action.input.id)) {\n  throw new LineItemNotFoundError(`Line item ${action.input.id} does not exist`);\n}\nstate.lineItems = state.lineItems.filter((li) => li.id !== action.input.id);",
+              errors: [
+                {
+                  id: "lineItemNotFoundDelete",
+                  name: "LineItemNotFound",
+                  code: "LINE_ITEM_NOT_FOUND",
+                  description: "No line item with this id exists",
+                  template: "",
+                },
+              ],
+              examples: [],
+              scope: "global",
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};

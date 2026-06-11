@@ -109,6 +109,7 @@ describe("SyncHealthMonitor", () => {
         lastFailureUtcMs: Date.now(),
         pushBlocked: false,
         pushFailureCount: 0,
+        receivingPages: false,
       },
     } satisfies ConnectionStateChangedEvent);
 
@@ -129,6 +130,7 @@ describe("SyncHealthMonitor", () => {
         lastFailureUtcMs: Date.now(),
         pushBlocked: false,
         pushFailureCount: 0,
+        receivingPages: false,
       },
     } satisfies ConnectionStateChangedEvent);
 
@@ -148,6 +150,7 @@ describe("SyncHealthMonitor", () => {
         lastFailureUtcMs: Date.now(),
         pushBlocked: false,
         pushFailureCount: 0,
+        receivingPages: false,
       },
     } satisfies ConnectionStateChangedEvent);
 

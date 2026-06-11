@@ -1,6 +1,6 @@
 import { createDocumentAction, type IReactor } from "@powerhousedao/reactor";
 import { generateId } from "document-model";
-import { addFile } from "document-drive";
+import { addFile } from "@powerhousedao/shared/document-drive";
 
 export const JOB_KEYS = ["budget", "scope", "project", "drive"] as const;
 export type JobKey = (typeof JOB_KEYS)[number];

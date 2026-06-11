@@ -6,6 +6,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 
 | Project | Description |
 |---------|-------------|
+| [analytics-processor](./analytics-processor) | Reactor processor that maps expense-report operations into the analytics-engine time-series store, with aggregation queries by category, month, and currency |
 | [audit-trail](./audit-trail) | Reactor processor that builds an immutable audit log from ActionSigner context with a GraphQL subgraph |
 | [batch-progress](./batch-progress) | Batch document creation with real-time progress tracking via Reactor EventBus |
 | [cross-document-reactor](./cross-document-reactor) | Event-driven cross-document automation using ReactorClient subscriptions to dispatch actions across related documents |
@@ -20,6 +21,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 | [relational-db-subgraph](./relational-db-subgraph) | RelationalDbProcessor recipe with Kysely migrations, typed schema, and a GraphQL subgraph for document catalog |
 | [role-based-auth](./role-based-auth) | Custom document model with creator-as-admin RBAC enforced inside the reducer via `action.context.signer` |
 | [saga](./saga) | Saga pattern via Reactor processor: operations on one document trigger operations on others, linked by a traceable saga context |
+| [semantic-search](./semantic-search) | Reactor processor that embeds document state in-process (Transformers.js) into PGlite + pgvector and answers cosine-similarity queries |
 | [subscription-cli](./subscription-cli) | CLI tool for monitoring Reactor GraphQL subscriptions in real time |
 | [sync-health-monitor](./sync-health-monitor) | Sync health dashboard via EventBus subscriptions with GraphQL subgraph |
 

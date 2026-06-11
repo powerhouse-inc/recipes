@@ -8,7 +8,7 @@ import {
   type OperationFilter,
 } from "@powerhousedao/reactor";
 import { documentModelCreateDocument } from "document-model";
-import { driveCreateDocument, addFile } from "document-drive";
+import { driveCreateDocument, addFile } from "@powerhousedao/shared/document-drive";
 
 /**
  * Exports document snapshots using the low-level IReactor API.

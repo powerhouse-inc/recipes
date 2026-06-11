@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "document-model": "catalog:",
-    "document-drive": "catalog:",
+    "@powerhousedao/shared": "catalog:",
     "@powerhousedao/reactor": "catalog:"
   },
   "devDependencies": {

@@ -12,7 +12,7 @@
     "generate": "node ../../powerhouse/clis/ph-cli/dist/cli.mjs generate"
   },
   "dependencies": {
-    "document-model": "catalog:stable",
+    "document-model": "catalog:",
     "zod": "^4.3.6"
   },
   "devDependencies": {

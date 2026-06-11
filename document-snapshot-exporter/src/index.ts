@@ -5,7 +5,7 @@ import {
   ReactorClientBuilder,
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
-import { driveDocumentModelModule } from "document-drive";
+import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
 import { exportWithReactor } from "./export-reactor.js";
 import { exportWithClient } from "./export-client.js";
 

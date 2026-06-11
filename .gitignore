@@ -19,6 +19,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Transformers.js model cache (semantic-search)
+.model-cache/
+
 # Tools
 hotseat.json
 .hotseat/worktrees

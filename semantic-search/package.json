@@ -1,0 +1,27 @@
+{
+  "name": "@powerhousedao/example-semantic-search",
+  "version": "0.0.0",
+  "description": "Example: Semantic similarity search processor for Powerhouse Reactor using Transformers.js embeddings and pgvector",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx demo.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.4.0",
+    "@huggingface/transformers": "^4.0.1",
+    "@powerhousedao/reactor": "catalog:",
+    "@powerhousedao/shared": "catalog:",
+    "document-model": "catalog:",
+    "kysely": "^0.28.17",
+    "kysely-pglite": "^0.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}

@@ -31,6 +31,7 @@ export class InternalChannel implements IChannel {
     lastFailureUtcMs: 0,
     pushBlocked: false,
     pushFailureCount: 0,
+    receivingPages: false,
   };
 
   private sendFn: (items: SyncOperation[]) => void;
@@ -108,6 +109,10 @@ export class InternalChannel implements IChannel {
 
   async shutdown() {
     /* no-op for in-process channel */
+  }
+
+  triggerPull(): void {
+    /* no-op: the in-process bridge delivers operations as they are sent */
   }
 
   getConnectionState(): ConnectionStateSnapshot {

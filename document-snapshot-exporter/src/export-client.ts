@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { IReactorClient } from "@powerhousedao/reactor";
-import { driveCreateDocument, addFile } from "document-drive";
+import { driveCreateDocument, addFile } from "@powerhousedao/shared/document-drive";
 import { documentModelCreateDocument } from "document-model";
 
 /**

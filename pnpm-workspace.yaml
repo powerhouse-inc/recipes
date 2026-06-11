@@ -3,25 +3,26 @@ allowBuilds:
   '@prisma/engines': true
   esbuild: true
   msw: true
+  onnxruntime-node: true
   prisma: true
+  protobufjs: true
+  sharp: true
   sqlite3: true
 
-# Latest version at which @powerhousedao/reactor, document-drive, document-model,
-# and @renown/sdk all exist on npm — document-drive is not published past
-# 6.0.2-staging.2, and document-model@6.0.0-dev.109 lacks the ./core export.
+# The 6.2.0-dev line (npm `dev` dist-tag). The document-drive package was
+# deleted upstream — its drive document model now lives at
+# @powerhousedao/shared/document-drive — and reactor declares its dependencies
+# properly from 6.1.0 on, so the whole family versions together as one group.
 catalog:
-  "@powerhousedao/reactor": 6.0.2-staging.2
-  "@renown/sdk": 6.0.2-staging.2
-  document-drive: 6.0.2-staging.2
-  document-model: 6.0.2-staging.2
-
-# For recipes that don't depend on document-drive/reactor and use the newer
-# document-model API (createAction, defaultBaseState, ...).
-catalogs:
-  stable:
-    document-model: 6.1.0
+  "@powerhousedao/analytics-engine-browser": 6.2.0-dev.9
+  "@powerhousedao/analytics-engine-core": 6.2.0-dev.9
+  "@powerhousedao/reactor": 6.2.0-dev.9
+  "@powerhousedao/shared": 6.2.0-dev.9
+  "@renown/sdk": 6.2.0-dev.9
+  document-model: 6.2.0-dev.9
 
 packages:
+  - analytics-processor
   - audit-trail
   - batch-progress
   - db-migrate
@@ -36,6 +37,7 @@ packages:
   - relational-db-subgraph
   - role-based-auth
   - saga
+  - semantic-search
   - signed-operations-verifier
   - subscription-cli
   - sync-health-monitor
