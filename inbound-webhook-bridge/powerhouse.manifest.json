@@ -1,0 +1,15 @@
+{
+  "name": "inbound-webhook-bridge",
+  "description": "Receives signed external webhooks, verifies them server-side, and dispatches them as payment-document actions.",
+  "category": "Integration",
+  "publisher": { "name": "Powerhouse", "url": "https://powerhouse.inc" },
+  "documentModels": [{ "id": "powerhouse/payment", "name": "Payment" }],
+  "config": [
+    {
+      "name": "WEBHOOK_SIGNING_SECRET",
+      "type": "secret",
+      "description": "Shared HMAC-SHA256 secret used to verify the `x-webhook-signature` header on inbound requests. Read only on the server (in webhook-bridge.ts); it must never be bundled for or shipped to the browser. Obtain it from the provider's webhook settings (e.g. Stripe's signing secret).",
+      "required": true
+    }
+  ]
+}
