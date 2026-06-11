@@ -20,6 +20,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 | [relational-db-subgraph](./relational-db-subgraph) | RelationalDbProcessor recipe with Kysely migrations, typed schema, and a GraphQL subgraph for document catalog |
 | [role-based-auth](./role-based-auth) | Custom document model with creator-as-admin RBAC enforced inside the reducer via `action.context.signer` |
 | [saga](./saga) | Saga pattern via Reactor processor: operations on one document trigger operations on others, linked by a traceable saga context |
+| [semantic-search](./semantic-search) | Reactor processor that embeds document state in-process (Transformers.js) into PGlite + pgvector and answers cosine-similarity queries |
 | [subscription-cli](./subscription-cli) | CLI tool for monitoring Reactor GraphQL subscriptions in real time |
 | [sync-health-monitor](./sync-health-monitor) | Sync health dashboard via EventBus subscriptions with GraphQL subgraph |
 

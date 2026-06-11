@@ -14,6 +14,7 @@
     { "path": "relational-db-subgraph" },
     { "path": "role-based-auth" },
     { "path": "saga" },
+    { "path": "semantic-search" },
     { "path": "signed-operations-verifier" },
     { "path": "subscription-cli" },
     { "path": "sync-health-monitor" }

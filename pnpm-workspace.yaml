@@ -3,7 +3,10 @@ allowBuilds:
   '@prisma/engines': true
   esbuild: true
   msw: true
+  onnxruntime-node: true
   prisma: true
+  protobufjs: true
+  sharp: true
   sqlite3: true
 
 # Latest version at which @powerhousedao/reactor, document-drive, document-model,
@@ -42,6 +45,7 @@ packages:
   - relational-db-subgraph
   - role-based-auth
   - saga
+  - semantic-search
   - signed-operations-verifier
   - subscription-cli
   - sync-health-monitor
