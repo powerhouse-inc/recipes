@@ -9,7 +9,7 @@ import {
   documentModelCreateDocument,
   setName,
 } from "document-model";
-import { driveDocumentModelModule, driveCreateDocument } from "document-drive";
+import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
 import type { SearchDB } from "./schema.js";
 import { up } from "./migrations.js";
 import { SearchProcessor } from "./processor.js";

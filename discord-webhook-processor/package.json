@@ -13,7 +13,7 @@
   "dependencies": {
     "@electric-sql/pglite": "^0.4.0",
     "@powerhousedao/reactor": "catalog:",
-    "document-drive": "catalog:",
+    "@powerhousedao/shared": "catalog:",
     "document-model": "catalog:"
   },
   "devDependencies": {

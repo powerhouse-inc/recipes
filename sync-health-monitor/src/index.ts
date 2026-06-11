@@ -8,7 +8,7 @@ import {
   type ReactorModule,
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
-import { driveDocumentModelModule, driveCreateDocument } from "document-drive";
+import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
 
 import { SyncHealthMonitor } from "./health-monitor.js";
 import {

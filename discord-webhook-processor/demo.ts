@@ -4,7 +4,7 @@ import {
   JobAwaiter,
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
-import { driveDocumentModelModule, driveCreateDocument } from "document-drive";
+import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
 import { createDiscordWebhookFactory } from "./discord-webhook-processor.js";
 
 const WEBHOOK_PORT = 9123;

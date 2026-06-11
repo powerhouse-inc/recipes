@@ -4,7 +4,7 @@ import {
   type IRelationalDb,
   type ProcessorFilter,
 } from "@powerhousedao/reactor";
-import { sql } from "kysely";
+import { sql, type Kysely } from "kysely";
 import type { CatalogDB } from "./schema.js";
 import { up } from "./migrations.js";
 
@@ -30,8 +30,21 @@ function extractTags(state: Record<string, unknown>): string[] {
  * relational DB processors.
  */
 export class CatalogProcessor extends RelationalDbProcessor<CatalogDB> {
+  /**
+   * `@powerhousedao/shared` publishes its relational types with kysely's
+   * declarations bundled into the dts rollup (kysely is only a devDependency
+   * there), so `IRelationalDb`'s `Kysely` is a different nominal class from
+   * the `kysely` package this recipe imports — TypeScript rejects the mix
+   * even though the runtime object is a genuine Kysely instance. Cast once
+   * here; use `this.db` wherever real-kysely APIs (`sql`, migrations) are
+   * involved.
+   */
+  private get db(): Kysely<CatalogDB> {
+    return this.relationalDb as unknown as Kysely<CatalogDB>;
+  }
+
   async initAndUpgrade(): Promise<void> {
-    await up(this.relationalDb);
+    await up(this.db);
   }
 
   async onOperations(operations: OperationWithContext[]): Promise<void> {
@@ -90,7 +103,7 @@ export class CatalogProcessor extends RelationalDbProcessor<CatalogDB> {
           content_summary = EXCLUDED.content_summary,
           revision = EXCLUDED.revision,
           updated_at = NOW()
-      `.execute(this.relationalDb);
+      `.execute(this.db);
 
       // Sync tags: delete existing, re-insert current set
       const tags = extractTags(state);

@@ -19,6 +19,8 @@ import type { IReadModel } from "@powerhousedao/reactor";
  *   need to block the read path.
  */
 export class DocumentCountReadModel implements IReadModel {
+  readonly name = "document-count";
+
   private readonly counts = new Map<string, number>();
 
   async indexOperations(operations: OperationWithContext[]): Promise<void> {

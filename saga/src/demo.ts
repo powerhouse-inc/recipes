@@ -8,7 +8,7 @@ import {
   documentModelDocumentModelModule,
   documentModelCreateDocument,
 } from "document-model";
-import { driveDocumentModelModule, driveCreateDocument } from "document-drive";
+import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
 import type { SagaDB } from "./schema.js";
 import type { SagaStepDefinition } from "./processor.js";
 import { up } from "./migrations.js";

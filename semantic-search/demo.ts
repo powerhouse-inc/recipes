@@ -7,7 +7,7 @@ import {
   documentModelCreateDocument,
   setName,
 } from "document-model";
-import { driveDocumentModelModule, driveCreateDocument } from "document-drive";
+import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
 import type { SemanticSearchDB } from "./schema.js";
 import { up } from "./migrations.js";
 import { SemanticSearchProcessor } from "./processor.js";

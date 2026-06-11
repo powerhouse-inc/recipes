@@ -8,7 +8,7 @@ import {
   type Unsubscribe,
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
-import { driveDocumentModelModule, driveCreateDocument } from "document-drive";
+import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
 import { MultiBar, type SingleBar } from "cli-progress";
 import {
   buildCreateProjectBatch,

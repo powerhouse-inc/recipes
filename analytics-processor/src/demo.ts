@@ -15,7 +15,7 @@ import { AnalyticsQueryEngine } from "@powerhousedao/analytics-engine-core";
 import { JobAwaiter, ReactorBuilder } from "@powerhousedao/reactor";
 import type { Action } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
-import { driveCreateDocument, driveDocumentModelModule } from "document-drive";
+import { driveCreateDocument, driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
 import { DateTime } from "luxon";
 import {
   addLineItem,

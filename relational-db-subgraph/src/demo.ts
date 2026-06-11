@@ -9,7 +9,7 @@ import {
   documentModelDocumentModelModule,
   documentModelCreateDocument,
 } from "document-model";
-import { driveDocumentModelModule, driveCreateDocument } from "document-drive";
+import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
 import type { CatalogDB } from "./schema.js";
 import { CatalogProcessor } from "./processor.js";
 import { createCatalogQuery } from "./query.js";
@@ -21,7 +21,11 @@ async function main() {
   // 1. Set up PGlite + Kysely for catalog
   const pglite = new KyselyPGlite();
   const db = new Kysely<CatalogDB>({ dialect: pglite.dialect });
-  const relationalDb = createRelationalDb<CatalogDB>(db);
+  // Cast across the nominal-Kysely boundary: shared's dts rollup bundles its
+  // own copy of kysely's declarations (see CatalogProcessor.db for details).
+  const relationalDb = createRelationalDb<CatalogDB>(
+    db as unknown as Parameters<typeof createRelationalDb<CatalogDB>>[0],
+  );
   console.log("Catalog database created");
 
   // 2. Create and initialize processor
