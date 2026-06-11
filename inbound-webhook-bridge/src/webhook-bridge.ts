@@ -6,8 +6,8 @@ import {
 } from "node:http";
 import type { Action } from "document-model";
 import { JobAwaiter, JobStatus, type IEventBus, type IReactor } from "@powerhousedao/reactor";
-import type { PaymentDocument } from "./payment-model.js";
-import { markFailed, recordPayment, recordRefund } from "./payment-model.js";
+import type { PaymentDocument } from "document-models/payment/v1";
+import { markFailed, recordPayment, recordRefund } from "document-models/payment/v1";
 import {
   DEFAULT_TOLERANCE_SECONDS,
   SIGNATURE_HEADER,

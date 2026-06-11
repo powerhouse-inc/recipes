@@ -10,9 +10,9 @@ import { documentModelDocumentModelModule } from "document-model";
 import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
 import {
   createPaymentDocument,
-  paymentModule,
+  Payment,
   type PaymentDocument,
-} from "./payment-model.js";
+} from "document-models/payment/v1";
 import {
   WebhookBridge,
   createWebhookServer,
@@ -57,7 +57,7 @@ describe("WebhookBridge over HTTP", () => {
       .withDocumentModels([
         documentModelDocumentModelModule,
         driveDocumentModelModule,
-        paymentModule,
+        Payment,
       ])
       .buildModule();
     reactor = built.reactor;
@@ -66,9 +66,7 @@ describe("WebhookBridge over HTTP", () => {
       reactor.getJobStatus(jobId, signal),
     );
     const doc = createPaymentDocument({
-      orderId: ORDER_ID,
-      amountCents: 4200,
-      currency: "usd",
+      global: { orderId: ORDER_ID, amountCents: 4200, currency: "usd" },
     });
     const job = await reactor.create(doc);
     await awaiter.waitForJob(job.id);

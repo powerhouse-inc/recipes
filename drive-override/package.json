@@ -7,16 +7,22 @@
   "private": true,
   "scripts": {
     "start": "tsx src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest run",
+    "generate": "ph-cli generate document-model --document document-models/custom-container/custom-container.json"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.4.0",
     "@powerhousedao/reactor": "catalog:",
-    "document-model": "catalog:"
+    "@powerhousedao/reactor-browser": "catalog:",
+    "document-model": "catalog:",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@powerhousedao/ph-cli": "catalog:",
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
   }
 }

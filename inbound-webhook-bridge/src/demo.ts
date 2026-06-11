@@ -4,9 +4,9 @@ import { documentModelDocumentModelModule } from "document-model";
 import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
 import {
   createPaymentDocument,
-  paymentModule,
+  Payment,
   type PaymentDocument,
-} from "./payment-model.js";
+} from "document-models/payment/v1";
 import { WebhookBridge, createWebhookServer, type WebhookEvent } from "./webhook-bridge.js";
 import { signWebhook, SIGNATURE_HEADER } from "./signature.js";
 
@@ -26,7 +26,7 @@ async function main() {
     .withDocumentModels([
       documentModelDocumentModelModule,
       driveDocumentModelModule,
-      paymentModule,
+      Payment,
     ])
     .buildModule();
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)`);
@@ -37,9 +37,7 @@ async function main() {
 
   // 2. Create a pending payment document for the order.
   const paymentDoc = createPaymentDocument({
-    orderId: ORDER_ID,
-    amountCents: 4200,
-    currency: "usd",
+    global: { orderId: ORDER_ID, amountCents: 4200, currency: "usd" },
   });
   const createJob = await reactor.create(paymentDoc);
   await jobAwaiter.waitForJob(createJob.id);

@@ -64,7 +64,9 @@ racing redeliveries.
 
 ## The payment document model
 
-A deliberately small state machine (`src/payment-model.ts`):
+A deliberately small state machine, **generated** from
+`document-models/payment/payment.json` via `pnpm generate` (pinned
+`ph-cli`, `catalog:`):
 
 ```
 PENDING ──recordPayment──▶ PAID ──recordRefund──▶ REFUNDED
@@ -79,12 +81,16 @@ PENDING ──recordPayment──▶ PAID ──recordRefund──▶ REFUNDED
 
 State: `{ orderId, amountCents, currency, status, failureReason, processedEventIds }`.
 
+The reducer logic (the state-machine guards + event-id dedup) is hand-maintained
+at `document-models/payment/v1/src/reducers/payment.ts`; everything under
+`document-models/payment/v1/gen/` is codegen output and isn't edited.
+
 ## Architecture
 
 | Module | Purpose |
 |--------|---------|
 | `src/signature.ts` | `signWebhook` / `verifyWebhook` — pure HMAC helpers (raw-bytes, constant-time, replay window) |
-| `src/payment-model.ts` | The `powerhouse/payment` document model: state machine + event-id dedup in the reducer |
+| `document-models/payment/` | The codegen'd `powerhouse/payment` document model; reducer (state machine + event-id dedup) in `v1/src/reducers/payment.ts` |
 | `src/webhook-bridge.ts` | `WebhookBridge` (event → action, dedup, dispatch) and `createWebhookServer` (raw-body HTTP edge) |
 | `src/demo.ts` | Boots a reactor + endpoint and plays the provider: valid / tampered / duplicate / stale events |
 

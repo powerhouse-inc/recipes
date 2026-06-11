@@ -7,7 +7,7 @@ import {
   recordRefund,
   reducer,
   type PaymentDocument,
-} from "./payment-model.js";
+} from "document-models/payment/v1";
 
 function dispatch(doc: PaymentDocument, action: Action): PaymentDocument {
   return reducer(doc, action) as PaymentDocument;
@@ -19,7 +19,9 @@ function lastError(doc: PaymentDocument): string | undefined {
 }
 
 function pending(): PaymentDocument {
-  return createPaymentDocument({ orderId: "o1", amountCents: 4200, currency: "usd" });
+  return createPaymentDocument({
+    global: { orderId: "o1", amountCents: 4200, currency: "usd" },
+  });
 }
 
 describe("payment reducer state machine", () => {
