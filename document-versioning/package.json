@@ -8,13 +8,16 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "start": "node --import tsx src/demo.ts"
+    "start": "node --import tsx src/demo.ts",
+    "generate": "ph-cli generate document-model --document document-models/todo/todo.json"
   },
   "dependencies": {
+    "@powerhousedao/reactor-browser": "catalog:",
     "document-model": "catalog:",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@powerhousedao/ph-cli": "catalog:",
     "@types/node": "^22.0.0",
     "tsx": "^4.0.0",
     "vitest": "^4.1.0"

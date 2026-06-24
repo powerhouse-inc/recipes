@@ -10,7 +10,6 @@
 import {
   addItem as addItemV1,
   checkItem,
-  createDocument,
   reducer as reducerV1,
 } from "document-models/todo/v1";
 import {
@@ -18,20 +17,19 @@ import {
   reducer as reducerV2,
   setPriority,
   setStatus,
-  type TodoV2PHState,
+  type TodoPHState as TodoV2PHState,
 } from "document-models/todo/v2";
 import { todoUpgradeManifest } from "document-models/todo/upgrades";
 import { replay } from "./replay.js";
+import { createV1Todo } from "./todo.js";
 import { upgradeDocument } from "./upgrade.js";
 
 // The "welcome" item exists only because it is seeded into the initial
 // state — no operation ever creates or touches it. It reaches the v2 shape
 // solely through the upgrade reducer's initialState patch.
-let v1Doc = createDocument({
-  global: {
-    items: [{ id: "welcome", title: "Take the tour", checked: true }],
-  },
-});
+let v1Doc = createV1Todo([
+  { id: "welcome", title: "Take the tour", checked: true },
+]);
 
 v1Doc = reducerV1(v1Doc, addItemV1({ id: "milk", title: "Buy milk" }));
 v1Doc = reducerV1(

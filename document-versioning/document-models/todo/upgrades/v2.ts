@@ -1,6 +1,12 @@
 import type { Action, PHDocument, UpgradeTransition } from "document-model";
-import type { TodoItemV1, TodoV1PHState } from "../v1/types.js";
-import type { TodoItemV2, TodoV2PHState } from "../v2/types.js";
+import type {
+  TodoItem as TodoItemV1,
+  TodoPHState as StateV1,
+} from "document-models/todo/v1";
+import type {
+  TodoItem as TodoItemV2,
+  TodoPHState as StateV2,
+} from "document-models/todo/v2";
 
 function migrateItems(items: TodoItemV1[]): TodoItemV2[] {
   return items.map(({ id, title, checked }) => ({
@@ -23,22 +29,18 @@ function migrateItems(items: TodoItemV1[]): TodoItemV2[] {
  * here, in-place mutation would be lost.
  */
 function upgradeReducer(
-  document: PHDocument<TodoV1PHState>,
+  document: PHDocument<StateV1>,
   _action: Action,
-): PHDocument<TodoV2PHState> {
+): PHDocument<StateV2> {
   return {
     ...document,
     state: {
       ...document.state,
-      global: {
-        items: migrateItems(document.state.global.items),
-      },
+      global: { items: migrateItems(document.state.global.items) },
     },
     initialState: {
       ...document.initialState,
-      global: {
-        items: migrateItems(document.initialState.global.items),
-      },
+      global: { items: migrateItems(document.initialState.global.items) },
     },
   };
 }

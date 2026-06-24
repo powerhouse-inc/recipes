@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   addItem as addItemV1,
   checkItem,
-  createDocument as createDocumentV1,
   reducer as reducerV1,
 } from "document-models/todo/v1";
 import {
@@ -11,15 +10,16 @@ import {
   reducer as reducerV2,
   setPriority,
   setStatus,
-  type TodoV2PHState,
+  type TodoPHState as TodoV2PHState,
 } from "document-models/todo/v2";
 import { todoUpgradeManifest } from "document-models/todo/upgrades";
 import { replay } from "../src/replay.js";
+import { createV1Todo } from "../src/todo.js";
 import { computeUpgradePath, upgradeDocument } from "../src/upgrade.js";
 
 describe("upgradeDocument", () => {
   it("migrates checked → status/priority on the live state and stamps the version", () => {
-    let v1Doc = createDocumentV1();
+    let v1Doc = createV1Todo();
     v1Doc = reducerV1(v1Doc, addItemV1({ id: "a", title: "A" }));
     v1Doc = reducerV1(v1Doc, addItemV1({ id: "b", title: "B" }));
     v1Doc = reducerV1(v1Doc, checkItem({ id: "b", checked: true }));
@@ -34,9 +34,7 @@ describe("upgradeDocument", () => {
   });
 
   it("migrates the initialState in the same pass", () => {
-    const v1Doc = createDocumentV1({
-      global: { items: [{ id: "seed", title: "Seeded", checked: true }] },
-    });
+    const v1Doc = createV1Todo([{ id: "seed", title: "Seeded", checked: true }]);
 
     const v2Doc = upgradeDocument<TodoV2PHState>(v1Doc, todoUpgradeManifest);
 
@@ -47,7 +45,7 @@ describe("upgradeDocument", () => {
   });
 
   it("records the upgrade in the document-scope operation log", () => {
-    const v1Doc = createDocumentV1();
+    const v1Doc = createV1Todo();
     const v2Doc = upgradeDocument<TodoV2PHState>(v1Doc, todoUpgradeManifest);
 
     const documentOps = v2Doc.operations.document ?? [];
@@ -59,7 +57,7 @@ describe("upgradeDocument", () => {
 
   it("is a no-op on an already-latest document", () => {
     const v2Doc = upgradeDocument<TodoV2PHState>(
-      createDocumentV1(),
+      createV1Todo(),
       todoUpgradeManifest,
     );
 
@@ -76,9 +74,7 @@ describe("upgradeDocument", () => {
 
 describe("replay", () => {
   function buildUpgradedDoc() {
-    let v1Doc = createDocumentV1({
-      global: { items: [{ id: "seed", title: "Seeded", checked: true }] },
-    });
+    let v1Doc = createV1Todo([{ id: "seed", title: "Seeded", checked: true }]);
     v1Doc = reducerV1(v1Doc, addItemV1({ id: "a", title: "A" }));
     v1Doc = reducerV1(v1Doc, addItemV1({ id: "b", title: "B" }));
     v1Doc = reducerV1(v1Doc, checkItem({ id: "a", checked: true }));
@@ -127,9 +123,7 @@ describe("replay", () => {
     };
     const brokenManifest = { ...todoUpgradeManifest, upgrades: { v2: broken } };
 
-    let v1Doc = createDocumentV1({
-      global: { items: [{ id: "seed", title: "Seeded", checked: true }] },
-    });
+    let v1Doc = createV1Todo([{ id: "seed", title: "Seeded", checked: true }]);
     v1Doc = reducerV1(v1Doc, addItemV1({ id: "a", title: "A" }));
 
     let v2Doc = upgradeDocument<TodoV2PHState>(v1Doc, brokenManifest);
@@ -212,7 +206,7 @@ describe("computeUpgradePath", () => {
   });
 
   it("upgradeDocument composes multi-hop transitions in order", () => {
-    const upgraded = upgradeDocument(createDocumentV1(), threeVersionManifest);
+    const upgraded = upgradeDocument(createV1Todo(), threeVersionManifest);
 
     expect(upgraded.state.document.version).toBe(3);
     const global = (upgraded.state as unknown as { global: { hops: number[] } })

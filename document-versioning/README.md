@@ -6,10 +6,17 @@ correctly.
 
 ## What it demonstrates
 
-- The `UpgradeManifest` shape: `{ documentType, latestVersion, supportedVersions, upgrades }`.
+- Defining two schema versions in a single codegen spec:
+  [`document-models/todo/todo.json`](./document-models/todo/todo.json) carries one
+  `specifications` entry per version, and `ph-cli generate` emits the whole `v1/`, `v2/`,
+  and `upgrades/` tree — including a wired-up `UpgradeManifest`
+  (`{ documentType, latestVersion, supportedVersions, upgrades }`) and a stub upgrade
+  transition for you to fill in.
 - `UpgradeTransition`: `{ toVersion, upgradeReducer, description }` — its `upgradeReducer`
-  is a pure function that transforms a whole document from version N−1 to N.
-- The versioned document model folder layout: `v1/`, `v2/`, `upgrades/`.
+  is a pure function that transforms a whole document from version N−1 to N. Codegen
+  scaffolds the stub at
+  [`document-models/todo/upgrades/v2.ts`](./document-models/todo/upgrades/v2.ts); the
+  migration body is the one piece you hand-write.
 - The upgrade-application logic that `@powerhousedao/reactor` runs in production
   (`computeUpgradePath` + apply + version stamp), distilled into
   [`src/upgrade.ts`](./src/upgrade.ts) — `document-model` only defines the manifest types.
@@ -31,7 +38,9 @@ type TodoItemV2 = {
 };
 ```
 
-The transition in [`document-models/todo/upgrades/v2.ts`](./document-models/todo/upgrades/v2.ts)
+Each version's shape is declared as GraphQL in the matching `specifications` entry of
+[`todo.json`](./document-models/todo/todo.json); codegen turns it into the types above. The
+transition in [`document-models/todo/upgrades/v2.ts`](./document-models/todo/upgrades/v2.ts)
 maps `checked: true → status: "DONE"`, `checked: false → status: "TODO"`, and adds
 `priority: 0`.
 
@@ -58,9 +67,11 @@ state-only transition that makes the failure visible.
 ## The latest reducer owns the historical log
 
 Replay sends the *entire* operation history through the latest reducer — including
-operations whose type no longer exists in the new schema. That is why the v2 reducer keeps
-a legacy `CHECK_ITEM` case mapping `checked` onto a `status`. When a migration renames or
-retypes fields, retiring an operation from the editor does not retire it from history.
+operations whose type no longer exists in the new schema. That is why `CHECK_ITEM` is
+retained as an operation in the v2 spec (so codegen keeps generating its action and reducer
+slot), and [`v2/src/reducers/todo.ts`](./document-models/todo/v2/src/reducers/todo.ts) maps
+the old `checked` boolean onto the new `status`. When a migration renames or retypes fields,
+retiring an operation from the editor does not retire it from history.
 
 ## Upgrade reducers must be pure
 
@@ -78,16 +89,20 @@ suite in [`tests/versioning.test.ts`](./tests/versioning.test.ts) exercises both
 
 ## Production wiring
 
-In a full Powerhouse package the pieces in this recipe plug into the platform instead of
-`src/upgrade.ts`:
+Codegen already emits the structure a real package registers: each version's
+[`module.ts`](./document-models/todo/v2/module.ts) carries an explicit `version` field,
+[`document-models/document-models.ts`](./document-models/document-models.ts) exports
+`documentModels = [TodoV1, TodoV2]`, and
+[`document-models/upgrade-manifests.ts`](./document-models/upgrade-manifests.ts) exports
+`upgradeManifests = [todoUpgradeManifest]`. The only thing this recipe does differently from
+production is *who applies the upgrade*:
 
-- each version exports a `DocumentModelModule` with an explicit `version: 1` / `version: 2`
-  field, and the package exports `documentModels` plus `upgradeManifests` arrays;
-- the reactor registers both:
-  `new ReactorBuilder().withDocumentModels([TodoV1, TodoV2]).withUpgradeManifests([todoUpgradeManifest])`;
-- dispatching `UPGRADE_DOCUMENT` makes the reactor compute the upgrade path from the
-  manifest and apply it — the same compose-transitions-then-stamp-version sequence as
-  `src/upgrade.ts` here.
+- a reactor registers both
+  (`new ReactorBuilder().withDocumentModels(documentModels).withUpgradeManifests(upgradeManifests)`)
+  and, on `UPGRADE_DOCUMENT`, computes the upgrade path from the manifest and applies it;
+- here, [`src/upgrade.ts`](./src/upgrade.ts) runs that same
+  compose-transitions-then-stamp-version sequence in-process, so the mechanics are visible
+  without standing up a reactor.
 
 A peer that has only the v1 package registered cannot execute the upgrade: the document
 stays at v1 there, and v2 operations fail until the updated package ships — deploy the new
@@ -103,6 +118,21 @@ pnpm start
 The demo creates a v1 document with a seeded item, applies v1 operations, upgrades to v2,
 keeps dispatching v2 operations, then replays the recorded history and verifies it
 converges on the stored state.
+
+## Regenerating the model
+
+The `document-models/` tree is generated from
+[`document-models/todo/todo.json`](./document-models/todo/todo.json) and committed to the
+repo. To evolve a schema, edit the spec (add a `specifications` entry for the new version)
+and re-run codegen:
+
+```sh
+pnpm generate
+```
+
+`gen/` files are overwritten on every run; the hand-written reducers
+(`*/src/reducers/todo.ts`) and the upgrade transitions (`upgrades/v*.ts`) are scaffolded
+once and then preserved, so re-running is safe.
 
 ## Tests
 

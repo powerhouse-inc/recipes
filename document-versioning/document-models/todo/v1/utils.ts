@@ -1,24 +1,14 @@
-import {
-  baseCreateDocument,
-  defaultBaseState,
-  defaultDocumentState,
-} from "document-model";
-import { todoDocumentType } from "../document-type.js";
-import type { TodoV1Document, TodoV1PHState } from "./types.js";
+/**
+ * WARNING: DO NOT EDIT
+ * This file is auto-generated and updated by codegen
+ */
+import type { DocumentModelUtils } from "document-model";
+import type { TodoPHState } from "./gen/types.js";
+import { utils as genUtils } from "./gen/utils.js";
+import * as customUtils from "./src/utils.js";
 
-export function createState(state?: Partial<TodoV1PHState>): TodoV1PHState {
-  return {
-    ...defaultBaseState(),
-    // defaultDocumentState() starts at version 0; a v1 document must declare
-    // version 1, because the upgrade manifest has no transition into v1.
-    document: { ...defaultDocumentState(), version: 1 },
-    global: { items: [], ...state?.global },
-    local: {},
-  };
-}
-
-export function createDocument(state?: Partial<TodoV1PHState>): TodoV1Document {
-  // Passing the document type makes baseCreateDocument seed the
-  // document-scope operations (CREATE_DOCUMENT + UPGRADE_DOCUMENT 0→1).
-  return baseCreateDocument(createState, state, todoDocumentType);
-}
+/** Utils for the Todo document model */
+export const utils: DocumentModelUtils<TodoPHState> = {
+  ...genUtils,
+  ...customUtils,
+};
