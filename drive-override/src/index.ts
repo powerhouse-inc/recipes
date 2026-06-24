@@ -14,12 +14,12 @@ import {
 import { documentModelDocumentModelModule } from "document-model";
 import type { PHDocument } from "document-model";
 import {
-  customContainerModule,
-  customContainerCreateDocument,
+  CustomContainer,
+  createCustomContainerDocument,
   customContainerDocumentType,
   actions as containerActions,
   type CustomContainerPHState,
-} from "./custom-container.js";
+} from "document-models/custom-container/v1";
 
 const TOTAL_CHILDREN = 10_000;
 const BATCH_SIZE = 100;
@@ -40,7 +40,7 @@ async function main() {
   const { reactor, eventBus, documentIndexer } = await new ReactorBuilder()
     .withDocumentModels([
       documentModelDocumentModelModule,
-      customContainerModule,
+      CustomContainer,
     ])
     .buildModule();
   const jobAwaiter = new JobAwaiter(eventBus, (jobId, signal) =>
@@ -49,7 +49,7 @@ async function main() {
   console.log(`done (${((performance.now() - t0) / 1000).toFixed(2)}s)\n`);
 
   // 2. Create the custom container and apply SET_METADATA.
-  const container = customContainerCreateDocument();
+  const container = createCustomContainerDocument();
   const containerId = container.header.id;
   const createJob = await reactor.create(container);
   await jobAwaiter.waitForJob(createJob.id);

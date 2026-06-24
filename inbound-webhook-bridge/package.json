@@ -1,0 +1,27 @@
+{
+  "name": "@powerhousedao/example-inbound-webhook-bridge",
+  "version": "0.0.0",
+  "description": "Example: verify signed external webhooks against the raw bytes and dispatch them as document actions — the inbound twin of discord-webhook-processor",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts",
+    "generate": "ph-cli generate document-model --document document-models/payment/payment.json"
+  },
+  "dependencies": {
+    "@powerhousedao/reactor": "catalog:",
+    "@powerhousedao/reactor-browser": "catalog:",
+    "@powerhousedao/shared": "catalog:",
+    "document-model": "catalog:",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@powerhousedao/ph-cli": "catalog:",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "vitest": "^4.1.0"
+  }
+}

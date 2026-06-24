@@ -1,0 +1,48 @@
+{
+  "id": "powerhouse/custom-container",
+  "name": "Custom Container",
+  "extension": "cco",
+  "description": "A lightweight container document that tracks children via ADD_RELATIONSHIP instead of embedding them in state",
+  "author": {
+    "name": "Powerhouse",
+    "website": "https://powerhouse.inc"
+  },
+  "specifications": [
+    {
+      "version": 1,
+      "changeLog": [],
+      "state": {
+        "global": {
+          "schema": "type CustomContainerState {\n  name: String!\n  description: String\n}",
+          "initialValue": "{\"name\":\"\",\"description\":null}",
+          "examples": []
+        },
+        "local": {
+          "schema": "",
+          "initialValue": "",
+          "examples": []
+        }
+      },
+      "modules": [
+        {
+          "id": "d4e5f6a7-3333-4c4d-8e5f-000000000001",
+          "name": "metadata",
+          "description": "Container metadata operations.",
+          "operations": [
+            {
+              "id": "d4e5f6a7-3333-4c4d-8e5f-000000000010",
+              "name": "SET_METADATA",
+              "description": "Set the container's name and description.",
+              "schema": "input SetMetadataInput {\n  name: String!\n  description: String\n}",
+              "template": "",
+              "reducer": "state.name = action.input.name;\nstate.description = action.input.description ?? null;",
+              "errors": [],
+              "examples": [],
+              "scope": "global"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

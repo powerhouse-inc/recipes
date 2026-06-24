@@ -63,5 +63,5 @@ Expect total runtime in the tens of seconds to a few minutes depending on hardwa
 
 ## Key files
 
-- [`src/custom-container.ts`](./src/custom-container.ts) — the minimal `DocumentModelModule`. Self-contained, no `ph generate` step.
+- [`document-models/custom-container/`](./document-models/custom-container) — the `powerhouse/custom-container` document model, generated from `custom-container.json` via `pnpm generate` (pinned `ph-cli`, `catalog:`). The `SET_METADATA` reducer lives in `v1/src/reducers/metadata.ts`; everything under `v1/gen/` is codegen output.
 - [`src/index.ts`](./src/index.ts) — the demo.

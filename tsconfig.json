@@ -11,6 +11,7 @@
     { "path": "document-versioning" },
     { "path": "drive-override" },
     { "path": "full-text-search" },
+    { "path": "inbound-webhook-bridge" },
     { "path": "rate-limiter" },
     { "path": "relational-db-subgraph" },
     { "path": "role-based-auth" },

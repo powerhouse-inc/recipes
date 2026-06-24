@@ -16,7 +16,9 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 | [document-snapshot-exporter](./document-snapshot-exporter) | CLI tool for reliable read-after-write export of document state to JSON using IReactor consistency tokens |
 | [document-versioning](./document-versioning) | Document model schema migration from v1 to v2 with an `UpgradeManifest` and a pure `upgradeReducer` that keeps old operation logs replayable |
 | [drive-override](./drive-override) | Custom container document that tracks children via the reactor's ADD_RELATIONSHIP action instead of document-drive's ADD_FILE, keeping container state O(1) |
+| [external-feed-ingest](./external-feed-ingest) | Polling worker that ingests an external feed into a ledger document idempotently — dedup set and high-watermark seeded from document state, corrections modeled as explicit supersede operations |
 | [full-text-search](./full-text-search) | Reactor processor that maintains a PostgreSQL full-text search index over document state |
+| [inbound-webhook-bridge](./inbound-webhook-bridge) | Standalone endpoint that verifies signed external webhooks against the raw bytes and dispatches them as payment-document actions, with replay-window and event-id dedup |
 | [rate-limiter](./rate-limiter) | Reactor processor and auth gate that throttles users by signer address using a sliding window |
 | [relational-db-subgraph](./relational-db-subgraph) | RelationalDbProcessor recipe with Kysely migrations, typed schema, and a GraphQL subgraph for document catalog |
 | [role-based-auth](./role-based-auth) | Custom document model with creator-as-admin RBAC enforced inside the reducer via `action.context.signer` |

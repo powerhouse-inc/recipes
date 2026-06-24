@@ -1,0 +1,20 @@
+{
+  "name": "",
+  "description": "",
+  "category": "",
+  "publisher": {
+    "name": "",
+    "url": ""
+  },
+  "documentModels": [
+    {
+      "name": "Custom Container",
+      "id": "powerhouse/custom-container"
+    }
+  ],
+  "apps": [],
+  "editors": [],
+  "processors": [],
+  "subgraphs": [],
+  "config": []
+}
