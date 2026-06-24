@@ -134,6 +134,40 @@ pnpm generate
 (`*/src/reducers/todo.ts`) and the upgrade transitions (`upgrades/v*.ts`) are scaffolded
 once and then preserved, so re-running is safe.
 
+## Temporary workaround: in-process version stamping
+
+> **This is a paper-over for an upstream codegen bug — remove it once that is fixed.**
+
+This recipe creates v1 documents through a helper,
+[`src/todo.ts`](./src/todo.ts)'s `createV1Todo`, rather than the generated
+`createTodoDocument`. The helper exists only to work around a bug in
+`@powerhousedao/codegen`: the generated `gen/utils.ts` `createState` discards the `auth`
+and `document` scopes of its input and always rebuilds from `defaultBaseState()`, so
+`createTodoDocument({ document: { version: 1 } })` silently returns a document at version
+**0**. A v1 document must declare version 1 (the upgrade manifest covers 1→2 and has no
+transition *into* v1), so without the helper `computeUpgradePath` throws
+`Version 0 ... is not in supportedVersions [1, 2]`.
+
+`createV1Todo` sidesteps the generated factory and calls `baseCreateDocument` with a
+`createState` that stamps version 1 — the same thing a reactor does from the registered
+module in production. The bug and its suggested fix are written up in the Powerhouse
+monorepo as `VERSION_BUG.md` (filed against `@powerhousedao/codegen`).
+
+**When the codegen fix lands**, delete [`src/todo.ts`](./src/todo.ts) and create v1
+documents directly with the generated factory:
+
+```ts
+import { createTodoDocument } from "document-models/todo/v1";
+
+// replaces createV1Todo(items)
+createTodoDocument({ document: { version: 1 }, global: { items } });
+```
+
+Then update the call sites in [`src/demo.ts`](./src/demo.ts) and the `tests/` suite and
+re-run `pnpm test` — the "starts at model version 1" check in
+[`tests/v1-reducer.test.ts`](./tests/v1-reducer.test.ts) and the upgrade/replay suites in
+[`tests/versioning.test.ts`](./tests/versioning.test.ts) guard the behavior.
+
 ## Tests
 
 ```sh
