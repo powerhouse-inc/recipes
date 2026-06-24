@@ -11,7 +11,7 @@
     "start": "node --import tsx src/demo.ts"
   },
   "dependencies": {
-    "document-model": "catalog:stable",
+    "document-model": "catalog:",
     "zod": "^4.3.6"
   },
   "devDependencies": {

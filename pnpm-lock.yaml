@@ -234,8 +234,8 @@ importers:
   document-versioning:
     dependencies:
       document-model:
-        specifier: catalog:stable
-        version: 6.1.0
+        specifier: 'catalog:'
+        version: 6.2.0-dev.9
       zod:
         specifier: ^4.3.6
         version: 4.3.6
