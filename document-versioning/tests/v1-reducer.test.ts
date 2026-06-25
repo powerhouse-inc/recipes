@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { addItem, checkItem, reducer } from "document-models/todo/v1";
-import { createV1Todo } from "../src/todo.js";
+import {
+  addItem,
+  checkItem,
+  createTodoDocument,
+  reducer,
+} from "document-models/todo/v1";
 
 describe("todo v1 reducer", () => {
   it("appends items with checked: false", () => {
-    let doc = createV1Todo();
+    let doc = createTodoDocument({ document: { version: 1 } });
     doc = reducer(doc, addItem({ id: "a", title: "First" }));
     doc = reducer(doc, addItem({ id: "b", title: "Second" }));
 
@@ -15,7 +19,7 @@ describe("todo v1 reducer", () => {
   });
 
   it("sets checked on an existing item", () => {
-    let doc = createV1Todo();
+    let doc = createTodoDocument({ document: { version: 1 } });
     doc = reducer(doc, addItem({ id: "a", title: "First" }));
     doc = reducer(doc, checkItem({ id: "a", checked: true }));
 
@@ -23,7 +27,7 @@ describe("todo v1 reducer", () => {
   });
 
   it("records operations in the global scope with increasing indices", () => {
-    let doc = createV1Todo();
+    let doc = createTodoDocument({ document: { version: 1 } });
     doc = reducer(doc, addItem({ id: "a", title: "First" }));
     doc = reducer(doc, checkItem({ id: "a", checked: true }));
 
@@ -36,7 +40,7 @@ describe("todo v1 reducer", () => {
   });
 
   it("starts at model version 1", () => {
-    const doc = createV1Todo();
+    const doc = createTodoDocument({ document: { version: 1 } });
     expect(doc.state.document.version).toBe(1);
   });
 });

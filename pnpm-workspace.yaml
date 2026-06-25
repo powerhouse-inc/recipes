@@ -16,14 +16,14 @@ allowBuilds:
 # @powerhousedao/shared/document-drive — and reactor declares its dependencies
 # properly from 6.1.0 on, so the whole family versions together as one group.
 catalog:
-  "@powerhousedao/analytics-engine-browser": 6.2.0-dev.9
-  "@powerhousedao/analytics-engine-core": 6.2.0-dev.9
-  "@powerhousedao/ph-cli": 6.2.0-dev.9
-  "@powerhousedao/reactor": 6.2.0-dev.9
-  "@powerhousedao/reactor-browser": 6.2.0-dev.9
-  "@powerhousedao/shared": 6.2.0-dev.9
-  "@renown/sdk": 6.2.0-dev.9
-  document-model: 6.2.0-dev.9
+  "@powerhousedao/analytics-engine-browser": 6.2.0-dev.33
+  "@powerhousedao/analytics-engine-core": 6.2.0-dev.33
+  "@powerhousedao/ph-cli": 6.2.0-dev.33
+  "@powerhousedao/reactor": 6.2.0-dev.33
+  "@powerhousedao/reactor-browser": 6.2.0-dev.33
+  "@powerhousedao/shared": 6.2.0-dev.33
+  "@renown/sdk": 6.2.0-dev.33
+  document-model: 6.2.0-dev.33
 
 packages:
   - analytics-processor
