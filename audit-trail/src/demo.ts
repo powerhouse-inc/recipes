@@ -47,7 +47,7 @@ async function main() {
   const t0 = performance.now();
   const clientModule = await new ReactorClientBuilder()
     .withReactorBuilder(
-      new ReactorBuilder().withDocumentModels([
+      new ReactorBuilder().withDocumentModelSources([
         documentModelDocumentModelModule,
         driveDocumentModelModule,
       ]),

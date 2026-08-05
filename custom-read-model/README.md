@@ -55,7 +55,7 @@ import { DocumentCountReadModel } from "./src/document-count-read-model.js";
 const countReadModel = new DocumentCountReadModel();
 
 const reactorModule = await new ReactorBuilder()
-  .withDocumentModels([/* your models */])
+  .withDocumentModelSources([/* your models */])
   .withReadModel(countReadModel)
   .buildModule();
 

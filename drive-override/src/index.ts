@@ -38,7 +38,7 @@ async function main() {
   process.stdout.write("Starting reactor... ");
   const t0 = performance.now();
   const { reactor, eventBus, documentIndexer } = await new ReactorBuilder()
-    .withDocumentModels([
+    .withDocumentModelSources([
       documentModelDocumentModelModule,
       CustomContainer,
     ])

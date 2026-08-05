@@ -42,7 +42,7 @@ async function main() {
     // and IEventBus — full control over jobs and consistency tokens.
     process.stdout.write("Starting reactor...");
     const reactorModule = await new ReactorBuilder()
-      .withDocumentModels(documentModels)
+      .withDocumentModelSources(documentModels)
       .buildModule();
     console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 
@@ -65,7 +65,7 @@ async function main() {
     process.stdout.write("Starting reactor client...");
     const clientModule = await new ReactorClientBuilder()
       .withReactorBuilder(
-        new ReactorBuilder().withDocumentModels(documentModels),
+        new ReactorBuilder().withDocumentModelSources(documentModels),
       )
       .buildModule();
     console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);

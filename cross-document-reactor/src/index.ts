@@ -35,7 +35,7 @@ async function main() {
 
   const clientModule = await new ReactorClientBuilder()
     .withReactorBuilder(
-      new ReactorBuilder().withDocumentModels([
+      new ReactorBuilder().withDocumentModelSources([
         documentModelDocumentModelModule,
         driveDocumentModelModule,
       ]),

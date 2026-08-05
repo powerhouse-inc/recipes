@@ -33,7 +33,7 @@ function entriesOf(doc: FeedLedgerDocument) {
 beforeEach(async () => {
   // Fresh reactor per test so document state never leaks between cases.
   const built = await new ReactorBuilder()
-    .withDocumentModels([
+    .withDocumentModelSources([
       documentModelDocumentModelModule,
       driveDocumentModelModule,
       FeedLedger,

@@ -54,7 +54,7 @@ describe("WebhookBridge over HTTP", () => {
 
   beforeAll(async () => {
     const built = await new ReactorBuilder()
-      .withDocumentModels([
+      .withDocumentModelSources([
         documentModelDocumentModelModule,
         driveDocumentModelModule,
         Payment,
