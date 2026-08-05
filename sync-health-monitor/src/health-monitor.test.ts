@@ -91,6 +91,7 @@ describe("SyncHealthMonitor", () => {
       remoteName: "remoteB",
       documentId: "doc-1",
       errorSource: ChannelErrorSource.Outbox,
+      errorType: "LIBRARY_ERROR",
     } satisfies DeadLetterAddedEvent);
 
     expect(monitor.getMetrics().deadLetterCount).toBe(1);
@@ -110,6 +111,7 @@ describe("SyncHealthMonitor", () => {
         pushBlocked: false,
         pushFailureCount: 0,
         receivingPages: false,
+        requiresAuth: false,
       },
     } satisfies ConnectionStateChangedEvent);
 
@@ -131,6 +133,7 @@ describe("SyncHealthMonitor", () => {
         pushBlocked: false,
         pushFailureCount: 0,
         receivingPages: false,
+        requiresAuth: false,
       },
     } satisfies ConnectionStateChangedEvent);
 
@@ -151,6 +154,7 @@ describe("SyncHealthMonitor", () => {
         pushBlocked: false,
         pushFailureCount: 0,
         receivingPages: false,
+        requiresAuth: false,
       },
     } satisfies ConnectionStateChangedEvent);
 
@@ -183,6 +187,7 @@ describe("SyncHealthMonitor", () => {
       remoteName: "remoteB",
       documentId: "doc-1",
       errorSource: ChannelErrorSource.Outbox,
+      errorType: "LIBRARY_ERROR",
     } satisfies DeadLetterAddedEvent);
 
     expect(monitor.getHealthStatus()).toBe("degraded");

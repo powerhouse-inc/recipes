@@ -12,6 +12,8 @@ import {
   type ChannelConfig,
   type RemoteFilter,
   type IOperationIndex,
+  type DriveCollectionId,
+  type RemoteOptions,
 } from "@powerhousedao/reactor";
 
 // ---------------------------------------------------------------------------
@@ -32,6 +34,7 @@ export class InternalChannel implements IChannel {
     pushBlocked: false,
     pushFailureCount: 0,
     receivingPages: false,
+    requiresAuth: false,
   };
 
   private sendFn: (items: SyncOperation[]) => void;
@@ -153,9 +156,10 @@ export function createInternalChannelFactory(
       remoteName: string,
       _config: ChannelConfig,
       _cursorStorage: ISyncCursorStorage,
-      _collectionId: string,
+      _collectionId: DriveCollectionId,
       _filter: RemoteFilter,
       _operationIndex: IOperationIndex,
+      _options?: RemoteOptions,
     ): InternalChannel {
       const channel = new InternalChannel((items) => {
         const peerName = peerMapping.get(remoteName);

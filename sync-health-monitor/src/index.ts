@@ -2,7 +2,7 @@ import {
   ReactorBuilder,
   SyncBuilder,
   JobAwaiter,
-  driveCollectionId,
+  DriveCollectionId,
   type IReactor,
   type IEventBus,
   type ReactorModule,
@@ -44,11 +44,11 @@ async function main() {
 
   const [moduleA, moduleB] = await Promise.all([
     new ReactorBuilder()
-      .withDocumentModels(docModels)
+      .withDocumentModelSources(docModels)
       .withSync(new SyncBuilder().withChannelFactory(channelFactory))
       .buildModule(),
     new ReactorBuilder()
-      .withDocumentModels(docModels)
+      .withDocumentModelSources(docModels)
       .withSync(new SyncBuilder().withChannelFactory(channelFactory))
       .buildModule(),
   ]);
@@ -87,7 +87,9 @@ async function main() {
   // ------------------------------------------------------------------
   // 5. Wire remotes: A ↔ B for this drive's collection
   // ------------------------------------------------------------------
-  const collectionId = driveCollectionId("main", driveId);
+  // Argument order is (driveId, branch) — the reverse of the old
+  // driveCollectionId(branch, driveId) helper this replaced.
+  const collectionId = DriveCollectionId.forDrive(driveId, "main");
   const filter = { documentId: [], scope: [], branch: "main" };
 
   await moduleA.syncModule!.syncManager.add("remoteB", collectionId, {
