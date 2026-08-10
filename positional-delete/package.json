@@ -1,0 +1,27 @@
+{
+  "name": "@powerhousedao/example-positional-delete",
+  "version": "0.0.0",
+  "description": "Example: deletion as a position in the merged operation order — pre-delete operations survive, post-delete operations are stored denied, and the view serves state as of the deletion",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts",
+    "generate": "ph-cli generate document-model --document document-models/field-log/field-log.json"
+  },
+  "dependencies": {
+    "@powerhousedao/reactor": "catalog:",
+    "@powerhousedao/reactor-browser": "catalog:",
+    "@powerhousedao/shared": "catalog:",
+    "document-model": "catalog:",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@powerhousedao/ph-cli": "catalog:",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}

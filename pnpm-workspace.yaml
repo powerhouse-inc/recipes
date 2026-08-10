@@ -42,6 +42,7 @@ packages:
   - external-feed-ingest
   - full-text-search
   - inbound-webhook-bridge
+  - positional-delete
   - rate-limiter
   - relational-db-subgraph
   - role-based-auth

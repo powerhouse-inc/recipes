@@ -1,0 +1,56 @@
+{
+  "id": "powerhouse/field-log",
+  "name": "Field Log",
+  "extension": "flog",
+  "description": "An append-only log of field observations, used to demonstrate positional deletion: entries recorded before a delete are legitimate history, entries after it are not",
+  "author": {
+    "name": "Powerhouse",
+    "website": "https://powerhouse.inc"
+  },
+  "specifications": [
+    {
+      "version": 1,
+      "changeLog": [],
+      "state": {
+        "global": {
+          "schema": "type FieldLogState {\n  observations: [Observation!]!\n}\n\ntype Observation {\n  id: ID!\n  note: String!\n  recordedBy: String!\n}",
+          "initialValue": "{\"observations\":[]}",
+          "examples": []
+        },
+        "local": {
+          "schema": "",
+          "initialValue": "",
+          "examples": []
+        }
+      },
+      "modules": [
+        {
+          "id": "2b8e6f10-3c4d-4e5f-8a9b-000000000001",
+          "name": "log",
+          "description": "Observation logging. Append-only; the recorder is read from the signer context for display.",
+          "operations": [
+            {
+              "id": "2b8e6f10-3c4d-4e5f-8a9b-000000000101",
+              "name": "LOG_OBSERVATION",
+              "description": "Append an observation to the log.",
+              "schema": "input LogObservationInput {\n  id: ID!\n  note: String!\n}",
+              "template": "",
+              "reducer": "if (state.observations.some((observation) => observation.id === action.input.id)) {\n  throw new DuplicateObservationError(`Observation ${action.input.id} already exists`);\n}\nstate.observations.push({\n  id: action.input.id,\n  note: action.input.note,\n  recordedBy: action.context?.signer?.user?.address ?? \"anonymous\",\n});",
+              "errors": [
+                {
+                  "id": "duplicateObservation",
+                  "name": "DuplicateObservation",
+                  "code": "DUPLICATE_OBSERVATION",
+                  "description": "An observation with this id already exists",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
