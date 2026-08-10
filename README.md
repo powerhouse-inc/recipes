@@ -23,6 +23,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 | [positional-delete](./positional-delete) | Deletion as a position in the merged operation order — pre-delete operations survive sync, post-delete operations are stored denied, and both reactors converge without coordination |
 | [rate-limiter](./rate-limiter) | Reactor processor and auth gate that throttles users by signer address using a sliding window |
 | [relational-db-subgraph](./relational-db-subgraph) | RelationalDbProcessor recipe with Kysely migrations, typed schema, and a GraphQL subgraph for document catalog |
+| [revocation-race](./revocation-race) | Convergent authorization: a grant revocation races an approval across two reactors, and both independently reach the same per-position verdict — no origin verdict shipped or trusted |
 | [role-based-auth](./role-based-auth) | Custom document model with creator-as-admin RBAC enforced inside the reducer via `action.context.signer` |
 | [saga](./saga) | Saga pattern via Reactor processor: operations on one document trigger operations on others, linked by a traceable saga context |
 | [semantic-search](./semantic-search) | Reactor processor that embeds document state in-process (Transformers.js) into PGlite + pgvector and answers cosine-similarity queries |

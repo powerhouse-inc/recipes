@@ -173,6 +173,12 @@ denied-op storage `:633`, re-evaluation on late delete `:1169`. Test template:
 
 ## 4. `revocation-race` — convergent enforcement across reactors
 
+> **Status: implemented** — see [`revocation-race/`](./revocation-race). As with
+> recipe 3, no timestamp flipping is needed: running the race twice with honest
+> wall-clock ordering (revoke-then-approve, approve-then-revoke) produces both
+> verdicts. The monotonicity sidebar is demonstrated with a backdated `setGrant`
+> refused at origin.
+
 **One-liner:** Two reactors race a grant revocation against a write by the revoked
 grantee; after sync in both directions, both reactors independently judge the write at
 its position in the merged order and converge on the same verdict — no origin-verdict
