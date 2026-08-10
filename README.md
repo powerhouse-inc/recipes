@@ -13,6 +13,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 | [custom-read-model](./custom-read-model) | Custom IReadModel with ReactorBuilder for a document-count-per-type materialized view |
 | [db-migrate](./db-migrate) | PostgreSQL database export, import, and migration scripts using Docker (no local pg tools required) |
 | [discord-webhook-processor](./discord-webhook-processor) | Reactor processor that forwards document operations to a Discord webhook as rich embeds |
+| [document-acl](./document-acl) | Platform-enforced document ACLs via the auth scope and the `documentDecisions`/`authEnforcement` feature flags — grant stacks, last-applicable-grant-wins, zero authorization code in reducers |
 | [document-snapshot-exporter](./document-snapshot-exporter) | CLI tool for reliable read-after-write export of document state to JSON using IReactor consistency tokens |
 | [document-versioning](./document-versioning) | Document model schema migration from v1 to v2 with an `UpgradeManifest` and a pure `upgradeReducer` that keeps old operation logs replayable |
 | [drive-override](./drive-override) | Custom container document that tracks children via the reactor's ADD_RELATIONSHIP action instead of document-drive's ADD_FILE, keeping container state O(1) |
