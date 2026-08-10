@@ -94,6 +94,12 @@ Plain reducers, no signer checks.
 
 ## 2. `auth-flag-rollout` — the cascading flags, and what "off" means
 
+> **Status: dropped** — the cascading flags are temporary rollout machinery, not a
+> durable surface worth a recipe. The one enduring lesson (flags flip per
+> document-sharing fleet, never per node) is documented in `document-acl`'s README,
+> and the flag-off contrast survives as a single "legacy" test in
+> `positional-delete`.
+
 **One-liner:** The same document and policy run under three reactor configurations — no
 flags, `documentDecisions` only, both flags — showing exactly which behavior each flag
 turns on, and the builder rejecting invalid combinations.
@@ -126,6 +132,13 @@ keep the recipe self-contained).
 ---
 
 ## 3. `positional-delete` — deletion as a position, not a tombstone
+
+> **Status: implemented** — see [`positional-delete/`](./positional-delete). Two
+> deviations from the sketch below: no backdating is needed (a real split-brain
+> gives the same shape with honest wall-clock timestamps), and the as-of-deletion
+> view is a load-path guarantee only — a reactor that already applied the tail
+> keeps its materialized view, with the effective operation stream as the
+> consensus artifact.
 
 **One-liner:** With `documentDecisions` on, a backdated `deleteDocument` arriving via
 sync refuses only the operations that sort after it — earlier operations survive,
