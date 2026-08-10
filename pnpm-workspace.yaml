@@ -45,6 +45,7 @@ packages:
   - positional-delete
   - rate-limiter
   - relational-db-subgraph
+  - revocation-race
   - role-based-auth
   - saga
   - semantic-search
