@@ -12,14 +12,14 @@
     "generate": "ph-cli generate document-model --document document-models/team-journal/team-journal.json"
   },
   "dependencies": {
-    "@powerhousedao/reactor": "6.2.2-dev.42",
-    "@powerhousedao/reactor-browser": "6.2.2-dev.42",
-    "@powerhousedao/shared": "6.2.2-dev.42",
-    "document-model": "6.2.2-dev.42",
+    "@powerhousedao/reactor": "catalog:",
+    "@powerhousedao/reactor-browser": "catalog:",
+    "@powerhousedao/shared": "catalog:",
+    "document-model": "catalog:",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@powerhousedao/ph-cli": "6.2.2-dev.42",
+    "@powerhousedao/ph-cli": "catalog:",
     "@types/node": "^22.0.0",
     "tsx": "^4.0.0",
     "vitest": "^4.1.0"

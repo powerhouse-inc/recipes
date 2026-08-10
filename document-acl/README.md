@@ -141,12 +141,6 @@ pnpm run generate
 The reducer implementations in `v1/src/reducers/` are scaffolded once and then left
 alone by codegen.
 
-## Version note
-
-This recipe pins `6.2.2-dev.42` directly instead of using the workspace catalog: the
-catalog's `6.2.0-dev` line predates the auth-scope actions and the
-`documentDecisions` / `authEnforcement` feature flags.
-
 ## License
 
 AGPL-3.0-only
