@@ -33,6 +33,7 @@ packages:
   - cross-document-reactor
   - custom-read-model
   - discord-webhook-processor
+  - document-acl
   - document-snapshot-exporter
   - document-versioning
   - drive-override

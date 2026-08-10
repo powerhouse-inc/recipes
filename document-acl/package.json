@@ -1,0 +1,27 @@
+{
+  "name": "@powerhousedao/example-document-acl",
+  "version": "0.0.0",
+  "description": "Example: platform-enforced document ACLs via the auth scope, with zero authorization code in reducers",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts",
+    "generate": "ph-cli generate document-model --document document-models/team-journal/team-journal.json"
+  },
+  "dependencies": {
+    "@powerhousedao/reactor": "6.2.2-dev.42",
+    "@powerhousedao/reactor-browser": "6.2.2-dev.42",
+    "@powerhousedao/shared": "6.2.2-dev.42",
+    "document-model": "6.2.2-dev.42",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@powerhousedao/ph-cli": "6.2.2-dev.42",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}

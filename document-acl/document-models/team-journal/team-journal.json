@@ -1,0 +1,86 @@
+{
+  "id": "powerhouse/team-journal",
+  "name": "Team Journal",
+  "extension": "tjrnl",
+  "description": "A shared journal whose write access is governed entirely by the platform auth scope; reducers contain no authorization code",
+  "author": {
+    "name": "Powerhouse",
+    "website": "https://powerhouse.inc"
+  },
+  "specifications": [
+    {
+      "version": 1,
+      "changeLog": [],
+      "state": {
+        "global": {
+          "schema": "type TeamJournalState {\n  title: String!\n  entries: [JournalEntry!]!\n}\n\ntype JournalEntry {\n  id: ID!\n  author: String!\n  text: String!\n  pinned: Boolean!\n}",
+          "initialValue": "{\"title\":\"\",\"entries\":[]}",
+          "examples": []
+        },
+        "local": {
+          "schema": "",
+          "initialValue": "",
+          "examples": []
+        }
+      },
+      "modules": [
+        {
+          "id": "7f3a9c21-5d0e-4b6a-9f2c-000000000001",
+          "name": "journal",
+          "description": "Journal operations. Reducers validate domain invariants only; access control is enforced by the platform auth scope, not in here.",
+          "operations": [
+            {
+              "id": "7f3a9c21-5d0e-4b6a-9f2c-000000000101",
+              "name": "ADD_ENTRY",
+              "description": "Append a journal entry. The author is read from the signer context for display; it is not an access check.",
+              "schema": "input AddEntryInput {\n  id: ID!\n  text: String!\n}",
+              "template": "",
+              "reducer": "if (state.entries.some((entry) => entry.id === action.input.id)) {\n  throw new DuplicateEntryError(`Entry ${action.input.id} already exists`);\n}\nstate.entries.push({\n  id: action.input.id,\n  author: action.context?.signer?.user?.address ?? \"anonymous\",\n  text: action.input.text,\n  pinned: false,\n});",
+              "errors": [
+                {
+                  "id": "duplicateEntry",
+                  "name": "DuplicateEntry",
+                  "code": "DUPLICATE_ENTRY",
+                  "description": "An entry with this id already exists",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            },
+            {
+              "id": "7f3a9c21-5d0e-4b6a-9f2c-000000000102",
+              "name": "PIN_ENTRY",
+              "description": "Pin an existing entry.",
+              "schema": "input PinEntryInput {\n  id: ID!\n}",
+              "template": "",
+              "reducer": "const entry = state.entries.find((candidate) => candidate.id === action.input.id);\nif (!entry) {\n  throw new EntryNotFoundError(`No entry ${action.input.id}`);\n}\nentry.pinned = true;",
+              "errors": [
+                {
+                  "id": "entryNotFound",
+                  "name": "EntryNotFound",
+                  "code": "ENTRY_NOT_FOUND",
+                  "description": "No entry exists with this id",
+                  "template": ""
+                }
+              ],
+              "examples": [],
+              "scope": "global"
+            },
+            {
+              "id": "7f3a9c21-5d0e-4b6a-9f2c-000000000103",
+              "name": "SET_TITLE",
+              "description": "Set the journal title.",
+              "schema": "input SetTitleInput {\n  title: String!\n}",
+              "template": "",
+              "reducer": "state.title = action.input.title;",
+              "errors": [],
+              "examples": [],
+              "scope": "global"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
