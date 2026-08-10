@@ -1,0 +1,37 @@
+scalar Unknown
+scalar DateTime
+scalar Address
+scalar AttachmentRef
+scalar Amount_Tokens
+scalar EthereumAddress
+scalar EmailAddress
+scalar Amount_Percentage
+scalar Date
+scalar URL
+scalar Amount_Money
+scalar OLabel
+scalar Currency
+scalar PHID
+scalar OID
+scalar Amount_Fiat
+scalar Amount_Currency
+scalar Amount_Crypto
+scalar Amount
+scalar Upload
+
+type FieldLogState {
+  observations: [Observation!]!
+}
+
+type Observation {
+  id: ID!
+  note: String!
+  recordedBy: String!
+}
+
+# log
+
+input LogObservationInput {
+  id: ID!
+  note: String!
+}
