@@ -99,12 +99,14 @@ model.
   signing key must include a reachable auth-administration grant in its initial
   policy, or `initializeAuth` is refused.
 
-## Non-goals (not shipped yet)
+## Non-goals here
 
 Grants with a `{group: ...}` or `{match: ...}` principal, or a `where` condition,
-parse and store today but **never match** — the evaluator skips them until the
-`authGroups` / `authConditions` stages ship. Don't demo a group grant and conclude
-enforcement is broken.
+parse and store but **never match** on a reactor without the `authGroups` /
+`authConditions` stages — the evaluator skips them. Don't demo a group grant on
+an older release and conclude enforcement is broken. Group principals have their
+own recipe: [`group-principals`](../group-principals), which needs a release
+carrying the `authGroups` stage.
 
 ## Running
 

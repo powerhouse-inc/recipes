@@ -23,6 +23,7 @@ catalog:
   "@powerhousedao/ph-cli": 6.2.2-dev.42
   "@powerhousedao/reactor": 6.2.2-dev.42
   "@powerhousedao/reactor-browser": 6.2.2-dev.42
+  "@powerhousedao/reactor-group": 6.2.2-dev.42
   "@powerhousedao/shared": 6.2.2-dev.42
   "@renown/sdk": 6.2.2-dev.42
   document-model: 6.2.2-dev.42
@@ -41,6 +42,7 @@ packages:
   - drive-override
   - external-feed-ingest
   - full-text-search
+  - group-principals
   - inbound-webhook-bridge
   - positional-delete
   - rate-limiter
