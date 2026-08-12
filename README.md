@@ -19,6 +19,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 | [drive-override](./drive-override) | Custom container document that tracks children via the reactor's ADD_RELATIONSHIP action instead of document-drive's ADD_FILE, keeping container state O(1) |
 | [external-feed-ingest](./external-feed-ingest) | Polling worker that ingests an external feed into a ledger document idempotently — dedup set and high-watermark seeded from document state, corrections modeled as explicit supersede operations |
 | [full-text-search](./full-text-search) | Reactor processor that maintains a PostgreSQL full-text search index over document state |
+| [group-principals](./group-principals) | A `reactor-group` roster document decides who may approve via a `{ group }` grant — hiring and offboarding are single membership operations, membership is judged at each operation's position, and a replica without the roster fails closed until it syncs |
 | [inbound-webhook-bridge](./inbound-webhook-bridge) | Standalone endpoint that verifies signed external webhooks against the raw bytes and dispatches them as payment-document actions, with replay-window and event-id dedup |
 | [positional-delete](./positional-delete) | Deletion as a position in the merged operation order — pre-delete operations survive sync, post-delete operations are stored denied, and both reactors converge without coordination |
 | [rate-limiter](./rate-limiter) | Reactor processor and auth gate that throttles users by signer address using a sliding window |
