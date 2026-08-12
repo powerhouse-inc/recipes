@@ -15,18 +15,20 @@ allowBuilds:
 # deleted upstream — its drive document model now lives at
 # @powerhousedao/shared/document-drive — and reactor declares its dependencies
 # properly from 6.1.0 on, so the whole family versions together as one group.
-# 6.2.2-dev.42 carries the ReactorBuilder.withDocumentModelSources rename the
-# recipes already use, plus the auth-scope actions and reactor feature flags.
+# 6.2.2-dev.44 carries the ReactorBuilder.withDocumentModelSources rename the
+# recipes already use, the complete auth-scope enforcement stages (all four
+# feature flags through authConditions), and the @powerhousedao/reactor-group
+# document model the group-principals recipe depends on.
 catalog:
-  "@powerhousedao/analytics-engine-browser": 6.2.2-dev.42
-  "@powerhousedao/analytics-engine-core": 6.2.2-dev.42
-  "@powerhousedao/ph-cli": 6.2.2-dev.42
-  "@powerhousedao/reactor": 6.2.2-dev.42
-  "@powerhousedao/reactor-browser": 6.2.2-dev.42
-  "@powerhousedao/reactor-group": 6.2.2-dev.42
-  "@powerhousedao/shared": 6.2.2-dev.42
-  "@renown/sdk": 6.2.2-dev.42
-  document-model: 6.2.2-dev.42
+  "@powerhousedao/analytics-engine-browser": 6.2.2-dev.44
+  "@powerhousedao/analytics-engine-core": 6.2.2-dev.44
+  "@powerhousedao/ph-cli": 6.2.2-dev.44
+  "@powerhousedao/reactor": 6.2.2-dev.44
+  "@powerhousedao/reactor-browser": 6.2.2-dev.44
+  "@powerhousedao/reactor-group": 6.2.2-dev.44
+  "@powerhousedao/shared": 6.2.2-dev.44
+  "@renown/sdk": 6.2.2-dev.44
+  document-model: 6.2.2-dev.44
 
 packages:
   - analytics-processor
