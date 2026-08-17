@@ -52,6 +52,7 @@ packages:
   - revocation-race
   - role-based-auth
   - saga
+  - scoped-reads
   - semantic-search
   - signed-operations-verifier
   - subscription-cli
