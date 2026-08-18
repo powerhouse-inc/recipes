@@ -33,6 +33,7 @@ catalog:
 packages:
   - analytics-processor
   - audit-trail
+  - auth-preflight
   - batch-progress
   - db-migrate
   - cross-document-reactor
