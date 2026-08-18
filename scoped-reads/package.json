@@ -1,0 +1,28 @@
+{
+  "name": "@powerhousedao/example-scoped-reads",
+  "version": "0.0.0",
+  "description": "Example: the read path of the auth scope — the same policy that refuses a write decides what a read returns, per scope, on the client rather than in the reactor",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts",
+    "generate": "ph-cli generate document-model --document document-models/expense-report/expense-report.json"
+  },
+  "dependencies": {
+    "@powerhousedao/reactor": "catalog:",
+    "@powerhousedao/reactor-browser": "catalog:",
+    "@powerhousedao/reactor-group": "catalog:",
+    "@powerhousedao/shared": "catalog:",
+    "document-model": "catalog:",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@powerhousedao/ph-cli": "catalog:",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}

@@ -27,6 +27,7 @@ Example integrations and utilities for [Powerhouse Reactor](https://github.com/p
 | [revocation-race](./revocation-race) | Convergent authorization: a grant revocation races an approval across two reactors, and both independently reach the same per-position verdict — no origin verdict shipped or trusted |
 | [role-based-auth](./role-based-auth) | Custom document model with creator-as-admin RBAC enforced inside the reducer via `action.context.signer` |
 | [saga](./saga) | Saga pattern via Reactor processor: operations on one document trigger operations on others, linked by a traceable saga context |
+| [scoped-reads](./scoped-reads) | The read path of the auth scope: one policy decides what every read returns, per scope and per identity, on the client rather than in the reactor |
 | [semantic-search](./semantic-search) | Reactor processor that embeds document state in-process (Transformers.js) into PGlite + pgvector and answers cosine-similarity queries |
 | [subscription-cli](./subscription-cli) | CLI tool for monitoring Reactor GraphQL subscriptions in real time |
 | [sync-health-monitor](./sync-health-monitor) | Sync health dashboard via EventBus subscriptions with GraphQL subgraph |
