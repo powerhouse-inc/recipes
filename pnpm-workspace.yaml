@@ -15,24 +15,27 @@ allowBuilds:
 # deleted upstream — its drive document model now lives at
 # @powerhousedao/shared/document-drive — and reactor declares its dependencies
 # properly from 6.1.0 on, so the whole family versions together as one group.
-# 6.2.2-dev.50 carries the ReactorBuilder.withDocumentModelSources rename the
+# 6.2.2-dev.52 carries the ReactorBuilder.withDocumentModelSources rename the
 # recipes already use, the complete auth-scope enforcement stages (all four
-# feature flags through authConditions), and the @powerhousedao/reactor-group
-# document model the group-principals recipe depends on.
+# feature flags through authConditions), the @powerhousedao/reactor-group
+# document model the group-principals recipe depends on, and
+# IReactorClient.evaluateActions / useCanExecute (the read-only admission
+# preflight the auth-preflight recipe is built on).
 catalog:
-  "@powerhousedao/analytics-engine-browser": 6.2.2-dev.50
-  "@powerhousedao/analytics-engine-core": 6.2.2-dev.50
-  "@powerhousedao/ph-cli": 6.2.2-dev.50
-  "@powerhousedao/reactor": 6.2.2-dev.50
-  "@powerhousedao/reactor-browser": 6.2.2-dev.50
-  "@powerhousedao/reactor-group": 6.2.2-dev.50
-  "@powerhousedao/shared": 6.2.2-dev.50
-  "@renown/sdk": 6.2.2-dev.50
-  document-model: 6.2.2-dev.50
+  "@powerhousedao/analytics-engine-browser": 6.2.2-dev.52
+  "@powerhousedao/analytics-engine-core": 6.2.2-dev.52
+  "@powerhousedao/ph-cli": 6.2.2-dev.52
+  "@powerhousedao/reactor": 6.2.2-dev.52
+  "@powerhousedao/reactor-browser": 6.2.2-dev.52
+  "@powerhousedao/reactor-group": 6.2.2-dev.52
+  "@powerhousedao/shared": 6.2.2-dev.52
+  "@renown/sdk": 6.2.2-dev.52
+  document-model: 6.2.2-dev.52
 
 packages:
   - analytics-processor
   - audit-trail
+  - auth-preflight
   - batch-progress
   - db-migrate
   - cross-document-reactor

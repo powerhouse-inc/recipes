@@ -290,21 +290,42 @@ actions `auth.ts:453`.
 
 ---
 
+## 7. `auth-preflight` — asking before writing
+
+> **Status: implemented** — see [`auth-preflight/`](./auth-preflight). It is the
+> first recipe to turn on `authConditions`, which is what makes the `where` clause
+> in its clerk grant apply at all.
+
+Every other recipe here demonstrates enforcement *after* dispatch — a failed job or
+a stored denied operation. `IReactorClient.evaluateActions` answers the other
+direction: given a batch of candidate operations, what would the reactor decide,
+without submitting any of them. A UI disables a control rather than offering an
+action that fails.
+
+The recipe's job is the caveat, not the feature. It predicts a batch, submits every
+candidate for real, and compares verdict to outcome one for one — then obtains an
+allow, revokes the grant behind it, and shows the same submit refused. The answer
+was right when it was given and wrong when it was used, which is why the submit path
+stays the only authority. It also pins the two ways a caller can misread the API:
+that a candidate's own input decides a conditional verdict (so a half-filled form
+predicts a half-filled form's answer), and that the flags-off refusal
+(`AuthEnforcementDisabledError`) means "cannot know" rather than "denied".
+
 ## Sequencing and scope notes
 
 - **Suggested build order:** 1 → 2 → 3 → 4, then 5 and 6 independently. Recipes 1–2
   share a document model; 3–4 introduce the two-reactor sync harness (crib the
   builder/`settle`/`sync` helpers from
   `packages/reactor/test/decision/auth-projection.test.ts:55-117`).
-- **Read gating is a candidate seventh recipe, not a footnote:** client-side scope
-  filtering (`canReadScope`/`filterReadableScopes` in
-  `packages/reactor/src/client/util.ts`) works *independently of the flags* — `auth`
-  and `document` scopes are always readable, domain scopes need `{can:"read", scope}`.
-  It's small enough that it may fold into recipe 1 as a section; decide when writing.
-- **Explicit non-goals everywhere:** `{group}` / `{match}` principals and `where`
-  conditions parse and store today but never match (grants carrying them are skipped),
-  because `authGroups` / `authConditions` haven't shipped. Each recipe README should
-  say this once so nobody demos a group grant and concludes enforcement is broken.
+- **Read gating shipped as its own recipe:** see [`scoped-reads/`](./scoped-reads).
+  The gate lives on the `ReactorClient`, so `reactor.get()` and `client.get()` return
+  different documents in the same process, and a withheld scope is absent from
+  `state` rather than present and empty.
+- **Group principals and conditions have both shipped:** `{group}` grants match
+  under `authGroups` (see [`group-principals/`](./group-principals)) and `where`
+  clauses under `authConditions` (see [`auth-preflight/`](./auth-preflight)). Below
+  their flag each still fails closed — a grant carrying one is skipped — which is
+  worth stating in a README so nobody demos one and concludes enforcement is broken.
 - **Denied ≠ erased:** several recipes surface stored denied operations. A shared
   README section (or a tiny shared helper) for "how to inspect denied operations"
   (`isDenied`, `deniedReason`, the closed consensus reason set) would keep the recipes
