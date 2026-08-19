@@ -4,10 +4,15 @@ CLI tool that exports document state and operation history to JSON files, demons
 
 ## What it demonstrates
 
-- **IReactor API** — low-level interface where mutations return `JobInfo` with consistency tokens
-- **Consistency tokens** — passed to reads (`reactor.get()`, `reactor.getOperations()`) to guarantee the read reflects prior writes
-- **OperationFilter** — filtering operations by action type, timestamp range, or revision
-- **IReactor vs IReactorClient** — run with `--mode reactor` or `--mode client` to compare the two APIs side by side
+`IReactor` is the low-level interface: every mutation returns a `JobInfo` rather than the
+document. `exportWithReactor` awaits the job with `JobAwaiter` and takes the
+`consistencyToken` off the completed job. Passing that token to `reactor.get()` and
+`reactor.getOperations()` guarantees the read reflects the write, even while background
+indexing is still catching up.
+
+`OperationFilter` narrows what comes back, by action type (`actionTypes`), timestamp range
+(`timestampFrom`, `timestampTo`), or revision (`sinceRevision`). The exporter passes an empty
+filter in `src/export-reactor.ts`.
 
 ### IReactor vs IReactorClient
 
@@ -15,9 +20,14 @@ CLI tool that exports document state and operation history to JSON files, demons
 |---|---|---|
 | Mutations return | `JobInfo` (must await manually) | The document (job awaited internally) |
 | Consistency | You pass `ConsistencyToken` to reads | Managed automatically |
-| Signing | Manual (pass `ISigner` to each call) | Automatic via configured signer |
-| `getOperations()` returns | `Record<string, PagedResults>` (per-scope) | `PagedResults` (flat) |
+| Signing | Manual (mutations like `create()` take an optional `ISigner`) | Automatic, from `ReactorClientBuilder.withSigner()` |
+| `getOperations()` returns | `Record<string, PagedResults>` keyed by scope | `PagedResults` (flat) |
 | Use when | You need fine-grained control over job lifecycle | You want a simpler, higher-level API |
+
+`ISigner` is the action-signing interface exported by `@powerhousedao/shared/document-model`.
+A scope is one named slice of a document's state. `reactor.getOperations()` keys its result
+by scope name (`global` and `document` in these exports), and `exportWithReactor` flattens
+that map into one array, tagging each operation with its `scope`.
 
 ## Usage
 

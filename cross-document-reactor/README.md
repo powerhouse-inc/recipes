@@ -4,15 +4,14 @@ Event-driven cross-document automation using `ReactorClient` subscriptions.
 
 ## What it demonstrates
 
-- **`reactorClient.subscribe()`** — broad subscription watching all document changes
-- **Cross-document workflows** — a change on one document triggers an action on a related document
-- **`execute()` from within a subscription handler** — the reactor as an event-driven automation engine
+A subscription callback can write. The handler passed to `reactorClient.subscribe()` acts on a document other than the one that changed: it calls the same client's `find()` and `rename()` in `src/index.ts`. The rule lives in that callback rather than in a processor, and [saga](../saga) shows the processor version of the same pattern.
 
 ## How it works
 
-1. Creates a drive with two documents: an **invoice** and a **task**, linked by naming convention (`Invoice-001` ↔ `Task-001-Invoice-001`)
+1. Creates a drive, the container document the others live under, holding an **invoice** and a **task** linked by naming convention (`Invoice-001` ↔ `Task-001-Invoice-001`)
 2. Subscribes to all document changes with an empty search filter (`{}`)
 3. When the invoice is renamed to include `[PAID]`, the subscription handler finds the related task and renames it to include `[CLOSED]`
+4. The handler ignores every event type except `DocumentChangeType.Updated`, and a `reacting` flag keeps it from re-entering while its own rename is in flight
 
 ## Running
 

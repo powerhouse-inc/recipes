@@ -1,10 +1,10 @@
 # Batch Progress
 
-Demonstrates multi-document wizard creation with dependency ordering using Reactor's `executeBatch` and real-time progress tracking via the EventBus.
+Demonstrates multi-document wizard creation with dependency ordering using Reactor's `executeBatch`, with per-job progress tracked through the EventBus, the reactor module's job-event stream.
 
 ## What it shows
 
-A "Create Project" flow that atomically creates 4 documents with dependencies:
+A "Create Project" flow that creates 4 documents in one `executeBatch` call, in dependency order:
 
 ```
 budget ──┐
@@ -12,11 +12,7 @@ budget ──┐
 scope  ──┘
 ```
 
-- **budget** and **scope** create in parallel (no dependencies)
-- **project** waits for both budget and scope
-- **drive** adds all three as files after project completes
-
-One call, one result, automatic dependency resolution.
+Budget and scope have no dependencies, so they create in parallel. Project waits for both, and drive adds all three as files once project completes.
 
 ### Without Reactor
 
@@ -28,7 +24,7 @@ const project = await createDocument(projectId, initProject);
 await addFilesToDrive(driveId, [budget, scope, project]);
 ```
 
-Four sequential calls, manual error handling, no atomicity.
+Four sequential calls, manual error handling, and nothing keeping other writes from interleaving.
 
 ### With Reactor
 
@@ -43,15 +39,15 @@ await reactor.executeBatch({
 });
 ```
 
-One call. Budget and scope run in parallel. Project waits for both. Drive waits for project. The reactor handles ordering, parallelism, and failure propagation.
+One call. `executeBatch` sorts the jobs topologically and turns each `dependsOn` key into a `queueHint`, so a job dequeues only once the jobs it names have resolved. There is no rollback: a job that fails ends at `FAILED`, and whatever earlier jobs wrote stays written.
 
 ## How it works
 
-1. **Embedded Reactor** — spins up an in-memory Reactor (PGlite, no external DB)
-2. **Drive creation** — creates a drive document to hold the project files
-3. **Batch submission** — submits 4 dependent jobs via `IReactor.executeBatch`
-4. **EventBus tracking** — subscribes to `JOB_PENDING`, `JOB_RUNNING`, `JOB_WRITE_READY`, `JOB_READ_READY`, and `JOB_FAILED` events for real-time status updates
-5. **Live progress** — renders a multi-bar terminal display showing each job's status
+1. Spins up an in-memory Reactor with `ReactorBuilder`: PGlite, an in-process Postgres, no external DB.
+2. Creates a drive document to hold the project files.
+3. Submits the 4 jobs built by `buildCreateProjectBatch` via `IReactor.executeBatch`.
+4. Subscribes on the EventBus to `JOB_PENDING`, `JOB_RUNNING`, `JOB_WRITE_READY`, `JOB_READ_READY`, and `JOB_FAILED` for status updates.
+5. Renders a multi-bar terminal display showing each job's status. Recorded events replay with a short delay, since they fire while `executeBatch` runs.
 
 ## Job status lifecycle
 

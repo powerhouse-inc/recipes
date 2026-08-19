@@ -1,46 +1,47 @@
 # Revocation Race
 
-Convergent authorization across reactors. Alice revokes Bob's approval grant on one
-reactor while Bob approves an expense on another — **both succeed locally**, because
-no transaction spans two reactors. What keeps the fleet honest is that every reactor
-judges every operation **at its position in the merged order**: after syncing both
-directions, both reactors independently reach the same verdict, with no origin
-verdict shipped or trusted.
+Convergent authorization across reactors. A reactor (`@powerhousedao/reactor`) is the
+Powerhouse node that stores documents and applies their operations. Alice revokes
+Bob's approval grant on one reactor while Bob approves an expense on another.
+**Both succeed locally**, because no transaction spans two reactors. What keeps the
+fleet honest is that every reactor judges every operation **at its position in the
+merged order**. After syncing both directions, both reactors independently reach the
+same verdict, and no origin verdict is shipped or trusted.
 
 The demo runs the race twice on one `expense-report` document, with honest wall-clock
 ordering both times:
 
-- **Revocation sorts first** → both reactors deny the approval; the expense stays
+- **Revocation sorts first** → both reactors deny the approval. The expense stays
   `PENDING`, and the refused approval is stored with
   `deniedReason: "no grant permits this operation"`.
-- **Approval sorts first** → both reactors keep it; the expense is `APPROVED` and
+- **Approval sorts first** → both reactors keep it. The expense is `APPROVED` and
   records Bob as approver.
-
-Same operation type, opposite verdicts, decided purely by position.
 
 ## What it demonstrates
 
-- **One rule, two times** — enforcement is *preventive* locally (a fresh approval
-  fails at origin once the revocation is known; nothing is stored) and *convergent*
-  across reactors (remote history is re-judged on arrival at its own position).
-- **Denials are consensus artifacts** — a refused operation keeps its place in the
-  stored stream with a reason from a closed, replicated set; inspect with
+- **One rule, two times.** Enforcement is *preventive* locally: a fresh approval
+  fails at origin once the revocation is known, and nothing is stored. Across
+  reactors it is *convergent*: remote history is re-judged on arrival at its own
+  position.
+- **Denials are consensus artifacts**: a refused operation keeps its place in the
+  stored stream with a reason from a closed, replicated set. Inspect with
   `isDenied` / `garbageCollect(sortOperations(...))`.
-- **Re-judgment on late policy arrival** — when the revocation reaches the reactor
+- **Re-judgment on late policy arrival**: when the revocation reaches the reactor
   that had already applied the approval, that reactor retracts it in the effective
   stream (see the view scope note in [`positional-delete`](../positional-delete)).
-- **The auth stream is strictly timestamp-monotonic** — a backdated policy edit is
+- **The auth stream is strictly timestamp-monotonic**: a backdated policy edit is
   refused outright (`AuthTimestampNotMonotonicError`), and auth operations are never
   reshuffled. Positional judgment of domain operations only works because the policy
   stream itself has one authoritative order.
 
 ## The rejected alternative
 
-The obvious design is to judge an operation once, at its origin, and ship the verdict
-with it. That verdict would be wrong the moment a concurrent policy change sorts
-before the operation — and every reactor would have to either trust it (divergence)
-or re-derive it anyway. Position-based judgment makes the verdict a pure function of
-the merged history, so agreement on history *is* agreement on authorization.
+The simplest-looking design is to judge an operation once, at its origin, and ship
+the verdict with it. That verdict would be wrong the moment a concurrent policy
+change sorts before the operation, and every reactor would then have to either trust
+it (divergence) or re-derive it anyway. Position-based judgment makes the verdict a
+pure function of the merged history, so agreement on history *is* agreement on
+authorization.
 
 ## Policy setup
 
@@ -52,10 +53,10 @@ the merged history, so agreement on history *is* agreement on authorization.
 | `g-bob-approve` | allow | Bob | `execute` `APPROVE_EXPENSE` on `global` |
 
 Only Alice's reactor ever writes the auth scope. That is a deliberate pattern, not
-just demo simplification: because the auth stream must stay strictly monotonic and is
+just demo simplification. Because the auth stream must stay strictly monotonic and is
 never reshuffled, concurrent policy edits from multiple reactors can conflict on
-merge — a single policy-writing home (or coordinated administration) avoids that
-class of problem entirely.
+merge. A single policy-writing home (or coordinated administration) avoids that class
+of problem entirely.
 
 ## State shape
 
@@ -105,9 +106,9 @@ pnpm run generate
 
 ## Related recipes
 
-- [`document-acl`](../document-acl) — the grant stack this recipe races: principals,
-  capabilities, last-applicable-grant-wins.
-- [`positional-delete`](../positional-delete) — the same positional machinery applied
+- [`document-acl`](../document-acl): the grant stack this recipe races (principals,
+  capabilities, last-applicable-grant-wins).
+- [`positional-delete`](../positional-delete): the same positional machinery applied
   to deletion, including the load-path vs retraction-path view guarantee.
 
 ## License

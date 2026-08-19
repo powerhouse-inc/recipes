@@ -4,14 +4,13 @@ Saga pattern via Reactor processor: operations on one document trigger operation
 
 ## What it demonstrates
 
-- **`IProcessor` as a saga coordinator** — a processor that reacts to operations and dispatches follow-up actions on other documents
-- **Saga correlation via DB** — a `saga_id` ties every step together, tracked entirely in the processor's own table (no changes to document interfaces)
-- **`IReactor.execute()` from within a processor** — the processor dispatches actions to other documents in response to incoming operations
-- **Re-entrancy guard** — prevents the processor from reacting to its own dispatched operations
+- **`IProcessor` as a saga coordinator**: `SagaProcessor.onOperations` reacts to incoming operations and dispatches the follow-up actions on other documents through `IReactor.execute()`
+- **Saga correlation via DB**: a `saga_id` ties every step together, tracked entirely in the processor's own `saga_log` table (no changes to document interfaces)
+- A re-entrancy guard keeps the processor from reacting to its own dispatched operations. `SagaProcessor` sets a `processing` flag while it dispatches, and `onOperations` returns immediately whenever that flag is already set (`src/processor.ts`).
 
 ## How it works
 
-1. Creates a drive with three documents: **Order-001**, **Payment-001**, and **Fulfillment-001**
+1. Creates a drive, the container document the others live under, holding **Order-001**, **Payment-001**, and **Fulfillment-001**
 2. Registers a `SagaProcessor` with step definitions that form a chain:
    - `Order-001 [CREATED]` &rarr; dispatches rename on Payment to `Payment-001 [REQUESTED]`
    - `Payment-001 [REQUESTED]` &rarr; dispatches rename on Fulfillment to `Fulfillment-001 [STARTED]`

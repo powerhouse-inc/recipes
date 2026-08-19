@@ -1,12 +1,12 @@
 # Rate Limiter
 
-A Reactor `IProcessor` paired with an `AuthService` gate to throttle users by signer address, preventing any single user from overwhelming the system with excessive operations.
+A Reactor `IProcessor` paired with an `AuthService` gate to throttle users by signer address, preventing any single user from overwhelming the system with excessive operations. The Reactor (`@powerhousedao/reactor`) is the Powerhouse node that stores documents and applies their operations.
 
 ## How it works
 
 The recipe has two components that form a feedback loop:
 
-1. **`RateLimiterProcessor`** sits inside the Reactor and observes every operation. It extracts the signer address from `operation.action.context.signer.user.address`, counts operations per user within a sliding time window, and calls `authService.cooldown()` when a user exceeds the threshold. The processor never throws — it only signals.
+1. **`RateLimiterProcessor`** sits inside the Reactor and observes every operation. It extracts the signer address from `operation.action.context.signer.user.address`, counts operations per user within a sliding time window, and calls `authService.cooldown()` when a user exceeds the threshold. The processor never throws. It only signals `AuthService` to block the user at the gate.
 
 2. **`AuthService`** sits in front of the Reactor (e.g. in a GraphQL resolver or HTTP middleware). Before forwarding a mutation, the caller checks `authService.isAllowed(address)`. If the user is on cooldown, the response includes `retryAfterMs` so the client knows when to retry.
 
@@ -16,14 +16,14 @@ Client → [AuthService gate] → Reactor → RateLimiterProcessor → authServi
               └────────────────────────────────────────────────────────┘
 ```
 
-Operations without a signer are silently skipped. Counters are in-memory and reset on processor disconnect or restart.
+Operations without a signer are silently skipped. Counters live in an in-memory per-address map, cleared by `RateLimiterProcessor.onDisconnect()` and empty after a restart.
 
 ## Architecture
 
 | Module | Purpose |
 |--------|---------|
-| `src/auth-service.ts` | `AuthService` — in-memory cooldown gate with `cooldown()`, `isAllowed()`, and `getCooldownRemaining()` |
-| `src/rate-limiter-processor.ts` | `RateLimiterProcessor` — the `IProcessor` implementation; also exports `createRateLimiterFactory` |
+| `src/auth-service.ts` | `AuthService`: in-memory cooldown gate with `cooldown()`, `isAllowed()` (returns `AuthCheckResult`), and `getCooldownRemaining()` |
+| `src/rate-limiter-processor.ts` | `RateLimiterProcessor`, the `IProcessor` implementation, plus `createRateLimiterFactory` and the `RateLimiterConfig` type |
 
 ## Configuration
 
@@ -71,15 +71,6 @@ if (!check.allowed) {
 
 ```ts
 const remainingMs = authService.getCooldownRemaining(userAddress);
-```
-
-## Exports
-
-```ts
-export { AuthService } from "./src/auth-service.js";
-export type { AuthCheckResult } from "./src/auth-service.js";
-export { RateLimiterProcessor, createRateLimiterFactory } from "./src/rate-limiter-processor.js";
-export type { RateLimiterConfig } from "./src/rate-limiter-processor.js";
 ```
 
 ## Tests

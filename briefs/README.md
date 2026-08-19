@@ -13,7 +13,7 @@ All package references point into the registry-audit cache:
 ~/projects/powerhouse/powerhouse/.cache/registry-audit/extracted/<package>/
 ```
 
-These are extracted npm tarballs (compiled `dist/` output — readable JS plus `.d.ts`
+These are extracted npm tarballs (compiled `dist/` output: readable JS plus `.d.ts`
 and `powerhouse.manifest.json`). If the cache has been cleared, regenerate it from the
 monorepo:
 
@@ -25,8 +25,8 @@ pnpm audit:download && pnpm audit:extract   # tools/registry-audit
 ## Repo conventions a new recipe should follow
 
 - Standalone package named `@powerhousedao/example-<name>`, `"private": true`, AGPL-3.0-only.
-- Powerhouse deps via `catalog:` (see root `pnpm-workspace.yaml`; a single catalog
-  tracks the `6.2.0-dev` line). The `document-drive` package is dead — the drive
+- Powerhouse deps via `catalog:` (see root `pnpm-workspace.yaml`). A single catalog
+  tracks the `6.2.0-dev` line. The `document-drive` package is dead. The drive
   document model lives at `@powerhousedao/shared/document-drive`.
 - Flat files or `src/`, a runnable `demo.ts` (`pnpm start` via tsx), vitest tests, a README.
 - Register the new directory in `pnpm-workspace.yaml` `packages:` and add a row to the

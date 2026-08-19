@@ -4,19 +4,16 @@ Subscribes to `SyncEventTypes` on the Reactor EventBus and maintains a live heal
 
 ## What it shows
 
-- **EventBus subscriptions** — listens to all five sync event types (`SYNC_PENDING`, `SYNC_SUCCEEDED`, `SYNC_FAILED`, `DEAD_LETTER_ADDED`, `CONNECTION_STATE_CHANGED`)
-- **ReactorModule internals** — accesses `eventBus` and `syncModule` from the built `ReactorModule`
-- **Two-reactor sync** — wires two embedded reactors via a custom `InternalChannel` (no network, direct in-process delivery)
-- **GraphQL subgraph** — serves a `syncHealth` query with counters, connection states, and recent errors
-- **Live dashboard** — refreshing terminal display with health status, sync counters, and connection states
+The recipe reaches into the built `ReactorModule` for two handles: `eventBus`, which the health monitor subscribes to, and `syncModule`, which registers the remote on each side. The demo then drives the pair through failure and recovery, so all five sync event types fire at least once.
 
 ## How it works
 
-1. **Two embedded reactors** — builds reactor A and reactor B, each with in-memory PGlite
-2. **Internal channels** — a shared `IChannelFactory` creates `InternalChannel` pairs that deliver operations directly between reactors
-3. **Health monitor** — subscribes to reactor A's `EventBus` for all `SyncEventTypes`, maintains counters and connection state
-4. **GraphQL server** — serves the health metrics via a `syncHealth` query on `http://localhost:4001/graphql`
-5. **Demo scenario** — runs through four phases: normal sync, connection state changes, simulated failure, and recovery
+1. Builds reactor A and reactor B, each on in-memory PGlite, an in-process Postgres, no external DB.
+2. Wires them together with a shared `IChannelFactory` that creates `InternalChannel` pairs, handing operations from one reactor's outbox straight into the other's inbox with no network in between.
+3. Attaches a `SyncHealthMonitor` to reactor A's `EventBus`, subscribing to all five sync event types (`SYNC_PENDING`, `SYNC_SUCCEEDED`, `SYNC_FAILED`, `DEAD_LETTER_ADDED`, `CONNECTION_STATE_CHANGED`). The monitor keeps counters, connection states, and the last 50 errors.
+4. Serves those metrics through a `syncHealth` GraphQL query on `http://localhost:4001/graphql`.
+5. Redraws a terminal dashboard every two seconds with health status, sync counters, connection states, and the five most recent errors.
+6. Runs the demo scenario through the four phases below.
 
 ### Demo phases
 

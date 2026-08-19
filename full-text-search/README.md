@@ -1,6 +1,6 @@
 # Full-Text Search Processor
 
-A Reactor `IProcessor` that indexes document state into a PostgreSQL full-text search table, enabling ranked keyword search across all documents managed by a Reactor instance.
+A Reactor `IProcessor` that indexes document state into a PostgreSQL full-text search table, enabling ranked keyword search across all documents managed by a Reactor instance. A Reactor (`@powerhousedao/reactor`) stores documents and their operation history and routes each batch of operations to the processors registered with it.
 
 ## How it works
 
@@ -15,16 +15,23 @@ When operations arrive, the processor:
 
 | Module | Purpose |
 |--------|---------|
-| `processor.ts` | `SearchProcessor` — the `IProcessor` implementation |
+| `processor.ts` | `SearchProcessor`: the `IProcessor` implementation |
 | `schema.ts` | Kysely type definitions for the `search_index` table |
-| `migrations.ts` | `up` / `down` functions to create/drop the table and GIN index |
-| `query.ts` | `createSearchQuery` — returns a `search(term, limit?)` helper using `ts_rank` |
-| `utils.ts` | `flattenToSearchableText` — recursively extracts all string values from a JSON state |
+| `migrations.ts` | `up` / `down` functions to create/drop the table and `idx_search_tsv`, a GIN (inverted) index on `tsv` |
+| `query.ts` | `createSearchQuery`: returns a `search(term, limit?)` helper using `ts_rank` |
+| `utils.ts` | `flattenToSearchableText`: recursively extracts all string values from a JSON state |
 
 ## Prerequisites
 
 - PostgreSQL with full-text search support (`tsvector`, `plainto_tsquery`, `ts_rank`)
 - [Kysely](https://kysely.dev/) database instance
+
+## Run it
+
+```sh
+pnpm start   # demo.ts: builds a reactor, indexes three documents, runs searches
+pnpm test    # vitest against in-process PGlite
+```
 
 ## Usage
 
@@ -44,6 +51,8 @@ import { SearchProcessor } from "@powerhousedao/example-full-text-search";
 const processor = new SearchProcessor(db);
 ```
 
+Hand it to the Reactor's `ProcessorManager`: `registerFactory("full-text-search", () => [{ processor, filter: { branch: ["main"] }, startFrom: "beginning" }])`. `demo.ts` does this against a `ReactorBuilder` module.
+
 ### Query the index
 
 ```ts
@@ -56,11 +65,4 @@ const results = await search.search("budget allocation", 10);
 
 ## Exports
 
-```ts
-export { SearchProcessor } from "./processor.js";
-export { createSearchQuery } from "./query.js";
-export type { SearchResult } from "./query.js";
-export type { SearchDB, SearchIndex } from "./schema.js";
-export { flattenToSearchableText } from "./utils.js";
-export { up, down } from "./migrations.js";
-```
+Beyond the three functions used above, `index.ts` exports `down` (drops the index, then the table), `flattenToSearchableText`, and the types `SearchResult`, `SearchDB`, and `SearchIndex`.

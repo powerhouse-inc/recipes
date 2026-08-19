@@ -1,53 +1,58 @@
 # Auth Preflight
 
 Every other auth recipe in this repo shows the reactor refusing a write **after**
-it arrives — a failed job, or an operation stored with a `deniedReason`. This one
+it arrives: a failed job, or an operation stored with a `deniedReason`. This one
 asks first. `evaluateActions` takes a batch of candidate operations and answers
 what the reactor *would* decide about each, without submitting any of them, so a
 UI can disable a control instead of offering an action that fails.
 
 The answer is decided by the same registered decision model that admits a real
-write, at the same stream heads, over the same policy. It is not a second
-implementation of the rules living in the client, and it is not the legacy
-host-side permission tables — those answer which addresses a host lets near a
-drive, which is a different question and never composed with this one.
+write, over the same policy, at the same stream heads: the newest revision of
+every scope the model reads. Registered means the reactor's own, the one
+`selectDecisionModel` derives from its feature flags and its document model
+registry. A client answers a preflight only from the model its reactor holds.
 
-This recipe picks up where [`document-acl`](../document-acl) leaves off. There,
-the policy refuses a write you already sent. Here, you find out before you send
-it — and find out, too, exactly how far that answer can be trusted.
+The preflight is not a second implementation of the rules living in the client,
+and it is not the legacy host-side permission tables. Those decide which
+addresses a host lets near a drive at all, and they refuse with
+`Forbidden: insufficient permissions` rather than with a verdict. That is a
+different question, and the two are never composed.
+
+This recipe picks up where [`document-acl`](../document-acl) leaves off.
 
 ## What it demonstrates
 
-- **The prediction matches the submit** — the batch is predicted first, then every
+- **The prediction matches the submit**: the batch is predicted first, then every
   candidate is actually executed, and the verdicts are compared one for one. If
   these could disagree, a UI built on the preflight would lie to its user.
-- **A refusal names its reason** — the verdict carries the consensus string the
+- **A refusal names its reason**: the verdict carries the consensus string the
   reactor would have recorded (`no grant permits this operation`), so a control
   can explain itself rather than just going grey.
-- **The aggregates are what a control asks** — `anyAllowed` is the question a
+- **The aggregates are what a control asks**: `anyAllowed` is the question a
   toolbar has, `allAllowed` the one a form has. Over an empty batch every
   aggregate is false: nothing asked about is nothing allowed *and* nothing denied.
-- **The subject is a parameter** — one client answers for many principals, so a
-  server can ask on behalf of whoever is calling it rather than only for itself.
-- **The candidate's input is part of the question** — the clerk's grant carries
+- **The subject is a parameter**: the `subject` argument to `evaluateActions`
+  defaults to the client's own signer, so a server can ask on behalf of whoever
+  is calling it rather than only for itself.
+- **The candidate's input is part of the question**: the clerk's grant carries
   `where: { lt: [{ attr: "action.input.amountCents" }, …] }`, so a half-filled
   form predicts the verdict a half-filled form earns. This is what makes a submit
   button that enables as the user types a smaller number correct rather than lucky.
-- **A document-scope candidate is judged by the document it names** — `DELETE_DOCUMENT`
+- **A document-scope candidate is judged by the document it names**: `DELETE_DOCUMENT`
   carries its target in `input.documentId`, and the policy consulted is that
   document's, not the one the call was addressed to.
-- **It is a prediction, not a promise** — an allow is obtained, the grant behind it
+- **It is a prediction, not a promise**: an allow is obtained, the grant behind it
   is revoked, and the very same submit is refused. The answer was right when it
   was given and wrong when it was used.
-- **Unsupported is not denied** — a reactor without `authEnforcement` holds no
+- **Unsupported is not denied**: a reactor without `authEnforcement` holds no
   decision model and throws `AuthEnforcementDisabledError`. A caller reads that as
-  "cannot know" and leaves its controls alone; reading it as a refusal would grey
+  "cannot know" and leaves its controls alone. Reading it as a refusal would grey
   out every button on a deployment that never asked for enforcement.
 
 ## The policy
 
 Two roles over one expense report. The manager is unrestricted in the `global`
-scope; the clerk may submit, but only below the approval threshold — and that
+scope. The clerk may submit, but only below the approval threshold, and that
 limit is a condition on the action's own input, not a rule in the reducer:
 
 ```ts
@@ -62,7 +67,7 @@ limit is a condition on the action's own input, not a rule in the reducer:
 
 This is the first recipe in the repo to turn on `authConditions`, which is what
 makes a `where` clause apply at all. Below that flag a conditional grant never
-matches, so it fails closed — and the preflight fails closed with it, which is
+matches, so it fails closed, and the preflight fails closed with it. That is
 the only way a prediction and an admission can agree.
 
 ## What it does not cover
@@ -83,10 +88,7 @@ pnpm test    # vitest: agreement, aggregates, conditions, routing, staleness
 pnpm start   # narrated walkthrough in five acts
 ```
 
-## Files
-
-| File | What's in it |
-|------|--------------|
-| `src/demo.ts` | The narrated walkthrough — predicted-vs-actual table, then the staleness and flags-off acts |
-| `tests/auth-preflight.test.ts` | One test per claim above |
-| `document-models/expense-report/` | The model, generated by `ph-cli` from `expense-report.json` |
+`src/demo.ts` prints predicted against actual for every candidate, then plays the
+staleness and flags-off acts. `tests/auth-preflight.test.ts` holds one test per
+claim above. The expense report model under `document-models/expense-report/` is
+generated by `ph-cli` from `expense-report.json`.

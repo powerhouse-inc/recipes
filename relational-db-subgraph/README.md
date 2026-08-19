@@ -1,19 +1,13 @@
 # Relational DB Subgraph
 
-A complete relational DB processor recipe demonstrating the academy flagship tutorial pattern:
-
-- **RelationalDbProcessor** — extends the base class with `initAndUpgrade()`, namespaced DB, and type-safe `query` builder
-- **Kysely migrations** — up/down migrations creating `documents` and `document_tags` tables
-- **Typed schema** — full Kysely DB interface with `CatalogDB`, `DocumentRow`, and `DocumentTagRow`
-- **Type-safe queries** — Kysely query layer with joins, filtering by type/tag, and pagination
-- **GraphQL subgraph** — graphql-yoga server exposing the catalog data, ready for supergraph composition
+A relational DB processor that catalogs every document it sees, with Kysely migrations, a typed query layer, and a GraphQL subgraph over the result. This is the pattern `ph generate --processor` and `ph generate --subgraph` produce.
 
 ## What it does
 
-The `CatalogProcessor` watches all documents flowing through the Reactor (document-type-agnostic) and maintains a denormalized relational view:
+A Reactor (`@powerhousedao/reactor`) stores documents and their operation history and hands each batch of operations to the processors registered with it. The `CatalogProcessor` watches all documents flowing through the Reactor (document-type-agnostic) and maintains a denormalized relational view:
 
-- **`documents`** table — stores document metadata (ID, type, name, content summary, revision)
-- **`document_tags`** table — stores tags extracted from document state
+- `documents` stores document metadata: ID, type, name, content summary, revision, and `updated_at`.
+- `document_tags` stores tags extracted from document state by `extractTags`, which reads the `tags` or `labels` array.
 
 The GraphQL subgraph exposes this data via queries like `documents`, `document(id)`, `documentsByType`, and `documentsByTag`.
 
@@ -21,11 +15,11 @@ The GraphQL subgraph exposes this data via queries like `documents`, `document(i
 
 | Generated artifact | File in this recipe |
 |---|---|
-| `ph generate --processor` | `src/processor.ts` — `CatalogProcessor extends RelationalDbProcessor<CatalogDB>` |
-| `ph generate --subgraph` | `src/subgraph.ts` — GraphQL SDL + resolvers backed by the query layer |
-| Schema types | `src/schema.ts` — Kysely DB interface |
-| Migrations | `src/migrations.ts` — `up()`/`down()` functions |
-| Query layer | `src/query.ts` — type-safe Kysely queries with joins |
+| `ph generate --processor` | `src/processor.ts`: `CatalogProcessor extends RelationalDbProcessor<CatalogDB>`, which gives it namespaced DB access, `initAndUpgrade()` to apply migrations, and a type-safe `query` builder |
+| `ph generate --subgraph` | `src/subgraph.ts`: `createCatalogSchema` builds the GraphQL SDL and resolvers over the query layer, `startCatalogServer` serves them with graphql-yoga |
+| Schema types | `src/schema.ts`: the Kysely DB interface `CatalogDB`, with the `DocumentRow` and `DocumentTagRow` row types |
+| Migrations | `src/migrations.ts`: `up()` creates both tables and their indexes, `down()` drops them |
+| Query layer | `src/query.ts`: `createCatalogQuery` returns typed reads with a join onto `document_tags`, filtering by type or tag, and `limit`/`offset` pagination |
 
 ## Usage
 
@@ -58,7 +52,7 @@ startCatalogServer(db, 4002);
 
 ## Supergraph composition
 
-This subgraph can be composed into a supergraph alongside other subgraphs (e.g., the Reactor's built-in GraphQL endpoint). With a gateway like Apollo Router or GraphQL Mesh, you can query documents from the catalog and other sources in a single request.
+`createCatalogSchema` in `src/subgraph.ts` returns a standalone schema, so a gateway like Apollo Router or GraphQL Mesh can compose it alongside other subgraphs, such as the Reactor's built-in GraphQL endpoint. One request then spans the catalog and the other sources. Nothing in this recipe runs a gateway, so the composition itself is untested here.
 
 ## Running tests
 
@@ -66,7 +60,7 @@ This subgraph can be composed into a supergraph alongside other subgraphs (e.g.,
 pnpm test
 ```
 
-Tests use PGlite (embedded PostgreSQL) — no external database required.
+Tests use PGlite (embedded PostgreSQL), so no external database is required. `pnpm start` runs `src/demo.ts`, which builds a Reactor, creates three documents, and prints the catalog rows.
 
 ## License
 

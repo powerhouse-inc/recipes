@@ -1,7 +1,7 @@
 {
   "name": "@powerhousedao/batch-progress",
   "version": "1.0.0",
-  "description": "Batch document creation with real-time progress tracking via Reactor EventBus",
+  "description": "Batch document creation with per-job progress tracked through Reactor EventBus job events",
   "license": "AGPL-3.0-only",
   "type": "module",
   "private": true,

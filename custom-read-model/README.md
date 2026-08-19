@@ -1,10 +1,10 @@
 # Custom Read Model
 
-A custom `IReadModel` implementation registered via `ReactorBuilder.withReadModel()` that maintains a document-count-per-type materialized view. Demonstrates the read model lifecycle, the pre-ready guarantee, and how read models differ from processors.
+A custom `IReadModel` implementation registered via `ReactorBuilder.withReadModel()` that maintains a document-count-per-type materialized view. Demonstrates the read model lifecycle, the pre-ready guarantee (counts are current before `JOB_READ_READY` fires), and how read models differ from processors.
 
 ## How it works
 
-`DocumentCountReadModel` implements `IReadModel` directly — it receives every operation written to the reactor's operation store via `indexOperations()` and increments an in-memory counter keyed by `context.documentType`.
+`DocumentCountReadModel` implements `IReadModel` directly. It receives every operation written to the reactor's operation store via `indexOperations()` and increments an in-memory counter keyed by `context.documentType`.
 
 ```
 Operation written → JOB_WRITE_READY → ReadModelCoordinator
@@ -18,24 +18,24 @@ Operation written → JOB_WRITE_READY → ReadModelCoordinator
 
 | | Read Model (IReadModel) | Processor (IProcessor) |
 |--|--|--|
-| Phase | **Pre-ready** — completes before `JOB_READ_READY` | **Post-ready** — runs after `JOB_READ_READY` |
+| Phase | **Pre-ready**: completes before `JOB_READ_READY` | **Post-ready**: runs after `JOB_READ_READY` |
 | Purpose | Derived views that must be queryable immediately | Side-effects (webhooks, notifications, sync) |
 | Registration | `ReactorBuilder.withReadModel()` | `ProcessorManager.registerFactory()` |
 | Receives | `OperationWithContext[]` via `indexOperations()` | `OperationWithContext[]` via `onOperations()` |
 
 ### Why implement IReadModel directly?
 
-`BaseReadModel` provides catch-up/rewind via the `ViewState` table and requires `IOperationIndex`, `IWriteCache`, and `IConsistencyTracker` — useful for persistent read models but unnecessary for a simple in-memory counter. Implementing `IReadModel` directly keeps the example minimal and shows the core contract.
+`BaseReadModel` tracks its progress in the `ViewState` table so it can catch up or rewind, and its constructor takes a database handle plus three reactor internals: `IOperationIndex`, `IWriteCache`, and `IConsistencyTracker`. Those are constructed inside `buildModule()`, so a subclass registers through `withReadModelFactory()` rather than `withReadModel()`. That cost buys persistence, which an in-memory counter does not need. Implementing `IReadModel` directly keeps the example minimal and shows the core contract.
 
 ### buildModule() internals
 
-`ReactorBuilder.buildModule()` returns a `ReactorModule` with direct access to the event bus, database, operation store, and other internals — useful for advanced integration, testing, or custom wiring.
+`ReactorBuilder.buildModule()` returns an `InProcessReactorModule`: the event bus, database, operation store, and the rest of the reactor's dependency graph. `src/index.ts` destructures `eventBus` from it and subscribes to `JOB_READ_READY` directly.
 
 ## Architecture
 
 | Module | Purpose |
 |--------|---------|
-| `src/document-count-read-model.ts` | `DocumentCountReadModel` — the `IReadModel` implementation |
+| `src/document-count-read-model.ts` | `DocumentCountReadModel`: `indexOperations()` writes the counter, `getCounts()` and `getCount()` read it |
 | `src/index.ts` | Demo: builds a reactor, creates a document, shows the read model counts inside `JOB_READ_READY` |
 
 ## Usage
@@ -82,10 +82,4 @@ const budgetOps = countReadModel.getCount("powerhouse/budget");
 
 ```sh
 pnpm test
-```
-
-## Exports
-
-```ts
-export { DocumentCountReadModel } from "./src/document-count-read-model.js";
 ```

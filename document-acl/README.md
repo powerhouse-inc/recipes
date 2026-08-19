@@ -1,34 +1,31 @@
 # Document ACL
 
 A custom `team-journal` document model whose write access is governed entirely by the
-platform auth scope — no authorization code in any reducer. Policy lives in the
-document as ordinary replicated state (`state.auth`), is edited with four platform
-actions, and is enforced at admission by the reactor when the `authEnforcement`
-feature flag is on.
+platform auth scope. No authorization code in any reducer. Policy lives in the
+document as ordinary replicated state (`state.auth`) and is edited with four platform
+actions: `initializeAuth`, `setGrant`, `moveGrant`, `removeGrant`. The reactor enforces
+it at admission when the `authEnforcement` feature flag is on.
 
 This recipe is the deliberate counterpart to [`role-based-auth`](../role-based-auth):
 same outcome (callers gated per operation), opposite mechanism. There, every reducer
 starts with signer checks and the rules are baked into the model. Here the reducers
-validate domain invariants only, and the rules are data — inspectable, replicated,
+validate domain invariants only, and the rules are data: inspectable, replicated,
 and changeable at runtime without touching the model.
 
 ## What it demonstrates
 
-- **The cascading feature flags** — `authEnforcement` requires `documentDecisions`;
-  the builder validates the combination eagerly and rejects unknown flag names.
-- **Open until initialized** — an uninitialized policy (`state.auth.version === 0`)
-  leaves the document open; `initializeAuth` flips the default to deny.
-- **Grant anatomy** — principals (`{anyone}`, `{address}`), capabilities with exact
+- **The cascading feature flags**: `authEnforcement` sits on top of
+  `documentDecisions` and cannot be turned on alone.
+- **Open until initialized**: an uninitialized policy (`state.auth.version === 0`)
+  leaves the document open, and `initializeAuth` flips the default to deny.
+- **Grant anatomy**: principals (`{anyone}`, `{address}`), capabilities with exact
   operation lists (`{can: "execute", scope: "global", operation: ["ADD_ENTRY"]}`),
   allow and deny effects.
-- **Last applicable grant wins** — a deny appended after an allow refuses what the
-  allow permitted, and `moveGrant` changes the verdict without changing any grant.
-- **The auth scope is just another scope** — who may edit the policy is itself
-  policy: a grant on `scope: "auth"`.
-- **Admission-level refusal** — a denied write fails the job with
-  `AuthorizationDeniedError` and nothing is stored; the reducer never runs.
-- **Self-lockout guardrail** — an initial policy with no reachable auth-administration
-  grant is refused by the platform reducer.
+- **The auth scope is just another scope**: who may edit the policy is itself
+  policy, a grant on `scope: "auth"`.
+- **Admission-level refusal**: a denied write fails its job (the unit of work
+  `reactor.execute` returns and `getJobStatus` tracks) with
+  `AuthorizationDeniedError`, and nothing is stored. The reducer never runs.
 
 ## The policy the demo installs
 
@@ -38,9 +35,10 @@ and changeable at runtime without touching the model.
 | `g-alice-all` | allow | Alice | `execute` on scope `*` |
 | `g-anyone-add` | allow | anyone | `execute` `ADD_ENTRY` on scope `global` |
 
-Evaluation is **default deny, last applicable grant wins**. The demo then appends
-`g-deny-bob` (deny Bob `ADD_ENTRY`) — Bob is refused; moves it to index 0 — the
-later `g-anyone-add` wins again and Bob is back. Order decides, not existence.
+Evaluation is **default deny, last applicable grant wins**. The demo appends
+`g-deny-bob` (deny Bob `ADD_ENTRY`) after the three above and Bob is refused.
+`moveGrant` then sends that same grant to index 0, the later `g-anyone-add` wins
+again, and Bob is back. Order decides, not existence.
 
 ## The feature flags
 
@@ -56,11 +54,13 @@ const reactor = await new ReactorBuilder()
   .build();
 ```
 
-The flags govern **enforcement only** — the auth data model is always live. A policy
-written on a flags-on reactor is silently unenforced on a flags-off reactor, which is
-why the flags flip per document-sharing fleet, never per node. Asking for
-`authEnforcement` without `documentDecisions` throws at build time, as does any flag
-name this reactor version doesn't know.
+The flags govern **enforcement only**. The auth data model is always live. A policy
+written on a flags-on reactor is silently unenforced on a flags-off reactor. There,
+`selectDecisionModel` leaves the auth scope out of every append condition, the
+read-set of stream revisions a write is checked against before it lands. That is
+why the flags flip per document-sharing fleet (every reactor that syncs the same
+documents), never per node. Asking for `authEnforcement` without `documentDecisions`
+throws at build time, as does any flag name this reactor version doesn't know.
 
 ## State shape
 
@@ -79,34 +79,37 @@ type JournalEntry {
 ```
 
 The reducers (`document-models/team-journal/v1/src/reducers/journal.ts`) throw
-`DuplicateEntry` / `EntryNotFound` — domain invariants — and read the signer only to
-record an entry's `author` for display. There is no access check anywhere in the
-model.
+`DuplicateEntry` / `EntryNotFound` for domain invariants, and read the signer only
+to record an entry's `author` for display. There is no access check anywhere in
+the model.
 
 ## Gotchas worth knowing
 
-- **One scope per `execute`** — all actions in a single `reactor.execute` call must
+- **One scope per `execute`**: all actions in a single `reactor.execute` call must
   share a scope, so policy changes (`scope: "auth"`) can't be batched with domain
   actions (`scope: "global"`).
-- **The auth stream is strictly timestamp-monotonic** — two policy edits in the same
+- **The auth stream is strictly timestamp-monotonic**: two policy edits in the same
   millisecond are refused (`AuthTimestampNotMonotonicError`), and auth operations are
   never reshuffled. The demo and tests space auth writes by a few milliseconds.
-- **Signer context** — the demo attaches `action.context.signer` by hand to play two
+- **Signer context**: the demo attaches `action.context.signer` by hand to play two
   callers from one process. In production the `ReactorClient` populates and signs it
   via `.withSigner(...)` (see the [`audit-trail`](../audit-trail) recipe for a real
   `RenownCryptoSigner` setup).
-- **Unsigned documents have no creator carve-out** — a document created without a
-  signing key must include a reachable auth-administration grant in its initial
-  policy, or `initializeAuth` is refused.
+- **Unsigned documents have no creator carve-out**: a document created without a
+  signing key must include a reachable auth-administration grant in its initial policy,
+  or the platform reducer refuses `initializeAuth`. Reachable means the whole grant
+  stack still allows some `{anyone}` or `{address}` principal `execute` on scope
+  `auth`, so an allow shadowed by a later deny does not count.
 
 ## Non-goals here
 
 Grants with a `{group: ...}` or `{match: ...}` principal, or a `where` condition,
 parse and store but **never match** on a reactor without the `authGroups` /
-`authConditions` stages — the evaluator skips them. Don't demo a group grant on
-an older release and conclude enforcement is broken. Group principals have their
-own recipe: [`group-principals`](../group-principals), which needs a release
-carrying the `authGroups` stage.
+`authConditions` feature flags, which ship in later stages of the platform's
+auth-scope rollout. The evaluator skips them. Don't demo a group grant on an older
+release and conclude enforcement is broken. Group principals have their own recipe:
+[`group-principals`](../group-principals), which needs a release carrying the
+`authGroups` stage.
 
 ## Running
 
@@ -116,9 +119,9 @@ pnpm start   # runs src/demo.ts
 ```
 
 The demo walks: Bob writes before any policy exists, Alice initializes the three-grant
-policy, Bob's `ADD_ENTRY` still lands while `SET_TITLE` / `PIN_ENTRY` / `SET_GRANT`
-are refused, Alice stacks a deny on Bob, reorders it with `moveGrant`, and retires it
-with `removeGrant`.
+policy, and Bob's `ADD_ENTRY` still lands while `SET_TITLE` / `PIN_ENTRY` /
+`SET_GRANT` are refused. Alice then runs the deny/`moveGrant` sequence above and
+closes with `removeGrant`.
 
 ## Tests
 

@@ -1,16 +1,17 @@
 # Signed Operations Verifier
 
-A standalone script that builds a document operation history with cryptographic signatures, then verifies each one. Demonstrates detection of unsigned and tampered operations, plus signer identity chain extraction.
+A standalone script that builds a document operation history with cryptographic signatures, then verifies each one. `injectBadOperations()` corrupts one signature and deletes the signer context from another, so the report separates valid operations from tampered and unsigned ones. Both detections are pinned by `should detect tampered signatures` and `should flag unsigned operations` in `src/verify-operations.test.ts`.
 
 ## What it demonstrates
 
-- **`ISigner` interface** via `RenownCryptoSigner` from `@renown/sdk`
-- **`RenownCryptoSigner`** construction using `MemoryKeyStorage` + `RenownCryptoBuilder` (no filesystem or network needed)
-- **`verifyOperationSignature()`** — low-level per-signature verification with a custom `ActionVerificationHandler`
-- **`createSignatureVerifier()`** — higher-level operation verifier from `@renown/sdk`
-- **`validateHeader()`** — document header signature validation
-- **Signature tuple structure** — `[timestamp, publicKey, actionHash, prevStateHash, signature]`
-- **Signer identity chain** — user address/networkId/chainId + app name/key
+Signing needs no filesystem and no network. `MemoryKeyStorage` generates a fresh ECDSA P-256 key pair in memory, `RenownCryptoBuilder` builds the crypto engine over that storage, and `RenownCryptoSigner` is the `ISigner` the recipe signs with.
+
+There are two verification paths, and they are not interchangeable:
+
+- `verifyOperationSignature()` checks one signature tuple at a time, and the caller supplies the verification callback. That callback is the `ActionVerificationHandler`, `(publicKey, signature, data) => Promise<boolean>`, and `ecdsaVerificationHandler` in `src/verify-operations.ts` implements it over Web Crypto.
+- `createSignatureVerifier()` verifies a whole operation and takes no callback, but it reads `signature[1]` as a DID. `buildSignedAction()` stores the raw hex public key there, so the SDK verifier pairs with `RenownCryptoSigner.signAction()` instead. `buildAndVerifyWithSignAction()` runs that second path end to end.
+
+Every signature is the 5-tuple `[timestamp, publicKey, actionHash, prevStateHash, signature]`. The signer context beside it carries the identity chain the report extracts: user address, networkId and chainId, plus app name and key.
 
 ## Run
 

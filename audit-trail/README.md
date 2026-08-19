@@ -1,20 +1,13 @@
 # Audit Trail
 
-A Reactor processor that inspects `ActionSigner` context on every operation to build an immutable audit log in PostgreSQL. Exposes a GraphQL subgraph for querying entries by user, document, or time range.
+A [Powerhouse Reactor](https://github.com/powerhouse-inc) processor that inspects `ActionSigner` context on every operation to build an immutable audit log in PostgreSQL. Exposes a GraphQL subgraph for querying entries by user, document, or time range.
 
 ## What it demonstrates
 
-- **Signature/signer inspection** — extracting `user.address`, `networkId`, `chainId`, and app credentials from `operation.action.context.signer`
-- **Relational DB processor** — batch-inserting structured rows via Kysely
-- **Subgraph resolvers** — GraphQL API over the audit log using graphql-yoga
-- **Operation context fields** — using `documentId`, `documentType`, `action.type`, and `timestampUtcMs`
-
-## Setup
-
-```sh
-pnpm install
-pnpm build
-```
+- `getSignerContext` reads `user.address`, `user.networkId`, `user.chainId`, and the app's `name` and `key` out of `operation.action.context.signer`. Operations that arrive without a signer are skipped.
+- `AuditTrailProcessor.onOperations` turns a batch of operations into rows and writes them to `audit_log` with a single Kysely insert.
+- Resolvers built by `createAuditSchema` serve the audit log over graphql-yoga.
+- A row carries `documentId` and `documentType` from the operation context, with `action.type` and `timestampUtcMs` from the action itself.
 
 ## Usage
 
@@ -57,10 +50,15 @@ Query examples:
 { auditByTimeRange(from: "2025-01-01T00:00:00Z", to: "2025-12-31T23:59:59Z") { signerAddress actionType documentId } }
 ```
 
-## Tests
+## Running it
 
 ```sh
+pnpm install
+pnpm build
 pnpm test
+pnpm start
 ```
 
-Tests use [PGlite](https://github.com/electric-sql/pglite) for an in-memory PostgreSQL instance.
+`pnpm start` runs `src/demo.ts`, which signs its operations with a Renown key, creates a drive and three documents, then prints the audit rows for that signer.
+
+Tests and the demo use [PGlite](https://github.com/electric-sql/pglite) for an in-memory PostgreSQL instance.
