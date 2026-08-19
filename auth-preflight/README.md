@@ -72,18 +72,10 @@ The preflight has two other transports, neither exercisable from a Node recipe:
 reactor subgraph serves it as an `evaluateActions` GraphQL query (reachable
 through `createReactorGraphQLClient`). Both decide through this same call.
 
-## Version requirement
+## Running it
 
-`evaluateActions` is newer than the release this repo's catalog pins, so `build`,
-`test` and `start` pass against a local checkout of the monorepo:
-
-```sh
-cd ../powerhouse
-pnpm build
-RECIPES_DIR=../recipes pnpm test:e2e:recipes --filter auth-preflight --verbose
-```
-
-Once the catalog carries it, the recipe runs standalone:
+`evaluateActions` ships in `6.2.2-dev.52`, which this repo's catalog pins, so the
+recipe runs standalone:
 
 ```sh
 pnpm install
