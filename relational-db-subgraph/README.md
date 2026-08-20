@@ -54,14 +54,10 @@ startCatalogServer(db, 4002);
 
 `createCatalogSchema` in `src/subgraph.ts` returns a standalone schema, so a gateway like Apollo Router or GraphQL Mesh can compose it alongside other subgraphs, such as the Reactor's built-in GraphQL endpoint. One request then spans the catalog and the other sources. Nothing in this recipe runs a gateway, so the composition itself is untested here.
 
-## Running tests
+## Running it
 
 ```sh
 pnpm test
 ```
 
 Tests use PGlite (embedded PostgreSQL), so no external database is required. `pnpm start` runs `src/demo.ts`, which builds a Reactor, creates three documents, and prints the catalog rows.
-
-## License
-
-AGPL-3.0-only

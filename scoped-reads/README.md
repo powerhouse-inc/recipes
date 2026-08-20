@@ -1,67 +1,53 @@
 # Scoped Reads
 
 The same policy that refuses a write decides what a read returns. A subject
-that may not read a scope does not receive it. The `auth` and `document` scopes
-come back for every holder, so anyone can still evaluate the policy and see the
-metadata.
-
-That filtering happens on the `ReactorClient`, not in the reactor. `IReactor`
-is inside the trust boundary and serves every scope of every document to every
-caller.
-
-This recipe picks up where [`document-acl`](../document-acl) (grant anatomy,
-admission) and [`group-principals`](../group-principals) (a roster deciding who
-may approve) stop. Those recipes drive a raw `ReactorBuilder` and so never see
-a gate at all. This one builds a `ReactorClientBuilder` over the same kind of
-reactor and reads one expense report as four identities.
+that may not read a scope does not receive it. `IReactor` is inside the trust
+boundary and serves every scope of every document to every caller, so the gate
+sits on the `ReactorClient`, which [`document-acl`](../document-acl) and
+[`group-principals`](../group-principals) never build.
 
 ## What it demonstrates
 
-- **The gate is on the client**: in one process, on one document,
-  `reactor.getByIdOrSlug()` serves all four scopes to anyone while
-  `client.get()` serves Mallory only `auth` and `document`.
+- **The gate is on the client**: `reactor.getByIdOrSlug()` serves all four
+  scopes to anyone while `client.get()` serves Mallory only `auth` and
+  `document`.
+- **Per scope, not per document**: four identities get three views, and a
+  withheld scope is *absent* from `document.state` rather than present and
+  empty. `client.execute()` hands back a document gated as the client's own
+  identity.
 - **It carries no feature flag**: with `featureFlags: {}` the read is still
-  filtered. Admission is staged behind flags. Reading is not, so a policy is
-  enforced against readers before it is enforced against writers.
-- **Per scope, not per document**: four identities get three views of one
-  report, and a withheld scope is *absent* from `document.state` rather than
-  present and empty.
-- **An allow on execute confers read**: Alice holds no read grant at all. She
-  reads `global` because she may write it, and she reads the whole scope even
-  though her grant names a single operation: the operation list restricts what
-  she may execute, not what she may see. The converse does not hold, so Carol
-  reads the expenses and still cannot submit one.
-- **A write hands back a read**: the document `client.execute()` returns is
-  gated exactly like `get()`, as the client's own identity. Alice sees the
-  scope she wrote and not the notes her policy withholds from her.
-- **A `{ group }` read grant follows the roster**: offboarding Bob withdraws
-  his `global` and `local` scopes with no write to the report's policy at all,
-  and its `header.revision.auth` never moves.
-- **Naming a group publishes its roster to that audience**: Carol reads the
-  reviewers roster she is not on, past the roster's own Alice-only policy,
-  because the report's `{ group }` grants cannot be evaluated without the
-  roster's member list. Mallory, whom the report serves nothing, does not.
-  With the `authGroups` feature flag off, nobody does.
+  filtered. Admission is staged behind flags. Reading is not.
 
-## The administration grant
+## An allow on execute confers read
+
+Alice holds no read grant. She reads all of `global` because she may write one
+operation in it: the operation list restricts what she may execute, not what
+she may see. The converse does not hold, so Carol reads the expenses and
+cannot submit one.
 
 `document-acl`, `revocation-race` and `group-principals` all install an
-administration grant of `{ can: "execute", scope: "*" }`. Because an allow on
-execute now confers read, that shape publishes **every** domain scope of the
-document to whoever it names. The expense report's administration grant here
-is scoped to `auth`, which is all the auth-administration retention rule
-requires: a policy has to leave some subject able to execute `SET_GRANT` on
-`auth`, and nothing wider. The roster keeps a `*` grant because Alice
-administers its membership as well as its policy.
+administration grant of `{ can: "execute", scope: "*" }`, which now publishes
+**every** domain scope to whoever it names. The grant here is scoped to `auth`,
+which is all the auth-administration retention rule requires: a policy has to
+leave some subject able to execute `SET_GRANT` on `auth`, and nothing wider.
+
+## A `{ group }` read grant follows the roster
+
+Offboarding Bob withdraws his `global` and `local` scopes with no write to the
+report's policy, and its `header.revision.auth` never moves.
+
+Naming a group publishes its roster to that audience: Carol reads the reviewers
+roster she is not on, past its Alice-only policy, because the report's
+`{ group }` grants cannot be evaluated without the member list. Mallory, whom
+the report serves nothing, does not.
 
 ## The two domain scopes
 
-A `PHDocument` has four state scopes (`auth`, `document`, `global` and
-`local`), and the first two are always readable, so `global` and `local` are
-the only pair a read can tell apart. This recipe puts the expenses in `global`
-and the reviewers' confidential notes in `local`. `local` is conventionally
-node-local data. It is used here as the second gateable scope because there is
-no third.
+Of a `PHDocument`'s four state scopes, `auth` and `document` come back for
+every holder, so anyone can evaluate the policy and see the metadata. That
+leaves `global` and `local` as the only pair a read can tell apart. The
+expenses go in `global`, the reviewers' confidential notes in `local`,
+conventionally node-local data.
 
 ## Running it
 
@@ -70,18 +56,15 @@ pnpm install
 pnpm --filter @powerhousedao/example-scoped-reads start
 ```
 
-`src/demo.ts` is the narrated walkthrough, in six acts, and
-`tests/scoped-reads.test.ts` holds one test per claim above. The expense report
-model under `document-models/expense-report/` is generated by `ph-cli` from
-`expense-report.json`.
+`src/demo.ts` is the narrated walkthrough, and `tests/scoped-reads.test.ts`
+holds one test per act of it, plus two with the feature flags off.
 
 ## Version requirement
 
-The read path is the auth-scope rollout stage that decides a `read` request per
-scope. It is newer than `6.2.2-dev.52`, the version this repo's catalog pins in
-`pnpm-workspace.yaml`. Until a dev release carrying it is published and the
-catalog is bumped, `build`, `test` and `start` pass only against a local
-checkout of the monorepo:
+Per-scope read filtering is newer than `6.2.2-dev.52`, which this repo's
+catalog pins in `pnpm-workspace.yaml`. Until a dev release carrying it is
+published and the catalog bumped, `build`, `test` and `start` pass only
+against a local checkout of the monorepo:
 
 ```sh
 cd ../powerhouse

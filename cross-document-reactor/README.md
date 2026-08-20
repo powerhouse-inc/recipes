@@ -49,7 +49,3 @@ Documents named: "Invoice-001" ↔ "Task-001-Invoice-001"
 
 ✓ Cross-document reaction succeeded
 ```
-
-## License
-
-AGPL-3.0-only

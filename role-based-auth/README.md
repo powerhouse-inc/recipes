@@ -4,7 +4,7 @@ A custom document model where the creator is promoted to admin on first action, 
 
 ## What it demonstrates
 
-Roles live in the document state, in the `admins` and `members` arrays, rather than in an external policy store. The first `bootstrap` caller becomes the permanent root admin and cannot be demoted. Every authorization failure is a named error class generated into `gen/access/error.ts` from the error list the spec declares for each operation.
+Roles live in the document state, in the `admins` and `members` arrays, rather than in an external policy store. Every authorization failure is a named error class generated into `gen/access/error.ts` from the error list the spec declares for each operation.
 
 ## State shape
 
@@ -48,7 +48,7 @@ if (!address) throw new NotAuthorized("User is not authenticated");
 
 Role-mutating ops additionally call `requireAdmin(state, address)`, which throws `NotAdmin`. `v1/gen/reducer.ts` wraps the state reducer with `createReducer`, whose default `baseReducer` catches the throw and records `error.message` as `operation.error` on the resulting document. Callers inspect the operation log to detect rejection.
 
-See `document-models/role-based-auth/v1/src/reducers/access.ts` for the full implementation.
+The full implementation lives in `document-models/role-based-auth/v1/src/reducers/access.ts`, which codegen does not touch.
 
 ## Running
 
@@ -65,18 +65,4 @@ The demo runs in order: Alice bootstraps, Bob is rejected from `writeNote`, Alic
 pnpm test
 ```
 
-The suite in `document-models/role-based-auth/v1/tests/access.test.ts` covers the single-bootstrap invariant, missing-signer rejection, non-admin role-mutation rejection, creator-cannot-be-demoted, grantAdmin moving members to admins, and writeNote gating.
-
-## Regenerating
-
-The document-model spec lives in `document-models/role-based-auth/role-based-auth.json` with the GraphQL schema at `document-models/role-based-auth/v1/schema.graphql`. To regenerate the `gen/` tree after editing either file:
-
-```sh
-pnpm run generate
-```
-
-The hand-written reducer at `v1/src/reducers/access.ts` is not touched by codegen.
-
-## License
-
-AGPL-3.0-only
+The suite in `document-models/role-based-auth/v1/tests/access.test.ts` covers the single-bootstrap invariant, missing-signer rejection, and the creator-cannot-be-demoted rule.

@@ -1,12 +1,6 @@
 # DB Migrate
 
-PostgreSQL database export, import, and migration scripts using Docker. No local `pg_dump` or `pg_restore` installation required.
-
-## Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/)
-
-The scripts use the `postgres:17` image, which is pulled automatically on first run.
+PostgreSQL database export, import, and migration scripts using [Docker](https://docs.docker.com/get-docker/). No local `pg_dump` or `pg_restore` installation required. The scripts use the `postgres:17` image, which is pulled automatically on first run.
 
 ## Scripts
 
@@ -80,7 +74,3 @@ pnpm --filter @powerhousedao/db-migrate export -- -o backup.dump postgres://user
 pnpm --filter @powerhousedao/db-migrate import -- postgres://user:pass@localhost:5432/mydb backup.dump
 pnpm --filter @powerhousedao/db-migrate migrate -- postgres://user:pass@source:5432/mydb postgres://user:pass@target:5432/mydb
 ```
-
-## License
-
-AGPL-3.0-only

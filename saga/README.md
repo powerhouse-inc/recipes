@@ -11,12 +11,8 @@ Saga pattern via Reactor processor: operations on one document trigger operation
 ## How it works
 
 1. Creates a drive, the container document the others live under, holding **Order-001**, **Payment-001**, and **Fulfillment-001**
-2. Registers a `SagaProcessor` with step definitions that form a chain:
-   - `Order-001 [CREATED]` &rarr; dispatches rename on Payment to `Payment-001 [REQUESTED]`
-   - `Payment-001 [REQUESTED]` &rarr; dispatches rename on Fulfillment to `Fulfillment-001 [STARTED]`
-   - `Fulfillment-001 [STARTED]` &rarr; dispatches rename on Order to `Order-001 [FULFILLED]`
+2. Registers a `SagaProcessor` whose step definitions chain the renames: `Order-001 [CREATED]` dispatches `Payment-001 [REQUESTED]`, which dispatches `Fulfillment-001 [STARTED]`, which closes the saga with `Order-001 [FULFILLED]`
 3. Triggering the saga by renaming the order document cascades through all three steps
-4. The saga log table records every step with a shared `saga_id` for traceability
 
 ## Running
 
@@ -69,7 +65,3 @@ with a traceable saga_id linking every step.
 
 + Saga completed successfully
 ```
-
-## License
-
-AGPL-3.0-only

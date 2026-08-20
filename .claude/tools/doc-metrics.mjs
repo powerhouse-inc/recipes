@@ -231,6 +231,214 @@ const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/u;
 
 // ---------------------------------------------------------------- analysis
 
+// -------------------------------------------------------------------- shape
+
+// Document shape: the budgets a reader feels as "too long" before they notice
+// any sentence-level problem. A section that carries six key concepts has no
+// key concepts, and a list of eight one-paragraph bullets is a document that
+// never decided what mattered. Scored here so two runs cannot disagree.
+//
+// These numbers are editorial. They are calibrated against the tight end of
+// this collection (discord-webhook-processor 105w, subscription-cli 170w,
+// audit-trail 253w) rather than its median, because the median is the problem.
+//
+// They assume a guide or an index page, which is every document in this repo.
+// A reference (an API surface, a config table) is legitimately longer and its
+// list caps do not apply; the judge treats a shape finding against a reference
+// as the routine decline. Retune here if this script is pointed at one.
+const BUDGET = {
+  doc: 400,      // whole-document prose words
+  preamble: 60,  // title to the first heading: what this is, in a breath
+  lead: 80,      // the first section, usually "What it demonstrates"
+  section: 120,  // any other single section
+  list: 4,       // items in an ordinary list
+  keyList: 3,    // items in a list whose heading calls them key or core
+  item: 40,      // words in one list item
+};
+
+// A heading that promises the reader a short, curated set.
+const KEY_LIST = /\b(key|core|essential|main|primary|principles?|concepts?)\b/i;
+
+// Sections the repository itself answers. LICENSE, package.json, and the root
+// README carry these; a per-recipe copy is duplication that rots. These are
+// never load-bearing, so they drive the score.
+const BOILERPLATE =
+  /^(licen[cs]e|installation|install|getting started|contributing|regenerat\w*)\b/i;
+
+// Sections that are usually boilerplate but sometimes carry the one constraint
+// a reader cannot run without (a required Postgres, a Docker daemon). Reported
+// for the model to adjudicate under unnecessary-data; they do not move the score.
+const BOILERPLATE_SOFT = /^(prerequisites?|requirements?|setup)\b/i;
+
+function shapeOf(lines, codeBlocks, quoteOf) {
+  const fenced = new Set();
+  for (const b of codeBlocks) for (let n = b.start; n <= b.end; n++) fenced.add(n);
+
+  // YAML frontmatter is not prose, and extract() already drops it.
+  let bodyStart = 0;
+  if (lines[0] !== undefined && lines[0].trim() === "---") {
+    let j = 1;
+    while (j < lines.length && lines[j].trim() !== "---") j++;
+    if (j < lines.length) bodyStart = j + 1;
+  }
+
+  // Walk the file into sections, counting only prose the rubric measures.
+  const sections = [];
+  let cur = { title: "(preamble)", line: 1, level: 0, words: 0, items: [], lists: [] };
+  let run = null; // current consecutive run of list items
+
+  const closeRun = () => { if (run && run.count) cur.lists.push(run); run = null; };
+
+  for (let i = bodyStart; i < lines.length; i++) {
+    const n = i + 1;
+    if (fenced.has(n)) { closeRun(); continue; }
+    const raw = lines[i];
+    const t = raw.trim();
+
+    const h = t.match(/^(#{1,6})\s+(.*)$/);
+    if (h) {
+      closeRun();
+      if (h[1].length === 1) continue; // the document title is not a section
+      sections.push(cur);
+      cur = { title: strip(h[2]).trim(), line: n, level: h[1].length, words: 0, items: [], lists: [] };
+      continue;
+    }
+
+    const li = t.match(/^([-*+]|\d+[.)])\s+(.*)$/);
+    if (li) {
+      const w = countWords(strip(li[2]));
+      cur.words += w;
+      cur.items.push({ line: n, words: w });
+      if (!run) run = { line: n, count: 0, widest: 0 };
+      run.count++;
+      run.widest = Math.max(run.widest, w);
+      continue;
+    }
+
+    if (t === "") { closeRun(); continue; }
+    cur.words += countWords(strip(t.replace(/^>\s?/, "")));
+  }
+  closeRun();
+  sections.push(cur);
+
+  const findings = [];
+  const push = (line, why, fix, severity = "major") =>
+    findings.push({ severity, line, ...quoteOf(line), source: "script", why, fix });
+
+  const words = sections.reduce((a, s) => a + s.words, 0);
+  const real = sections.filter((s) => s.level > 0);
+  const preamble = sections.find((s) => s.level === 0) || { words: 0, line: 1 };
+  const lead = real[0];
+
+  // --- length bands
+  const band = (v, cuts) => { for (let i = 0; i < cuts.length; i++) if (v <= cuts[i]) return 5 - i; return 0; };
+
+  const sDoc = band(words, [BUDGET.doc, 550, 700, 900, 1200]);
+  if (words > BUDGET.doc) {
+    push(1, `Document runs ${words} prose words against a ${BUDGET.doc}-word budget.`,
+      `Cut ${words - BUDGET.doc} words. Take them from the longest section first, not evenly.`,
+      words > 700 ? "blocker" : "major");
+  }
+
+  const sPre = band(preamble.words, [BUDGET.preamble, 90, 130, 180, 250]);
+  if (preamble.words > BUDGET.preamble) {
+    push(preamble.line, `Opening runs ${preamble.words} words before the first heading (budget ${BUDGET.preamble}).`,
+      "Say what this is and what it needs in one or two sentences. The detail belongs in a section.");
+  }
+
+  let sLead = 5;
+  if (lead) {
+    sLead = band(lead.words, [BUDGET.lead, 130, 190, 260, 350]);
+    if (lead.words > BUDGET.lead) {
+      push(lead.line, `The lead section "${lead.title}" runs ${lead.words} words (budget ${BUDGET.lead}).`,
+        "This section orients the reader; it is not the documentation. A few lines, then let the sections carry it.",
+        lead.words > 190 ? "blocker" : "major");
+    }
+  }
+
+  let sSection = 5;
+  for (const s of real) {
+    if (s === lead) continue;
+    const band1 = band(s.words, [BUDGET.section, 180, 240, 320, 420]);
+    sSection = Math.min(sSection, band1);
+    if (s.words > BUDGET.section) {
+      push(s.line, `Section "${s.title}" runs ${s.words} words (budget ${BUDGET.section}).`,
+        "Split it, or cut what the reader does not need to run and understand the recipe.");
+    }
+  }
+
+  // --- list discipline
+  let sList = 5;
+  for (const s of real.concat([preamble])) {
+    const keyed = KEY_LIST.test(s.title || "");
+    const capItems = keyed ? BUDGET.keyList : BUDGET.list;
+    for (const l of s.lists || []) {
+      sList = Math.min(sList, band(l.count, [capItems, capItems + 2, capItems + 4, capItems + 6, capItems + 9]));
+      if (l.count > capItems) {
+        push(l.line,
+          keyed
+            ? `"${s.title}" lists ${l.count} items. More than ${capItems} and none of them is key.`
+            : `List of ${l.count} items (budget ${capItems}).`,
+          keyed
+            ? `Keep the ${capItems} a reader cannot work without. Fold or drop the rest.`
+            : "Cut to the items that change what the reader does.",
+          l.count > capItems + 2 ? "blocker" : "major");
+      }
+      if (l.widest > BUDGET.item) {
+        sList = Math.min(sList, 3);
+        push(l.line, `Longest item in this list runs ${l.widest} words (budget ${BUDGET.item}).`,
+          "A bullet that needs a paragraph is a section, or it is padding.", "minor");
+      }
+    }
+  }
+
+  // --- sections the repo already answers
+  const boiler = real.filter((s) => BOILERPLATE.test(s.title || ""));
+  // One is enough to gate. These sections are never load-bearing, so a document
+  // carrying even one has not been finished, however good the rest of it is.
+  const sBoiler = band(boiler.length, [0, 0, 1, 2, 3]);
+  for (const s of boiler) {
+    push(s.line, `"${s.title}" is a section the repository already answers.`,
+      "Delete it. LICENSE, package.json, and the root README carry this, and a copy here rots.",
+      "major");
+  }
+
+  // Soft: reported, never scored. The model decides whether this one is the
+  // constraint the recipe genuinely cannot run without.
+  const boilerSoft = real.filter((s) => BOILERPLATE_SOFT.test(s.title || ""));
+  for (const s of boilerSoft) {
+    push(s.line, `"${s.title}" is boilerplate unless it names a constraint specific to this recipe.`,
+      "Keep it only if it names something the reader must have and would not guess. Otherwise fold it into the run step.",
+      "minor");
+  }
+
+  const RANK = { blocker: 0, major: 1, minor: 2 };
+  const ranked = findings
+    .slice()
+    .sort((a, b) => (RANK[a.severity] - RANK[b.severity]) || (a.line - b.line));
+
+  const score = Math.min(sDoc, sPre, sLead, sSection, sList, sBoiler);
+  return {
+    score,
+    subScores: { documentLength: sDoc, preamble: sPre, leadSection: sLead, sections: sSection, lists: sList, boilerplate: sBoiler },
+    metrics: {
+      proseWords: words,
+      sectionCount: real.length,
+      preambleWords: preamble.words,
+      leadSectionWords: lead ? lead.words : 0,
+      longestSectionWords: real.reduce((a, s) => Math.max(a, s.words), 0),
+      longestListItems: real.concat([preamble]).reduce((a, s) => Math.max(a, ...(s.lists || []).map((l) => l.count), 0), 0),
+      boilerplateSections: boiler.map((s) => s.title),
+      boilerplateCandidates: boilerSoft.map((s) => s.title),
+    },
+    budgets: BUDGET,
+    // Sort before truncating: a blocker produced late in the walk (an oversized
+    // list, a boilerplate section) must not be dropped for an earlier minor.
+    findings: ranked.slice(0, 8),
+    findingsTruncated: ranked.length > 8,
+  };
+}
+
 function analyze(path) {
   const raw = readFileSync(path, "utf8");
   const { segments, codeBlocks, lines } = extract(raw);
@@ -372,15 +580,34 @@ function analyze(path) {
 
   const unnecessary = [];
   for (const b of codeBlocks) {
+    // Report the first non-blank body line and the line it actually sits on, so
+    // the quote is verbatim at the number given (rules 2 and 3).
+    const k = b.lines.findIndex((l) => l.trim());
+    if (k < 0) continue;
     const body = b.lines.filter((l) => l.trim());
-    if (!body.length) continue;
+    const firstLine = b.start + 1 + k;
+    const firstText = b.lines[k].trim();
+
     if (body.some((l) => /[├└│]/.test(l)) || body.filter((l) => /^\s*[\w.-]+\/\s*$/.test(l)).length >= 3) {
-      unnecessary.push({ kind: "file-tree", line: b.start, quote: (body[0] || "").trim().slice(0, 160), truncated: false, source: "script" });
-    } else if (body.every((l) => /^\s*(#|\$)?\s*(npm|pnpm|yarn|bun|cd|git clone|nvm|node)\b/.test(l))) {
-      unnecessary.push({ kind: "install-boilerplate", line: b.start, quote: body.join(" ").trim().slice(0, 160), truncated: body.join(" ").length > 160, source: "script" });
+      unnecessary.push({ kind: "file-tree", line: firstLine, quote: firstText.slice(0, 160), truncated: firstText.length > 160, source: "script" });
+    } else if (
+      // Every line is a package-manager or shell invocation...
+      body.every((l) => /^\s*(#|\$)?\s*(npm|pnpm|yarn|bun|cd|git clone|nvm|node)\b/.test(l)) &&
+      // ...and at least one is actually setup. A block of `pnpm start` or
+      // `pnpm test` is the recipe's run command, not install boilerplate.
+      body.some((l) => /\b(install|add|ci|clone|cd|nvm\s+use)\b/.test(l))
+    ) {
+      unnecessary.push({ kind: "install-boilerplate", line: firstLine, quote: firstText.slice(0, 160), truncated: firstText.length > 160, source: "script" });
     }
   }
+
+  // Raw-line candidates must skip fenced content: rule 5 forbids a finding drawn
+  // from inside a code block, and a `|` row or a heading can appear in one.
+  const fencedLines = new Set();
+  for (const b of codeBlocks) for (let n = b.start; n <= b.end; n++) fencedLines.add(n);
+
   for (let n = 1; n <= lines.length; n++) {
+    if (fencedLines.has(n)) continue;
     const t = lines[n - 1];
     if (/^\s*(#+\s*)?\**prerequisites\b/i.test(t)) {
       unnecessary.push({ kind: "prerequisites", line: n, ...quoteOf(n), source: "script" });
@@ -401,6 +628,8 @@ function analyze(path) {
     unanchored.push({ line: s.line, ...quoteOf(s.line), words: s.words, source: "script" });
   }
 
+  const shape = shapeOf(lines, codeBlocks, quoteOf);
+
   const cap = (arr) => ({ items: arr.slice(0, CAP), total: arr.length, truncated: arr.length > CAP });
 
   return {
@@ -414,6 +643,7 @@ function analyze(path) {
       codeBlocks: codeBlocks.length,
     },
     authoritative: {
+      "document-shape": shape,
       "sentence-mechanics": {
         score: mechScore,
         subScores: { emDashDensity: sDash, semicolons: sSemi, longSentences: sLong },

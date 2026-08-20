@@ -11,9 +11,7 @@ The recipe reaches into the built `ReactorModule` for two handles: `eventBus`, w
 1. Builds reactor A and reactor B, each on in-memory PGlite, an in-process Postgres, no external DB.
 2. Wires them together with a shared `IChannelFactory` that creates `InternalChannel` pairs, handing operations from one reactor's outbox straight into the other's inbox with no network in between.
 3. Attaches a `SyncHealthMonitor` to reactor A's `EventBus`, subscribing to all five sync event types (`SYNC_PENDING`, `SYNC_SUCCEEDED`, `SYNC_FAILED`, `DEAD_LETTER_ADDED`, `CONNECTION_STATE_CHANGED`). The monitor keeps counters, connection states, and the last 50 errors.
-4. Serves those metrics through a `syncHealth` GraphQL query on `http://localhost:4001/graphql`.
-5. Redraws a terminal dashboard every two seconds with health status, sync counters, connection states, and the five most recent errors.
-6. Runs the demo scenario through the four phases below.
+4. Serves those metrics through a `syncHealth` GraphQL query on `http://localhost:4001/graphql`, and redraws a terminal dashboard every two seconds.
 
 ### Demo phases
 
@@ -83,7 +81,3 @@ pnpm test
 ```
 
 Unit tests verify the `SyncHealthMonitor` class in isolation using a standalone `EventBus` with synthetic events.
-
-## License
-
-AGPL-3.0-only

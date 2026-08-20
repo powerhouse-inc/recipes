@@ -1,31 +1,22 @@
 # Document ACL
 
-A custom `team-journal` document model whose write access is governed entirely by the
-platform auth scope. No authorization code in any reducer. Policy lives in the
-document as ordinary replicated state (`state.auth`) and is edited with four platform
-actions: `initializeAuth`, `setGrant`, `moveGrant`, `removeGrant`. The reactor enforces
-it at admission when the `authEnforcement` feature flag is on.
-
-This recipe is the deliberate counterpart to [`role-based-auth`](../role-based-auth):
-same outcome (callers gated per operation), opposite mechanism. There, every reducer
-starts with signer checks and the rules are baked into the model. Here the reducers
-validate domain invariants only, and the rules are data: inspectable, replicated,
-and changeable at runtime without touching the model.
+A `team-journal` document model whose writes are governed by the platform auth scope,
+with no authorization code in any reducer. Policy lives in the document as
+replicated state (`state.auth`), edited with `initializeAuth`, `setGrant`, `moveGrant`,
+and `removeGrant`, and enforced at admission when the `authEnforcement` feature flag is
+on. [`role-based-auth`](../role-based-auth) reaches the same outcome with the rules
+baked into its reducers.
 
 ## What it demonstrates
 
-- **The cascading feature flags**: `authEnforcement` sits on top of
-  `documentDecisions` and cannot be turned on alone.
-- **Open until initialized**: an uninitialized policy (`state.auth.version === 0`)
-  leaves the document open, and `initializeAuth` flips the default to deny.
-- **Grant anatomy**: principals (`{anyone}`, `{address}`), capabilities with exact
-  operation lists (`{can: "execute", scope: "global", operation: ["ADD_ENTRY"]}`),
-  allow and deny effects.
-- **The auth scope is just another scope**: who may edit the policy is itself
-  policy, a grant on `scope: "auth"`.
-- **Admission-level refusal**: a denied write fails its job (the unit of work
-  `reactor.execute` returns and `getJobStatus` tracks) with
-  `AuthorizationDeniedError`, and nothing is stored. The reducer never runs.
+An uninitialized policy (`state.auth.version === 0`) leaves the document open, and
+`initializeAuth` flips the default to deny. A write that no grant covers fails the job
+`reactor.execute` returns, with `AuthorizationDeniedError`. Nothing is stored and the
+reducer never runs.
+
+The reducers (`document-models/team-journal/v1/src/reducers/journal.ts`) throw
+`DuplicateEntry` and `EntryNotFound` for domain invariants, and read the signer only
+for an entry's `author`.
 
 ## The policy the demo installs
 
@@ -35,10 +26,11 @@ and changeable at runtime without touching the model.
 | `g-alice-all` | allow | Alice | `execute` on scope `*` |
 | `g-anyone-add` | allow | anyone | `execute` `ADD_ENTRY` on scope `global` |
 
-Evaluation is **default deny, last applicable grant wins**. The demo appends
-`g-deny-bob` (deny Bob `ADD_ENTRY`) after the three above and Bob is refused.
-`moveGrant` then sends that same grant to index 0, the later `g-anyone-add` wins
-again, and Bob is back. Order decides, not existence.
+Evaluation is **default deny, last applicable grant wins**. `g-alice-admin` makes
+editing the policy itself policy: Bob's `SET_GRANT` is refused. The demo appends
+`g-deny-bob` (deny Bob `ADD_ENTRY`) after those three and his next entry fails.
+`moveGrant` sends that deny to index 0, `g-anyone-add` is last again, and Bob is back.
+Order decides, not existence.
 
 ## The feature flags
 
@@ -54,62 +46,30 @@ const reactor = await new ReactorBuilder()
   .build();
 ```
 
-The flags govern **enforcement only**. The auth data model is always live. A policy
-written on a flags-on reactor is silently unenforced on a flags-off reactor. There,
-`selectDecisionModel` leaves the auth scope out of every append condition, the
-read-set of stream revisions a write is checked against before it lands. That is
-why the flags flip per document-sharing fleet (every reactor that syncs the same
-documents), never per node. Asking for `authEnforcement` without `documentDecisions`
-throws at build time, as does any flag name this reactor version doesn't know.
-
-## State shape
-
-```graphql
-type TeamJournalState {
-  title: String!
-  entries: [JournalEntry!]!
-}
-
-type JournalEntry {
-  id: ID!
-  author: String!
-  text: String!
-  pinned: Boolean!
-}
-```
-
-The reducers (`document-models/team-journal/v1/src/reducers/journal.ts`) throw
-`DuplicateEntry` / `EntryNotFound` for domain invariants, and read the signer only
-to record an entry's `author` for display. There is no access check anywhere in
-the model.
+The flags govern **enforcement only**. The auth data model is always live, so a policy
+written on a flags-on reactor is silently unenforced on a flags-off one, where
+`selectDecisionModel` leaves the auth scope out of every append condition. Flip them per
+fleet of reactors that sync the same documents, never per node. Asking for
+`authEnforcement` without `documentDecisions` throws at build time.
 
 ## Gotchas worth knowing
 
-- **One scope per `execute`**: all actions in a single `reactor.execute` call must
-  share a scope, so policy changes (`scope: "auth"`) can't be batched with domain
-  actions (`scope: "global"`).
+- **One scope per `execute`**: actions in one `reactor.execute` call must share a
+  scope, so policy changes (`scope: "auth"`) can't be batched with domain actions
+  (`scope: "global"`).
 - **The auth stream is strictly timestamp-monotonic**: two policy edits in the same
-  millisecond are refused (`AuthTimestampNotMonotonicError`), and auth operations are
-  never reshuffled. The demo and tests space auth writes by a few milliseconds.
-- **Signer context**: the demo attaches `action.context.signer` by hand to play two
-  callers from one process. In production the `ReactorClient` populates and signs it
-  via `.withSigner(...)` (see the [`audit-trail`](../audit-trail) recipe for a real
-  `RenownCryptoSigner` setup).
-- **Unsigned documents have no creator carve-out**: a document created without a
-  signing key must include a reachable auth-administration grant in its initial policy,
-  or the platform reducer refuses `initializeAuth`. Reachable means the whole grant
-  stack still allows some `{anyone}` or `{address}` principal `execute` on scope
-  `auth`, so an allow shadowed by a later deny does not count.
+  millisecond are refused (`AuthTimestampNotMonotonicError`), so the demo and tests
+  space auth writes by a few milliseconds.
+- **Unsigned documents have no creator carve-out**: without a signing key, the initial
+  policy must include a reachable `execute` grant on scope `auth`, or the platform
+  reducer refuses `initializeAuth`. Reachable means not shadowed by a later deny.
 
 ## Non-goals here
 
-Grants with a `{group: ...}` or `{match: ...}` principal, or a `where` condition,
-parse and store but **never match** on a reactor without the `authGroups` /
-`authConditions` feature flags, which ship in later stages of the platform's
-auth-scope rollout. The evaluator skips them. Don't demo a group grant on an older
-release and conclude enforcement is broken. Group principals have their own recipe:
-[`group-principals`](../group-principals), which needs a release carrying the
-`authGroups` stage.
+Grants with a `{group: ...}` or `{match: ...}` principal, or a `where` condition, parse
+and store but **never match** without the `authGroups` / `authConditions` flags. The
+evaluator skips them silently: check the flags before concluding enforcement is
+broken. [`group-principals`](../group-principals) covers group grants.
 
 ## Running
 
@@ -118,34 +78,11 @@ pnpm install
 pnpm start   # runs src/demo.ts
 ```
 
-The demo walks: Bob writes before any policy exists, Alice initializes the three-grant
-policy, and Bob's `ADD_ENTRY` still lands while `SET_TITLE` / `PIN_ENTRY` /
-`SET_GRANT` are refused. Alice then runs the deny/`moveGrant` sequence above and
-closes with `removeGrant`.
-
 ## Tests
 
 ```sh
 pnpm test
 ```
 
-`tests/enforcement.test.ts` runs the same behaviors against a real flags-on reactor,
-including proof that a denied write stores nothing, plus the self-lockout guardrail
-(surfaced as `operation.error`, not a failed job). The generated model tests live
-under `document-models/team-journal/v1/tests/`.
-
-## Regenerating
-
-The document-model spec lives in `document-models/team-journal/team-journal.json`.
-To regenerate the `gen/` tree after editing it:
-
-```sh
-pnpm run generate
-```
-
-The reducer implementations in `v1/src/reducers/` are scaffolded once and then left
-alone by codegen.
-
-## License
-
-AGPL-3.0-only
+`tests/enforcement.test.ts` runs these behaviors on a flags-on reactor, plus the
+self-lockout guardrail, surfaced as `operation.error`, not a failed job.

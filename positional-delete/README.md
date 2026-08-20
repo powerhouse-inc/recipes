@@ -4,32 +4,23 @@ Deletion as a **position in the merged operation order**, not a document-wide
 tombstone. A `deleteDocument` refuses only the operations that sort after it.
 Operations that sort before it are legitimate history, even when they arrive later
 over sync. Refusal stores the operation as a **denied operation** rather than dropping
-it, so every reactor can independently reach the same verdict for the same history.
-
-The demo is a plain split-brain with a custom `field-log` document model: Station B
-keeps logging observations while Station A deletes the document. No backdating, no
-clock tricks. B's second observation genuinely happens after the delete in wall-clock
-time, B just doesn't know yet.
+it, so every reactor reaches the same verdict independently.
 
 ## What it demonstrates
 
-- After syncing both directions, both reactors agree per operation: the observation
-  that sorts before the delete is applied, the one after it is denied.
-- The refused operation keeps its place in the stored stream, with `deniedReason:
-  "document deleted"` recorded on it. Inspect it with `isDenied(operation)` and
-  `garbageCollect(sortOperations(...))` from `@powerhousedao/shared/document-model`.
+- The refused operation keeps its place in the stored stream with `deniedReason:
+  "document deleted"`, readable through `garbageCollect(sortOperations(...))` and
+  `isDenied(operation)` from `@powerhousedao/shared/document-model`.
 - No origin verdict is shipped or trusted. Each reactor judges arriving history at
-  its own position in the merged order, which is what lets the two converge without
-  coordinating. The `judges each operation at its position and converges` case asserts
-  the same verdict list on both.
+  its own position, which lets the two converge without coordinating (the
+  `judges each operation at its position and converges` case).
 - Once a reactor knows the delete, a newly submitted write fails its job outright
   (`DocumentDeletedError`) and nothing is stored.
-- A single-document read serves the state as of the deletion boundary instead of a
-  hole (see the scope note below).
-- Without the decision model there is a cliff: one deleted flag rejects a whole
-  incoming load, discarding even the history that sorts before the delete.
 
 ## Running
+
+The demo is a plain split-brain over a custom `field-log` document model: Station B
+keeps logging observations while Station A deletes the document, no clock tricks.
 
 ```sh
 pnpm install
@@ -51,8 +42,8 @@ pnpm start   # runs src/demo.ts
 ## How it works
 
 The reactor is built with the `documentDecisions` feature flag, which replaces the
-cached whole-document `isDeleted` check with a decision model built over the
-document stream:
+cached whole-document `isDeleted` check with a decision model over the document
+stream:
 
 ```ts
 const reactor = await new ReactorBuilder()
@@ -62,13 +53,12 @@ const reactor = await new ReactorBuilder()
 ```
 
 Admission is the write path's decision at the stream heads: `decideAtHead` in
-`@powerhousedao/reactor` compiles an append condition over everything it read, and the
-store enforces that condition at write time. A load instead evaluates each operation
-at its own position. A delete arriving late triggers re-evaluation of the tail it now
-precedes, which re-appends retracted operations with a skip rather than rewriting
-history. The stored rows therefore keep both copies, and
-`garbageCollect(sortOperations(...))` resolves them to the effective stream that
-`src/demo.ts` prints.
+`@powerhousedao/reactor` compiles an append condition the store enforces at write
+time. A load instead evaluates each operation at its own position. A delete arriving
+late triggers re-evaluation of the tail it now precedes, which re-appends retracted
+operations with a skip rather than rewriting history. The stored rows therefore keep
+both copies, and `garbageCollect(sortOperations(...))` resolves them to the effective
+stream that `src/demo.ts` prints.
 
 ## Scope note: views on the retraction path
 
@@ -94,9 +84,9 @@ type Observation {
 }
 ```
 
-One operation, `LOG_OBSERVATION`. The reducer's only invariant is id uniqueness.
-Deletion never touches model code: `DELETE_DOCUMENT` is a platform action on the
-`document` scope, and all of the semantics above live in the platform.
+One operation, `LOG_OBSERVATION`, whose reducer only enforces id uniqueness. Deletion
+never touches model code: `DELETE_DOCUMENT` is a platform action on the `document`
+scope.
 
 ## Tests
 
@@ -104,24 +94,12 @@ Deletion never touches model code: `DELETE_DOCUMENT` is a platform action on the
 pnpm test
 ```
 
-`tests/positional-delete.test.ts` runs the same split-brain against two reactors and
-covers the behavior above in five cases.
-
-## Regenerating
-
-The document-model spec lives in `document-models/field-log/field-log.json`:
-
-```sh
-pnpm run generate
-```
+The last case covers the legacy path: without `documentDecisions`, one `isDeleted`
+check rejects a whole incoming load, legitimate pre-delete history included.
 
 ## Related recipes
 
-- [`document-acl`](../document-acl): the auth scope rides the same decision-model
-  machinery. Authorization verdicts are also computed per operation at its position.
-- [`document-versioning`](../document-versioning): replaying stored history is what
-  makes "the effective stream is the consensus artifact" matter.
-
-## License
-
-AGPL-3.0-only
+- [`document-acl`](../document-acl): authorization verdicts computed per operation at
+  its position, on the same decision-model machinery.
+- [`document-versioning`](../document-versioning): replaying stored history, which is
+  what makes the effective stream matter.

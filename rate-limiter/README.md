@@ -4,11 +4,11 @@ A Reactor `IProcessor` paired with an `AuthService` gate to throttle users by si
 
 ## How it works
 
-The recipe has two components that form a feedback loop:
+Two components form a feedback loop.
 
-1. **`RateLimiterProcessor`** sits inside the Reactor and observes every operation. It extracts the signer address from `operation.action.context.signer.user.address`, counts operations per user within a sliding time window, and calls `authService.cooldown()` when a user exceeds the threshold. The processor never throws. It only signals `AuthService` to block the user at the gate.
+1. **`RateLimiterProcessor`** sits inside the Reactor, counts operations per signer address (`operation.action.context.signer.user.address`) within a sliding time window, and calls `authService.cooldown()` when a user exceeds the threshold. The processor never throws.
 
-2. **`AuthService`** sits in front of the Reactor (e.g. in a GraphQL resolver or HTTP middleware). Before forwarding a mutation, the caller checks `authService.isAllowed(address)`. If the user is on cooldown, the response includes `retryAfterMs` so the client knows when to retry.
+2. **`AuthService`** sits in front of the Reactor (e.g. in a GraphQL resolver or HTTP middleware). Before forwarding a mutation, the caller checks `authService.isAllowed(address)`.
 
 ```
 Client → [AuthService gate] → Reactor → RateLimiterProcessor → authService.cooldown()
@@ -16,7 +16,7 @@ Client → [AuthService gate] → Reactor → RateLimiterProcessor → authServi
               └────────────────────────────────────────────────────────┘
 ```
 
-Operations without a signer are silently skipped. Counters live in an in-memory per-address map, cleared by `RateLimiterProcessor.onDisconnect()` and empty after a restart.
+Operations without a signer are silently skipped. Counters live in memory and are empty after a restart.
 
 ## Architecture
 
@@ -65,12 +65,6 @@ if (!check.allowed) {
   res.set("Retry-After", String(Math.ceil(check.retryAfterMs! / 1000)));
   throw new Error(`Rate limited. Retry after ${check.retryAfterMs}ms`);
 }
-```
-
-### Check cooldown status
-
-```ts
-const remainingMs = authService.getCooldownRemaining(userAddress);
 ```
 
 ## Tests

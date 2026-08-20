@@ -44,10 +44,9 @@ One call. `executeBatch` sorts the jobs topologically and turns each `dependsOn`
 ## How it works
 
 1. Spins up an in-memory Reactor with `ReactorBuilder`: PGlite, an in-process Postgres, no external DB.
-2. Creates a drive document to hold the project files.
-3. Submits the 4 jobs built by `buildCreateProjectBatch` via `IReactor.executeBatch`.
-4. Subscribes on the EventBus to `JOB_PENDING`, `JOB_RUNNING`, `JOB_WRITE_READY`, `JOB_READ_READY`, and `JOB_FAILED` for status updates.
-5. Renders a multi-bar terminal display showing each job's status. Recorded events replay with a short delay, since they fire while `executeBatch` runs.
+2. Creates a drive document to hold the project files, then submits the 4 jobs built by `buildCreateProjectBatch` via `IReactor.executeBatch`.
+3. Subscribes on the EventBus to the five `JOB_*` events for status updates.
+4. Renders a multi-bar terminal display showing each job's status. Recorded events replay with a short delay, since they fire while `executeBatch` runs.
 
 ## Job status lifecycle
 
@@ -58,8 +57,6 @@ PENDING → RUNNING → WRITE_READY → READ_READY
 
 | Status | Meaning |
 |--------|---------|
-| `PENDING` | Job is queued but not yet started |
-| `RUNNING` | Job is currently being executed |
 | `WRITE_READY` | Operations written to the operation store |
 | `READ_READY` | Read models have finished indexing (terminal) |
 | `FAILED` | Job failed (terminal) |
@@ -91,7 +88,3 @@ Drive created: abc123
   Project: jkl012
   Drive:   abc123
 ```
-
-## License
-
-AGPL-3.0-only
