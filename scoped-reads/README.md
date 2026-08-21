@@ -15,15 +15,15 @@ sits on the `ReactorClient`, which [`document-acl`](../document-acl) and
   withheld scope is *absent* from `document.state` rather than present and
   empty. `client.execute()` hands back a document gated as the client's own
   identity.
-- **It carries no feature flag**: with `featureFlags: {}` the read is still
-  filtered. Admission is staged behind flags. Reading is not.
+- **The read gate carries no feature flag**: with `featureFlags: {}` the read
+  is filtered, while admission waits on `authEnforcement`.
 
 ## An allow on execute confers read
 
 Alice holds no read grant. She reads all of `global` because she may write one
 operation in it: the operation list restricts what she may execute, not what
-she may see. The converse does not hold, so Carol reads the expenses and
-cannot submit one.
+she may see. A read grant does not confer execute: Carol reads the expenses
+and cannot submit one.
 
 `document-acl`, `revocation-race` and `group-principals` all install an
 administration grant of `{ can: "execute", scope: "*" }`, which now publishes
@@ -34,12 +34,12 @@ leave some subject able to execute `SET_GRANT` on `auth`, and nothing wider.
 ## A `{ group }` read grant follows the roster
 
 Offboarding Bob withdraws his `global` and `local` scopes with no write to the
-report's policy, and its `header.revision.auth` never moves.
+report's policy, and `header.revision.auth` never moves.
 
-Naming a group publishes its roster to that audience: Carol reads the reviewers
-roster she is not on, past its Alice-only policy, because the report's
-`{ group }` grants cannot be evaluated without the member list. Mallory, whom
-the report serves nothing, does not.
+Naming a group publishes its roster to the naming document's audience. Carol
+reads the reviewers roster she is not on, past its Alice-only policy, because
+the report's `{ group }` grants cannot be evaluated without the member list.
+Mallory, whom the report serves nothing, does not.
 
 ## The two domain scopes
 

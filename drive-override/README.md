@@ -8,9 +8,9 @@ A custom container document that tracks its children via the `ADD_RELATIONSHIP` 
 - Reading children back is a paged call: `documentIndexer.getOutgoing(containerId, ["contains"], { cursor, limit })`, advancing `cursor` until `nextCursor` is empty.
 - The graph runs both ways. `documentIndexer.getIncoming(childId)` returns the container as a parent.
 
-## Why this scales better than `ADD_FILE`
+## Why `ADD_RELATIONSHIP` scales better than `ADD_FILE`
 
-`document-drive` keeps its child catalogue inside the drive document's `state.global.nodes[]`. Each `ADD_FILE` mutates that array: every replay walks every previously-added child, every read materialises the full state, and operation-log size grows with child count. Container performance decays as the drive fills.
+`document-drive` keeps its child catalogue inside the drive document's `state.global.nodes[]`. Each `ADD_FILE` mutates that array: every replay walks every previously-added child, every read materialises the full state, and operation-log size grows with child count.
 
 `ADD_RELATIONSHIP` is a system-scope action handled directly by the reactor's job executor. The source document's state and operation log are unaffected. The indexer writes one row to `DocumentRelationship` and exposes the graph via `IDocumentIndexer`. Cost is flat in the number of children.
 
@@ -40,7 +40,7 @@ The reactor subgraph (the GraphQL schema `@powerhousedao/reactor-api` serves in 
 - `documentOutgoingRelationships(documentId, relationshipTypes, paging)` returns the children of a container.
 - `documentIncomingRelationships(documentId, relationshipTypes, paging)` returns the parents of a child.
 
-Both fields are paged. Use them when querying from an external client. The demo starts no server, so it only prints a pointer to them.
+Both fields are paged. Use them when querying from an external client. The demo starts no server, so it only prints a note naming both fields.
 
 ## Running
 

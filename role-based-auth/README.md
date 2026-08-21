@@ -30,7 +30,7 @@ type Note {
 |---|---|---|
 | `bootstrap` | anyone, once | Sets the caller as `creator` and pushes them into `admins`. Throws `AlreadyBootstrapped` on a second call. |
 | `grantAdmin(address)` | admin | Promotes `address` to admin and removes it from `members` if present. |
-| `revokeAdmin(address)` | admin | Removes `address` from admins. Throws `CannotRevokeCreator` on the creator, `LastAdmin` if it would empty the admin set. |
+| `revokeAdmin(address)` | admin | Removes `address` from admins. Throws `CannotRevokeCreator` on the creator, `LastAdmin` if the removal would empty the admin set. |
 | `addMember(address)` | admin | Adds `address` to `members`. Throws `AddressAlreadyAdmin` if the address is already an admin. |
 | `removeMember(address)` | admin | Removes `address` from `members` (no-op if absent). |
 | `writeNote({ id, text, createdAt })` | admin or member | Appends `{ id, author, text, createdAt }` to `state.notes`. Throws `NotAuthorized` if the caller has no role. |

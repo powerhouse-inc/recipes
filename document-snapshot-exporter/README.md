@@ -1,6 +1,6 @@
 # Document Snapshot Exporter
 
-CLI tool that exports document state and operation history to JSON files, demonstrating reliable read-after-write consistency using the Reactor API.
+CLI tool that exports document state and operation history to JSON files, demonstrating read-after-write consistency using the Reactor API.
 
 ## What it demonstrates
 
@@ -22,7 +22,7 @@ filter in `src/export-reactor.ts`.
 | Consistency | You pass `ConsistencyToken` to reads | Managed automatically |
 | Signing | Manual (mutations like `create()` take an optional `ISigner`) | Automatic, from `ReactorClientBuilder.withSigner()` |
 | `getOperations()` returns | `Record<string, PagedResults>` keyed by scope | `PagedResults` (flat) |
-| Use when | You need fine-grained control over job lifecycle | You want a simpler, higher-level API |
+| Use when | You need fine-grained control over job lifecycle | You do not need access to `JobInfo` or consistency tokens |
 
 `ISigner` is the action-signing interface exported by `@powerhousedao/shared/document-model`.
 A scope is one named slice of a document's state. `reactor.getOperations()` keys its result

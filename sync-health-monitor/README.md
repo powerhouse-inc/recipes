@@ -4,7 +4,7 @@ Subscribes to `SyncEventTypes` on the Reactor EventBus and maintains a live heal
 
 ## What it shows
 
-The recipe reaches into the built `ReactorModule` for two handles: `eventBus`, which the health monitor subscribes to, and `syncModule`, which registers the remote on each side. The demo then drives the pair through failure and recovery, so all five sync event types fire at least once.
+The recipe reaches into the built `ReactorModule` for two handles: `eventBus`, which the health monitor subscribes to, and `syncModule`, which registers the remote on each side. The demo then drives the two reactors through failure and recovery, so all five sync event types fire at least once.
 
 ## How it works
 

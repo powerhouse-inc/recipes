@@ -22,10 +22,10 @@ as a **membership removal on a different document** than the one being judged.
 ## Run it
 
 Group principals apply only with `authGroups`, third of the reactor's cascading
-auth flags (`documentDecisions` → `authEnforcement` → `authGroups`). Below it a
-`{ group }` grant parses and stores but never matches, as
+auth flags (`documentDecisions` → `authEnforcement` → `authGroups`). Below
+`authGroups` a `{ group }` grant parses and stores but never matches, as
 [`document-acl`](../document-acl) warns. The catalog pins `6.2.2-dev.52`, which
-carries the stage.
+carries that flag.
 
 ```sh
 pnpm install
@@ -50,7 +50,7 @@ verifying those signatures is a separate concern
 }
 ```
 
-The roster's document id is data, so which humans that means is decided by
-folding the roster's stream to the position of the operation being judged. A
+The roster's document id is data, so which humans the grant covers is decided
+by folding the roster's stream to the position of the operation being judged. A
 `{ group }` grant on a roster is itself refused (`assertValidGrant` throws
 `GroupPrincipalNotAllowedError`), so the fold is always one roster deep.

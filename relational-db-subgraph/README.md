@@ -1,6 +1,6 @@
 # Relational DB Subgraph
 
-A relational DB processor that catalogs every document it sees, with Kysely migrations, a typed query layer, and a GraphQL subgraph over the result. This is the pattern `ph generate --processor` and `ph generate --subgraph` produce.
+A relational DB processor that catalogs every document it sees, with Kysely migrations, a typed query layer, and a GraphQL subgraph over the result. This recipe is the pattern `ph generate --processor` and `ph generate --subgraph` produce.
 
 ## What it does
 
@@ -15,7 +15,7 @@ The GraphQL subgraph exposes this data via queries like `documents`, `document(i
 
 | Generated artifact | File in this recipe |
 |---|---|
-| `ph generate --processor` | `src/processor.ts`: `CatalogProcessor extends RelationalDbProcessor<CatalogDB>`, which gives it namespaced DB access, `initAndUpgrade()` to apply migrations, and a type-safe `query` builder |
+| `ph generate --processor` | `src/processor.ts`: `CatalogProcessor extends RelationalDbProcessor<CatalogDB>`, which gives the processor namespaced DB access, `initAndUpgrade()` to apply migrations, and a type-safe `query` builder |
 | `ph generate --subgraph` | `src/subgraph.ts`: `createCatalogSchema` builds the GraphQL SDL and resolvers over the query layer, `startCatalogServer` serves them with graphql-yoga |
 | Schema types | `src/schema.ts`: the Kysely DB interface `CatalogDB`, with the `DocumentRow` and `DocumentTagRow` row types |
 | Migrations | `src/migrations.ts`: `up()` creates both tables and their indexes, `down()` drops them |

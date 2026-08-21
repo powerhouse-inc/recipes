@@ -51,7 +51,7 @@ import { SearchProcessor } from "@powerhousedao/example-full-text-search";
 const processor = new SearchProcessor(db);
 ```
 
-Hand it to the Reactor's `ProcessorManager`: `registerFactory("full-text-search", () => [{ processor, filter: { branch: ["main"] }, startFrom: "beginning" }])`. `demo.ts` does this against a `ReactorBuilder` module.
+Hand the processor to the Reactor's `ProcessorManager`: `registerFactory("full-text-search", () => [{ processor, filter: { branch: ["main"] }, startFrom: "beginning" }])`. `demo.ts` makes the same call against a module built by `ReactorBuilder`.
 
 ### Query the index
 
@@ -65,4 +65,4 @@ const results = await search.search("budget allocation", 10);
 
 ## Exports
 
-Beyond the three functions used above, `index.ts` exports `down` (drops the index, then the table), `flattenToSearchableText`, and the types `SearchResult`, `SearchDB`, and `SearchIndex`.
+Beyond `up`, `SearchProcessor`, and `createSearchQuery`, `index.ts` exports `down` (drops the index, then the table), `flattenToSearchableText`, and the types `SearchResult`, `SearchDB`, and `SearchIndex`.

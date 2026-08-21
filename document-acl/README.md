@@ -26,11 +26,10 @@ for an entry's `author`.
 | `g-alice-all` | allow | Alice | `execute` on scope `*` |
 | `g-anyone-add` | allow | anyone | `execute` `ADD_ENTRY` on scope `global` |
 
-Evaluation is **default deny, last applicable grant wins**. `g-alice-admin` makes
-editing the policy itself policy: Bob's `SET_GRANT` is refused. The demo appends
+Evaluation is **default deny, last applicable grant wins**. `SET_GRANT` is judged
+against scope `auth`, which only Alice holds, so Bob's is refused. The demo appends
 `g-deny-bob` (deny Bob `ADD_ENTRY`) after those three and his next entry fails.
 `moveGrant` sends that deny to index 0, `g-anyone-add` is last again, and Bob is back.
-Order decides, not existence.
 
 ## The feature flags
 
@@ -48,8 +47,8 @@ const reactor = await new ReactorBuilder()
 
 The flags govern **enforcement only**. The auth data model is always live, so a policy
 written on a flags-on reactor is silently unenforced on a flags-off one, where
-`selectDecisionModel` leaves the auth scope out of every append condition. Flip them per
-fleet of reactors that sync the same documents, never per node. Asking for
+`selectDecisionModel` leaves the auth scope out of every append condition. Flip the
+flags per fleet of reactors that sync the same documents, never per node. Asking for
 `authEnforcement` without `documentDecisions` throws at build time.
 
 ## Gotchas worth knowing

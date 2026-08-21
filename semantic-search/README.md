@@ -55,9 +55,9 @@ const results = await query.searchSimilar("budget allocation", 10);
 - **The embedding dimension is baked into the column type.** `vector(384)` matches `all-MiniLM-L6-v2`. The processor asserts `embedding.length === 384` before insert, so swapping models with a different dimension fails loudly instead of corrupting the index.
 - Long content is **truncated, not chunked**. MiniLM attends to ~256 tokens, and `utils.ts` cuts at `MAX_EMBED_CHARS` (2 000 characters). Production systems should chunk long content into multiple rows.
 - At demo scale the HNSW parameters don't matter. The approximate-nearest-neighbour index in `migrations.ts` takes pgvector's defaults (`m=16`, `ef_construction=64`), which hold until the table reaches many thousands of vectors.
-- [`@powerhousedao/knowledge-note`](https://www.npmjs.com/package/@powerhousedao/knowledge-note), the production proof of this stack, lazily `import()`s PGlite so registration survives deployments where the transitive runtime deps aren't installed. This Node-only recipe does not need that.
+- [`@powerhousedao/knowledge-note`](https://www.npmjs.com/package/@powerhousedao/knowledge-note), a published package running the same Transformers.js-and-pgvector stack, lazily `import()`s PGlite so registration survives deployments where the transitive runtime deps aren't installed. This Node-only recipe imports PGlite statically.
 
 ## Related recipes
 
-- [full-text-search](../full-text-search): the lexical sibling, with the same layout and the same text extraction, so the two approaches diff cleanly.
-- [relational-db-subgraph](../relational-db-subgraph): how to expose a read model like this one over GraphQL.
+- [full-text-search](../full-text-search): the lexical sibling, with the same layout and the same text extraction, so the two directories can be diffed file by file.
+- [relational-db-subgraph](../relational-db-subgraph): how to expose a read model like `semantic_index` over GraphQL.

@@ -1,7 +1,7 @@
 # Auth Preflight
 
 Every other auth recipe here shows the reactor refusing a write **after** it
-arrives, as a failed job or a stored `deniedReason`. This one asks first.
+arrives, as a failed job or a stored `deniedReason`. This recipe asks first.
 `evaluateActions` answers what the reactor *would* decide about a batch of
 candidate operations, without submitting any of them, so a UI can disable a
 control rather than offer one that fails.
@@ -9,11 +9,11 @@ control rather than offer one that fails.
 ## What it demonstrates
 
 The batch is predicted first, then every candidate is actually executed, and the
-verdicts are compared one for one. Both decide through the reactor's own decision
-model, at the same stream heads. A refusal carries the consensus string the
-reactor would have recorded (`no grant permits this operation`). `anyAllowed` and
-`allAllowed` answer what a toolbar and a form each ask, and every aggregate is
-false over an empty batch.
+verdicts are compared one for one. Prediction and submit decide through the
+reactor's own decision model, at the same stream heads. A refusal carries
+the consensus string the reactor would have recorded
+(`no grant permits this operation`). `anyAllowed` and `allAllowed` answer what a
+toolbar and a form each ask, and every aggregate is false over an empty batch.
 
 ## The policy
 
@@ -33,20 +33,20 @@ action's own input, not a rule in the reducer:
 }
 ```
 
-This is the first recipe in the repo to turn on `authConditions`, which is what
+This recipe is the first in the repo to turn on `authConditions`, which is what
 makes a `where` clause apply at all. Below that flag a conditional grant never
 matches, so it fails closed, and the preflight fails closed with it. Because the
-grant reads `action.input.amountCents`, a half-filled form predicts the verdict a
-half-filled form earns.
+grant reads `action.input.amountCents`, the prediction follows the amount the
+form currently holds, and denies until one is typed.
 
 ## A prediction, not a promise
 
 An allow is obtained, the grant behind it is revoked, and the very same submit is
 refused. The submit path stays the only authority. A reactor without
 `authEnforcement` holds no decision model and throws
-`AuthEnforcementDisabledError`. A caller reads that as "cannot know" and leaves
-its controls alone, never as a refusal that would grey out every button wherever
-enforcement is off.
+`AuthEnforcementDisabledError`. A caller reads that error as "cannot know" and
+leaves its controls alone, never as a refusal that would grey out every button
+wherever enforcement is off.
 
 ## What it does not cover
 
@@ -55,7 +55,7 @@ The preflight is not the legacy host-side permission tables, which refuse with
 transports, neither exercisable from a Node recipe: `useCanExecute` in
 `@powerhousedao/reactor-browser` wraps it for React, and the reactor subgraph
 serves it as an `evaluateActions` GraphQL query through
-`createReactorGraphQLClient`. Both decide through this same call.
+`createReactorGraphQLClient`.
 
 ## Running it
 
@@ -70,4 +70,4 @@ pnpm start   # narrated walkthrough in five acts
 
 `src/demo.ts` prints predicted against actual for every candidate, then plays the
 staleness and flags-off acts. `tests/auth-preflight.test.ts` holds one test per
-claim above.
+claim in this README.

@@ -2,7 +2,7 @@
 
 Receive external webhooks (Stripe-style), verify the signature **server-side
 against the raw request bytes**, and map verified events onto document actions.
-This is the inbound twin of [`discord-webhook-processor`](../discord-webhook-processor)
+This recipe is the inbound twin of [`discord-webhook-processor`](../discord-webhook-processor)
 (documents → external service).
 
 ## The headline rule: verify the raw bytes
@@ -41,9 +41,9 @@ operations to them.
 ### Signature scheme (modelled on Stripe)
 
 The `x-webhook-signature` header is `t=<unixSeconds>,v1=<hmacHex>`, and the
-signed payload is `` `${t}.${rawBody}` ``. Folding the timestamp into the
-signature is what makes the replay-window check trustworthy. The timestamp can't be altered
-independently of the signature.
+signed payload is `` `${t}.${rawBody}` ``. Because the timestamp is inside that
+payload, it can't be altered independently of the signature, which is what the
+replay-window check relies on.
 
 ```ts
 import { signWebhook, verifyWebhook } from "@powerhousedao/example-inbound-webhook-bridge";
@@ -62,14 +62,14 @@ timestamps outside the tolerance window (default 5 minutes). Comparison uses
 
 Providers redeliver. Every event that mutates the document records its provider
 `event.id` in the document's `processedEventIds` state. Because the dedup set
-lives in **document state**, not in the memory of a long-running listener, it is
-rebuilt for free after a restart. The bridge (`src/webhook-bridge.ts`)
-short-circuits a known event id (keeping history clean), and the reducer
-refuses a duplicate as a second line of defense for racing redeliveries.
+lives in **document state**, not in the memory of a long-running listener, it
+survives a restart. The bridge (`src/webhook-bridge.ts`) short-circuits a known
+event id, so no operation is appended, and the reducer refuses a duplicate if
+two redeliveries race past that check.
 
 ## The payment document model
 
-A deliberately small state machine, **generated** from
+A four-state machine, **generated** from
 `document-models/payment/payment.json` via `pnpm generate`:
 
 ```

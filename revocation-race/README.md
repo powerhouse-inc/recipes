@@ -3,8 +3,8 @@
 Convergent authorization across reactors. Alice revokes Bob's approval grant on one
 reactor (`@powerhousedao/reactor`, the Powerhouse node that stores documents and
 applies their operations) while Bob approves an expense on another. **Both succeed
-locally**, because no transaction spans two reactors. What keeps the fleet honest is
-that every reactor judges every operation **at its position in the merged order**.
+locally**, because no transaction spans two reactors. Both reactors still converge,
+because each judges every operation **at its position in the merged order**.
 
 ## What it demonstrates
 
@@ -20,10 +20,10 @@ that every reactor judges every operation **at its position in the merged order*
 
 ## The rejected alternative
 
-The simplest-looking design is to judge an operation once, at its origin, and ship
-the verdict with it. That verdict would be wrong the moment a concurrent policy
-change sorts before the operation, and every reactor would then have to either trust
-it (divergence) or re-derive it anyway.
+The alternative is to judge an operation once, at its origin, and ship the verdict
+with it. That verdict would be wrong the moment a concurrent policy change sorts
+before the operation, and every reactor would then have to either trust it
+(divergence) or re-derive it anyway.
 
 ## Policy setup
 
@@ -69,7 +69,7 @@ pnpm install
 pnpm start   # runs src/demo.ts
 ```
 
-The demo runs the race twice on one `expense-report` document, with honest wall-clock
+The demo runs the race twice on one `expense-report` document, with wall-clock
 ordering both times. When the revocation sorts first, both reactors deny the
 approval: the expense stays `PENDING` and the refusal is stored with
 `deniedReason: "no grant permits this operation"`. When the approval sorts first,

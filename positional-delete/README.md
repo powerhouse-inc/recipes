@@ -12,7 +12,7 @@ it, so every reactor reaches the same verdict independently.
   "document deleted"`, readable through `garbageCollect(sortOperations(...))` and
   `isDenied(operation)` from `@powerhousedao/shared/document-model`.
 - No origin verdict is shipped or trusted. Each reactor judges arriving history at
-  its own position, which lets the two converge without coordinating (the
+  its own position, which lets two reactors converge without coordinating (the
   `judges each operation at its position and converges` case).
 - Once a reactor knows the delete, a newly submitted write fails its job outright
   (`DocumentDeletedError`) and nothing is stored.
@@ -101,5 +101,5 @@ check rejects a whole incoming load, legitimate pre-delete history included.
 
 - [`document-acl`](../document-acl): authorization verdicts computed per operation at
   its position, on the same decision-model machinery.
-- [`document-versioning`](../document-versioning): replaying stored history, which is
-  what makes the effective stream matter.
+- [`document-versioning`](../document-versioning): replaying stored history through the
+  latest reducer after a schema upgrade.

@@ -5,14 +5,14 @@ A polling worker that pulls an off-platform feed into event-sourced documents
 `@powerhousedao/reactor` instance that stores the documents and applies
 operations to them. A deterministic in-process mock feed replaces the chain a
 production poller would page ([the brief](../briefs/05-external-feed-ingest.md)
-has the blueprint), so it runs offline with no keys.
+describes that poller), so the demo runs offline with no keys.
 
-## The one idea worth taking away
+## Where the checkpoint lives
 
 > **The document is the checkpoint store.** The dedup set and the high-watermark
 > live in document state, and the worker rebuilds them at startup. An
 > in-memory-only checkpoint re-ingests everything since the last flush when the
-> worker dies mid-stream. Seed from state and a restart is a no-op.
+> worker dies mid-stream. A state-seeded restart re-ingests nothing.
 
 ```
 external feed ──fetchSince(watermark)──▶ FeedPoller
@@ -38,7 +38,7 @@ external feed ──fetchSince(watermark)──▶ FeedPoller
 
 The watermark is only a *fetch optimization* ("don't re-read the whole feed"),
 **not** the dedup mechanism. Real feeds redeliver: the same `externalId` can
-reappear at a *later* cursor, sailing straight past a watermark filter. The
+reappear at a *later* cursor, and a watermark filter lets it through. The
 authoritative check is "have I already recorded this `externalId`?", answered
 from the document state of that source.
 
@@ -53,8 +53,8 @@ pnpm --filter @powerhousedao/example-external-feed-ingest start
 
 The demo ingests the first three events, **kills the poller** (discarding its
 in-memory cache), then starts a fresh one that re-seeds from the document and
-drains the rest. It prints the final ledger, the operation history, and three
-checks: no duplicate across the restart, the correction recorded as
+drains the rest. The demo prints the final ledger, the operation history, and
+three checks: no duplicate across the restart, the correction recorded as
 `MARK_SUPERSEDED` plus a new entry, and `po-001`'s payload intact.
 
 ## The document model

@@ -25,7 +25,7 @@ Operation written → JOB_WRITE_READY → ReadModelCoordinator
 
 ### Why implement IReadModel directly?
 
-`BaseReadModel` tracks its progress in the `ViewState` table so it can catch up or rewind, and its constructor takes a database handle plus three reactor internals: `IOperationIndex`, `IWriteCache`, and `IConsistencyTracker`. Those are constructed inside `buildModule()`, so a subclass registers through `withReadModelFactory()` rather than `withReadModel()`. That cost buys persistence, which an in-memory counter does not need. Implementing `IReadModel` directly keeps the example minimal and shows the core contract.
+`BaseReadModel` tracks its progress in the `ViewState` table so it can catch up or rewind, and its constructor takes a database handle plus three reactor internals: `IOperationIndex`, `IWriteCache`, and `IConsistencyTracker`. Those are constructed inside `buildModule()`, so a subclass registers through `withReadModelFactory()` rather than `withReadModel()`. The `ViewState` tracking and those dependencies serve persistence, which an in-memory counter does not need. `IReadModel` itself requires only `name` and `indexOperations()`.
 
 ### buildModule() internals
 

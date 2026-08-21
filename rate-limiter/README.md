@@ -1,6 +1,6 @@
 # Rate Limiter
 
-A Reactor `IProcessor` paired with an `AuthService` gate to throttle users by signer address, preventing any single user from overwhelming the system with excessive operations. The Reactor (`@powerhousedao/reactor`) is the Powerhouse node that stores documents and applies their operations.
+A Reactor `IProcessor` paired with an `AuthService` gate to throttle users by signer address. The Reactor (`@powerhousedao/reactor`) is the Powerhouse node that stores documents and applies their operations.
 
 ## How it works
 

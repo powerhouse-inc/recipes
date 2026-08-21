@@ -53,8 +53,8 @@ query time by `lod` (level of detail): `lod: { category: 4 }` collapses
 `ph/expenses/category/headcount/salaries` into
 `ph/expenses/category/headcount`, and every key in `select` needs a `lod`
 entry. Every query in `src/query.ts` also passes an explicit window. The
-engine can derive a missing start/end from the data, but that breaks down
-when every value lands on a single date.
+engine can derive a missing start/end from the data, but the derivation
+breaks down when every value lands on a single date.
 
 ## Running the demo
 

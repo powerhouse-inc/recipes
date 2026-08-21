@@ -13,9 +13,9 @@ All package references point into the registry-audit cache:
 ~/projects/powerhouse/powerhouse/.cache/registry-audit/extracted/<package>/
 ```
 
-These are extracted npm tarballs (compiled `dist/` output: readable JS plus `.d.ts`
-and `powerhouse.manifest.json`). If the cache has been cleared, regenerate it from the
-monorepo:
+Each `<package>` directory holds an extracted npm tarball (compiled `dist/` output:
+readable JS plus `.d.ts` and `powerhouse.manifest.json`). If the cache has been cleared,
+regenerate it from the monorepo:
 
 ```sh
 cd ~/projects/powerhouse/powerhouse
@@ -26,11 +26,11 @@ pnpm audit:download && pnpm audit:extract   # tools/registry-audit
 
 - Standalone package named `@powerhousedao/example-<name>`, `"private": true`, AGPL-3.0-only.
 - Powerhouse deps via `catalog:` (see root `pnpm-workspace.yaml`). A single catalog
-  tracks the `6.2.0-dev` line. The `document-drive` package is dead. The drive
-  document model lives at `@powerhousedao/shared/document-drive`.
+  tracks the `6.2.2-dev` line. The `document-drive` package was deleted upstream. The
+  drive document model lives at `@powerhousedao/shared/document-drive`.
 - Flat files or `src/`, a runnable `demo.ts` (`pnpm start` via tsx), vitest tests, a README.
 - Register the new directory in `pnpm-workspace.yaml` `packages:` and add a row to the
-  root `README.md` table.
+  matching table in the root `README.md`.
 
 ## The briefs
 
@@ -47,4 +47,3 @@ pnpm audit:download && pnpm audit:extract   # tools/registry-audit
 | 9 | [ai-suggestions](./09-ai-suggestions.md) | Agent suggestions as first-class document state with human accept/dismiss resolution |
 | 10 | [derived-invariants](./10-derived-invariants.md) | Reducers recompute rollups after every mutation and auto-advance status at thresholds |
 | 11 | [phd-import](./11-phd-import.md) | CLI imports a `.phd` archive into a remote reactor by replaying its operations |
-| 12 | [deletion-aware-read-model](./12-deletion-aware-read-model.md) | Relational read model that handles document deletion via a sentinel table |

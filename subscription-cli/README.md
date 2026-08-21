@@ -2,7 +2,7 @@
 
 A standalone CLI for monitoring Powerhouse Reactor GraphQL subscriptions over WebSocket in real time.
 
-Subscribes to `documentChanges` and optionally `jobChanges`, printing timestamped events to stdout. Useful for debugging, integration testing, and observing Reactor activity.
+Subscribes to `documentChanges` and optionally `jobChanges`, printing timestamped events to stdout.
 
 ## Usage
 
@@ -40,4 +40,4 @@ pnpm start -- --url ws://localhost:4001/graphql/subscriptions \
 [12:34:58.100] documentChanges [UPDATE] Invoice Q1 (powerhouse/billing-statement)
 ```
 
-Press `Ctrl+C` for clean shutdown.
+Press `Ctrl+C` to unsubscribe, dispose the WebSocket client, and exit.

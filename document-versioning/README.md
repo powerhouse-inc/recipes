@@ -43,8 +43,8 @@ loading a document (`baseLoadFromInput` → `replayDocument`, distilled in
 upgrade record live in the `document` scope, which replay skips.
 
 A transition that migrates `state` but forgets `initialState` leaves a healthy-looking
-document whose seeded items, created by no operation, stay v1-shaped there. A rebuild no
-longer reproduces the stored state, and the document errors on load with a
+document whose seeded items, created by no operation, stay v1-shaped in `initialState`.
+A rebuild no longer reproduces the stored state, and the document errors on load with a
 `HashMismatchError` (`Hash mismatch on document …, scope global`). The transition here
 patches both, and [`tests/versioning.test.ts`](./tests/versioning.test.ts) includes a
 deliberately broken state-only one.
@@ -102,7 +102,7 @@ pnpm start
 ```
 
 The demo creates a v1 document with a seeded item, upgrades it, dispatches v2 operations,
-then replays the history and verifies it converges.
+then replays the history and verifies the replay matches the live document.
 
 ## Tests
 
