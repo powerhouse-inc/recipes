@@ -61,10 +61,9 @@ holds one test per act of it, plus two with the feature flags off.
 
 ## Version requirement
 
-Per-scope read filtering is newer than `6.2.2-dev.52`, which this repo's
-catalog pins in `pnpm-workspace.yaml`. Until a dev release carrying it is
-published and the catalog bumped, `build`, `test` and `start` pass only
-against a local checkout of the monorepo:
+Per-scope read filtering ships in `6.2.2-dev.62`, which this repo's catalog
+pins in `pnpm-workspace.yaml`. To run against a local monorepo checkout
+instead:
 
 ```sh
 cd ../powerhouse
