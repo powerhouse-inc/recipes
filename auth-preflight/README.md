@@ -59,7 +59,7 @@ serves it as an `evaluateActions` GraphQL query through
 
 ## Running it
 
-`evaluateActions` ships in `6.2.2-dev.52`, which this repo's catalog pins, so the
+`evaluateActions` ships in `6.2.2-dev.62`, which this repo's catalog pins, so the
 recipe runs standalone:
 
 ```sh
