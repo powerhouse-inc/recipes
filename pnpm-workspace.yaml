@@ -22,11 +22,16 @@ allowBuilds:
 # IReactorClient.evaluateActions / useCanExecute (the read-only admission
 # preflight the auth-preflight recipe is built on), per-scope read filtering
 # (scoped-reads), and the document-model/mock subpath generateMock moved to.
+#
+# reactor-api is pinned with the family, but no published build carries the
+# HTTP scope API (subgraph.http) the hosted-webhooks recipe uses yet. That
+# recipe's README has the local link to use until one does.
 catalog:
   "@powerhousedao/analytics-engine-browser": 6.2.2-dev.62
   "@powerhousedao/analytics-engine-core": 6.2.2-dev.62
   "@powerhousedao/ph-cli": 6.2.2-dev.62
   "@powerhousedao/reactor": 6.2.2-dev.62
+  "@powerhousedao/reactor-api": 6.2.2-dev.62
   "@powerhousedao/reactor-browser": 6.2.2-dev.62
   "@powerhousedao/reactor-group": 6.2.2-dev.62
   "@powerhousedao/shared": 6.2.2-dev.62

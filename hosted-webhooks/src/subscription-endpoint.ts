@@ -1,10 +1,4 @@
-import {
-  JobAwaiter,
-  JobStatus,
-  type IEventBus,
-  type IReactor,
-} from "@powerhousedao/reactor";
-import type { SubscriptionDocument } from "document-models/subscription/v1";
+import type { IReactorClient } from "@powerhousedao/reactor";
 import type {
   IHttpScope,
   IWebhookEndpoints,
@@ -12,7 +6,8 @@ import type {
   WebhookPolicy,
   WebhookReply,
   WebhookRequest,
-} from "./http-contract.js";
+} from "@powerhousedao/reactor-api";
+import type { SubscriptionDocument } from "document-models/subscription/v1";
 import { actionForEvent, parseStripeEvent } from "./stripe-events.js";
 
 /** The endpoint family's name. It distinguishes families, and never appears in a URL. */
@@ -27,8 +22,12 @@ const RECEIVED = 200;
 const JSON_CONTENT_TYPE = "application/json; charset=utf-8";
 
 export interface SubscriptionEndpointDeps {
-  reactor: IReactor;
-  eventBus: IEventBus;
+  /**
+   * The reactor handle a subgraph already holds as `this.reactorClient`. The
+   * client awaits its own jobs and throws on a failed one, so nothing here
+   * has to reach for an event bus.
+   */
+  reactorClient: IReactorClient;
   /**
    * The Stripe signing secret for one subscription document. Read from wherever
    * the host keeps secrets, never from the document's public state.
@@ -39,7 +38,6 @@ export interface SubscriptionEndpointDeps {
 export interface SubscriptionEndpoints {
   endpoints: IWebhookEndpoints;
   routes: ScopedRouteHandle[];
-  shutdown: () => void;
 }
 
 function json(status: number, body: unknown): Response {
@@ -53,19 +51,20 @@ function json(status: number, body: unknown): Response {
  * are named relative to it: `subscriptions/:id` is served at
  * `<publicUrl>/api/@powerhousedao/example-hosted-webhooks/subscriptions/:id`.
  * There is no way to name a path outside that namespace.
+ *
+ * Nothing is returned for teardown: the host disposes a package's scope when
+ * the package is replaced or the process shuts down, which releases every
+ * route and webhook registration made through it.
  */
 export async function registerSubscriptionEndpoints(
   scope: IHttpScope,
   deps: SubscriptionEndpointDeps,
 ): Promise<SubscriptionEndpoints> {
-  const { reactor, secretFor } = deps;
-  const awaiter = new JobAwaiter(deps.eventBus, (jobId, signal) =>
-    reactor.getJobStatus(jobId, signal),
-  );
+  const { reactorClient, secretFor } = deps;
 
   const load = async (documentId: string) => {
     try {
-      return await reactor.get<SubscriptionDocument>(documentId);
+      return await reactorClient.get<SubscriptionDocument>(documentId);
     } catch {
       return undefined;
     }
@@ -138,15 +137,15 @@ export async function registerSubscriptionEndpoints(
       return reply({ duplicate: event.id });
     }
 
-    const job = await reactor.execute(request.key, BRANCH, [action]);
-    const info = await awaiter.waitForJob(job.id);
-    if (info.status === JobStatus.FAILED) {
+    try {
+      await reactorClient.execute(request.key, BRANCH, [action]);
+    } catch (error) {
       // A reducer that refused this event will refuse it again, so a retry
       // would only repeat the work. Answering 200 stops the retries, and the
       // body records why.
       return reply({
         rejected: action.type,
-        reason: info.error?.message ?? "job failed",
+        reason: error instanceof Error ? error.message : String(error),
       });
     }
 
@@ -213,12 +212,5 @@ export async function registerSubscriptionEndpoints(
     ),
   ];
 
-  return {
-    endpoints,
-    routes,
-    shutdown: () => {
-      for (const route of routes) route.dispose();
-      awaiter.shutdown();
-    },
-  };
+  return { endpoints, routes };
 }

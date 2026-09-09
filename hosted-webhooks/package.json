@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@powerhousedao/reactor": "catalog:",
+    "@powerhousedao/reactor-api": "catalog:",
     "@powerhousedao/reactor-browser": "catalog:",
     "@powerhousedao/shared": "catalog:",
     "document-model": "catalog:",
