@@ -71,13 +71,14 @@ in-tree consumer.
 ```ts
 const endpoints = await scope.webhooks.register({
   name: "stripe",
+  // Fixed for the family. Anything a document configures goes in policyFor.
+  defaults: { methods: ["POST"] },
   rateLimit: { perMinute: 120 },
   policyFor: async (documentId) => {
     const document = await load(documentId);
     if (!document) return undefined;
     if (document.state.global.status === "CANCELED") return undefined;
     return {
-      methods: ["POST"],
       dedupe: { field: "id", ttlSeconds: 3600 },
       verify: {
         scheme: "stripe",
@@ -90,23 +91,23 @@ const endpoints = await scope.webhooks.register({
 });
 ```
 
-`undefined` disarms the endpoint, which core answers with the status and bytes
-it gives a token it never minted: `404 {"error":"Unknown endpoint"}`. By the
-time `onRequest` runs, a delivery is method-checked, size-capped, verified
-against the exact octets and de-duplicated. It answers `200` to an event it
-ignores or the reducer refuses, since Stripe retries a 4xx and then disables
-the endpoint.
+`undefined` disarms the endpoint, which core answers exactly as a token it
+never minted: `404 {"error":"Unknown endpoint"}`. By the time `onRequest` runs,
+a delivery is method-checked, size-capped, verified against the exact octets
+and de-duplicated. It answers `200` to an event it ignores, since Stripe
+retries a 4xx and then disables the endpoint.
 
 ## Two dedupe layers
 
-`dedupe: { field: "id" }` names the Stripe event id, and core answers a
-redelivery inside the TTL with `200` and an empty body, without calling
-`onRequest`. That cache is per host and expires, so the document also records
-every applied id in `processedEventIds`, and its reducer throws
-`DuplicateEvent` on a repeat. Core reads the field from the query string or a
-top-level body field, never a nested one. Stripe's `data.object.id` is
-unreachable, and GitHub, which puts its delivery id in `x-github-delivery`
-alone, cannot use `dedupe`.
+`dedupe: { field: "id" }` names the Stripe event id. Core answers a redelivery
+inside the TTL with `200` and an empty body, without calling `onRequest`. That
+cache is per host and expires, so the document also records every applied id in
+`processedEventIds`, and its reducer throws `DuplicateEvent` on a repeat.
+
+A field can name a query parameter or top-level body field, a header
+(`{ header: "x-github-delivery" }`), or a nested path (`{ body: "a.b.c" }`).
+Name the id identifying the delivery. Stripe's is the top-level `id`, not
+`data.object.id`, which is the subscription and repeats across events.
 
 ## Running
 
