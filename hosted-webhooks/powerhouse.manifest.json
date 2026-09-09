@@ -1,0 +1,32 @@
+{
+  "name": "hosted-webhooks",
+  "description": "Hosts the package's own HTTP routes and receives Stripe deliveries at a token URL the reactor serves.",
+  "category": "Integration",
+  "publisher": {
+    "name": "Powerhouse",
+    "url": "https://powerhouse.inc"
+  },
+  "documentModels": [
+    {
+      "name": "Subscription",
+      "id": "powerhouse/subscription"
+    }
+  ],
+  "apps": [],
+  "editors": [],
+  "processors": [],
+  "subgraphs": [
+    {
+      "id": "subscription-webhooks",
+      "name": "subscription-webhooks"
+    }
+  ],
+  "config": [
+    {
+      "name": "STRIPE_WEBHOOK_SECRET",
+      "type": "secret",
+      "description": "The signing secret Stripe shows when a webhook endpoint is created. Resolved server-side in policyFor and handed to core as `verify.secret`; it is never written into document state and never reaches the browser. One secret per endpoint in a deployment, so a leak from one account cannot forge another's deliveries.",
+      "required": true
+    }
+  ]
+}
