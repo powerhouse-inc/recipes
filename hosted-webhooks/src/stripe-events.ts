@@ -11,9 +11,10 @@ import {
  * and `data.object` differs per event type; these are the fields the three
  * mapped types share plus the ones each action needs.
  *
- * `id` is at the top level, which is what makes it usable as core's dedupe
- * field. `data.object.id` would not be: core reads the dedupe field from the
- * query string or a top-level body field, never from a nested one.
+ * `id` is the event id and is at the top level, which is what core dedupes on.
+ * Core can also name a header or a nested path now, but neither is right here:
+ * `data.object.id` identifies the subscription, not the delivery, so deduping
+ * on it would drop every event after the first.
  */
 const stripeEvent = z.object({
   id: z.string().min(1),

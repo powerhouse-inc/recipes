@@ -28,6 +28,7 @@ import type {
   RouteOptions,
   RouteSpec,
   ScopedRouteHandle,
+  WebhookField,
   WebhookPolicy,
   WebhookSpec,
 } from "./http-contract.js";
@@ -131,6 +132,7 @@ export class StandInHost {
       };
 
     const webhooks: IWebhookScope = {
+      hasPublicOrigin: options.publicUrl !== "",
       register: async (spec: WebhookSpec) => {
         this.#specs.set(spec.name, spec);
         return {
@@ -292,7 +294,9 @@ export class StandInHost {
 
     const perEndpoint = spec.policyFor ? await spec.policyFor(row.key) : {};
     if (!perEndpoint) return unknown();
-    const policy: WebhookPolicy = { ...spec, ...perEndpoint };
+    // Only `defaults` participates: a policy field on the spec itself is no
+    // longer expressible, which is what made the old whole-spec merge unsafe.
+    const policy: WebhookPolicy = { ...spec.defaults, ...perEndpoint };
 
     const method = (delivery.method ?? "POST").toUpperCase();
     if (policy.methods && !policy.methods.includes(method)) {
@@ -321,7 +325,7 @@ export class StandInHost {
     const body = parseBody(raw, headers["content-type"]);
 
     const challenge = policy.challengeField
-      ? fieldValue(policy.challengeField, queryParams, body)
+      ? fieldValue(policy.challengeField, queryParams, headers, body)
       : undefined;
     if (challenge !== undefined) {
       return new Response(challenge, {
@@ -331,7 +335,7 @@ export class StandInHost {
     }
 
     if (policy.dedupe) {
-      const key = fieldValue(policy.dedupe.field, queryParams, body);
+      const key = fieldValue(policy.dedupe.field, queryParams, headers, body);
       if (key !== undefined) {
         const seenKey = `${token}|${key}`;
         const until = this.#seen.get(seenKey);
@@ -438,18 +442,35 @@ function parseBody(raw: Buffer, contentType: string | undefined): unknown {
   return text;
 }
 
-/** Query string first, then a top-level body field. Never a nested one. */
+function scalar(value: unknown): string | undefined {
+  if (typeof value === "string" && value !== "") return value;
+  if (typeof value === "number") return String(value);
+  return undefined;
+}
+
+/**
+ * Resolves a `WebhookField`: a bare string reads the query string then a
+ * top-level body field, `{ header }` reads a header, and `{ body }` walks a
+ * dot-separated path into the parsed body.
+ */
 function fieldValue(
-  field: string,
+  field: WebhookField,
   queryParams: Record<string, string>,
+  headers: Record<string, string>,
   body: unknown,
 ): string | undefined {
-  const fromQuery = queryParams[field];
-  if (typeof fromQuery === "string" && fromQuery !== "") return fromQuery;
-  if (body && typeof body === "object") {
-    const value = (body as Record<string, unknown>)[field];
-    if (typeof value === "string" && value !== "") return value;
-    if (typeof value === "number") return String(value);
+  if (typeof field === "object") {
+    if ("header" in field) return scalar(headers[field.header.toLowerCase()]);
+    let current: unknown = body;
+    for (const segment of field.body.split(".")) {
+      if (!current || typeof current !== "object") return undefined;
+      current = (current as Record<string, unknown>)[segment];
+    }
+    return scalar(current);
   }
-  return undefined;
+  const fromQuery = scalar(queryParams[field]);
+  if (fromQuery !== undefined) return fromQuery;
+  return body && typeof body === "object"
+    ? scalar((body as Record<string, unknown>)[field])
+    : undefined;
 }

@@ -85,11 +85,12 @@ export async function registerSubscriptionEndpoints(
     if (document.state.global.status === "CANCELED") return undefined;
 
     return {
-      methods: ["POST"],
-      // Stripe puts the event id at the top level of the body, so core can read
-      // it. The document records the same id in `processedEventIds`, which is
-      // the durable half: core's dedupe is a TTL cache, and a redelivery after
-      // the TTL reaches the handler.
+      // Stripe's event id is the top-level `id`, so a bare field name reaches
+      // it. (`data.object.id` is the *object's* id — a subscription — which is
+      // stable across events and would dedupe away everything after the
+      // first.) The document records the same event id in `processedEventIds`,
+      // which is the durable half: core's dedupe is a TTL cache, and a
+      // redelivery after the TTL reaches the handler.
       dedupe: { field: "id", ttlSeconds: 3600 },
       // A document with no secret configured is refused with 401 rather than
       // accepted unverified: the endpoint is configured as signed, and there is
@@ -154,9 +155,12 @@ export async function registerSubscriptionEndpoints(
 
   const endpoints = await scope.webhooks.register({
     name: ENDPOINT_NAME,
-    // The ceiling core applies per token, per registration. A burst of ten is
-    // admitted whatever this says, so it bounds a runaway provider rather than
-    // shaping traffic.
+    // Fixed for every endpoint in this family, so it belongs here rather than
+    // in `policyFor`. The split is the point: `defaults` is a property of the
+    // integration, `policyFor` is what the document configures.
+    defaults: { methods: ["POST"] },
+    // The ceiling core applies per token, per registration. Capacity is the
+    // declared rate, so this bounds a runaway provider at 120 a minute.
     rateLimit: { perMinute: 120 },
     policyFor,
     onRequest,

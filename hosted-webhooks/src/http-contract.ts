@@ -15,6 +15,12 @@
  *
  * Nothing else in the recipe changes: every other file imports these types from
  * here, and the names and shapes are the ones core declares.
+ *
+ * Refreshed after review of this recipe fed back into the API. Four things moved:
+ * a `WebhookField` may now name a header or a nested body path, `WebhookSpec`
+ * carries registration values under `defaults` instead of inheriting policy
+ * fields, `IWebhookScope` exposes `hasPublicOrigin`, and a declared rate limit
+ * binds as written rather than flooring at ten.
  */
 import type { IncomingMessage, ServerResponse } from "node:http";
 
@@ -216,6 +222,22 @@ export interface WebhookVerification {
   toleranceSeconds?: number;
 }
 
+/**
+ * Where to read a value a provider sent.
+ *
+ * A bare string is the common case: a query parameter, or a top-level body
+ * field. The other two forms exist because the providers this supports do not
+ * agree — GitHub puts its delivery id in the `x-github-delivery` *header*, and
+ * Stripe puts its event id at `data.object.id`, *nested*. Naming only
+ * top-level body fields made both undedupable, which is the opposite of the
+ * point.
+ */
+export type WebhookField =
+  | string
+  | { header: string }
+  /** Dot-separated path into the parsed body, e.g. `data.object.id`. */
+  | { body: string };
+
 export interface WebhookRequest {
   /** The caller's own key for this endpoint, e.g. a document id. */
   key: string;
@@ -253,18 +275,38 @@ export interface WebhookPolicy {
    * level of the body. Every provider redelivers, so this is how a retry is
    * recognised rather than replayed.
    */
-  dedupe?: { field: string; ttlSeconds?: number };
+  dedupe?: { field: WebhookField; ttlSeconds?: number };
   /**
    * A field a provider echoes back to prove the endpoint exists, before it
    * will register it. Answered without invoking onRequest.
    */
-  challengeField?: string;
+  challengeField?: WebhookField;
   maxBodyBytes?: number;
 }
 
-export interface WebhookSpec extends WebhookPolicy {
+/**
+ * One endpoint family a package registers.
+ *
+ * Deliberately *not* extending `WebhookPolicy`. It used to, which meant every
+ * per-endpoint field was also settable here, where it compiles, reads
+ * correctly, and is wrong: the policy that actually applies is resolved per
+ * endpoint by `policyFor`. A field set here silently backstopped a missing one
+ * there. That is how the challenge round came to be skipped for every endpoint
+ * — the field was read off the registration and so was never set at all.
+ *
+ * Registration-level values now live under `defaults`, so the distinction
+ * between "a property of the package's integration" and "document
+ * configuration this endpoint carries" is visible in the shape.
+ */
+export interface WebhookSpec {
   /** Distinguishes several endpoint families within one package. */
   name: string;
+  /**
+   * What a per-endpoint policy merges over. For genuinely fixed properties of
+   * the integration — a scheme every endpoint in the family uses, a body cap.
+   * Anything an author can change belongs in `policyFor`.
+   */
+  defaults?: WebhookPolicy;
   onRequest: (request: WebhookRequest) => Promise<WebhookReply> | WebhookReply;
   /**
    * The policy for one endpoint, merged over the registration's own. Returning
@@ -298,6 +340,15 @@ export interface IWebhookEndpoints {
 
 export interface IWebhookScope {
   register(spec: WebhookSpec): Promise<IWebhookEndpoints>;
+  /**
+   * Whether the host knows its own public origin, and so whether
+   * `endpointFor().url` is an absolute URL rather than a bare path.
+   *
+   * A package hands that URL to a third party, which will reject a path. Worth
+   * checking before advertising one, and worth surfacing to an operator as a
+   * misconfiguration rather than discovering it in a provider's error log.
+   */
+  readonly hasPublicOrigin: boolean;
 }
 
 // ── the scope ──────────────────────────────────────────────────────────────
