@@ -41,6 +41,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 |---------|-------------|
 | [discord-webhook-processor](./discord-webhook-processor) | Reactor processor that forwards document operations to a Discord webhook as rich embeds |
 | [external-feed-ingest](./external-feed-ingest) | Polling worker that ingests an external feed into a ledger document idempotently |
+| [hosted-webhooks](./hosted-webhooks) | `subgraph.http` routes under the package's npm name, and a per-document Stripe webhook at a token URL the reactor hosts |
 | [inbound-webhook-bridge](./inbound-webhook-bridge) | Standalone endpoint that verifies signed external webhooks against the raw bytes and dispatches them as payment-document actions |
 
 ## Events and subscriptions

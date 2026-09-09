@@ -49,6 +49,7 @@ packages:
   - external-feed-ingest
   - full-text-search
   - group-principals
+  - hosted-webhooks
   - inbound-webhook-bridge
   - positional-delete
   - rate-limiter
