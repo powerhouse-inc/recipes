@@ -35,6 +35,7 @@ catalog:
 
 packages:
   - analytics-processor
+  - anonymous-subscriptions
   - audit-trail
   - auth-preflight
   - batch-progress

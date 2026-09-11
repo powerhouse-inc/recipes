@@ -15,6 +15,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 
 | Project | Description |
 |---------|-------------|
+| [anonymous-subscriptions](./anonymous-subscriptions) | A tokenless WebSocket subscription admitted at `onConnect`, then filtered per document, and refused with a retryable 4403 |
 | [auth-preflight](./auth-preflight) | Asking the reactor what it would decide before submitting. One `evaluateActions` call answers a batch of candidate operations |
 | [document-acl](./document-acl) | Platform-enforced document ACLs via the auth scope, with zero authorization code in reducers |
 | [group-principals](./group-principals) | A `reactor-group` roster document decides who may approve via a `{ group }` grant |
