@@ -1,0 +1,23 @@
+{
+  "name": "@powerhousedao/example-anonymous-subscriptions",
+  "version": "0.0.0",
+  "description": "Example: anonymous GraphQL subscriptions over WebSocket against an auth-enabled Switchboard",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "tsx src/demo.ts",
+    "tsc": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@renown/sdk": "catalog:",
+    "graphql": "^16.12.0",
+    "graphql-ws": "^6.0.7",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.0"
+  }
+}
