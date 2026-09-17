@@ -18,11 +18,14 @@ closes `4403`, which graphql-ws retries.
   document still arrives, leaving the anonymous socket at
   `["readable-one","readable-two"]`.
 - **`REQUIRE_AUTHENTICATED_CALLER=true` closes 4403**: the client retries
-  through three `4403 Forbidden` closes, and the fourth attempt carries a
-  bearer, connects, and receives `["after-sign-in"]`.
+  through three `4403 authentication-required` closes, and the fourth attempt
+  carries a bearer, connects, and receives `["after-sign-in"]`.
 - **A bearer that is present and unusable is refused**: `Bearer
-  not-a-credential` closes `4403 Forbidden` on the server that admits anonymous
-  callers.
+  not-a-credential` closes `4403 bearer-rejected` on the server that admits
+  anonymous callers.
+- **The reason, not the code, says which refusal it was**: both refusals close
+  `4403`, and only the reason distinguishes "sign in and this will work" from
+  "the bearer you sent is not usable".
 - **A Switchboard without the fix acks and then closes 4500**: the same
   tokenless client records
   `{"code":4500,"reason":"Missing authorization in connection parameters"}` and
@@ -49,6 +52,17 @@ A code in that list is thrown to the caller before `retryAttempts` is even
 read. `4401` sits there beside `4500`, so closing `4401` would leave the socket
 as dead as closing `4500` does. `4403` is commented out of the list, so
 `retryAttempts` governs it.
+
+Because both refusals share that one code, the reason carries what the code
+cannot. `reactor-api` exports the two it closes with,
+`WS_CLOSE_REASON_AUTHENTICATION_REQUIRED` (`authentication-required`) and
+`WS_CLOSE_REASON_BEARER_REJECTED` (`bearer-rejected`), and `reactor-browser`
+matches the same set in `isAuthRefusalClose`. A close reason caps at 123 UTF-8
+bytes, which is why they are slugs and not sentences. This recipe drives
+graphql-ws directly, so it retries on its own `retryAttempts`; the platform
+client instead declines to retry an auth refusal and reopens the socket when
+the credentials change, since repeating the same ones cannot change the
+answer.
 
 Before the fix, `authenticateWebSocketConnection` threw for a missing
 `authorization`, and graphql-ws ran that function as its `context` option, once
@@ -86,8 +100,7 @@ no error and no close.
 ## Running it
 
 Switchboard writes a `.ph` directory into the working directory, so start each
-server from its own empty directory. `$POWERHOUSE` is a monorepo checkout whose
-`apps/switchboard/dist` has been built.
+server from its own empty directory. The published package needs no checkout.
 
 The server the first two scenarios use, on port 4101:
 
@@ -100,7 +113,7 @@ DEFAULT_PROTECTION=false \
 ADMINS=0xa11ce00000000000000000000000000000000001 \
 SKIP_CREDENTIAL_VERIFICATION=true \
 ALLOW_INSECURE_SKIP_CREDENTIAL_VERIFICATION=true \
-node $POWERHOUSE/apps/switchboard/dist/index.mjs
+npx @powerhousedao/switchboard@6.2.3-dev.11
 ```
 
 The server scenario 3 uses, on port 4102, which adds one variable:
@@ -115,7 +128,7 @@ REQUIRE_AUTHENTICATED_CALLER=true \
 ADMINS=0xa11ce00000000000000000000000000000000001 \
 SKIP_CREDENTIAL_VERIFICATION=true \
 ALLOW_INSECURE_SKIP_CREDENTIAL_VERIFICATION=true \
-node $POWERHOUSE/apps/switchboard/dist/index.mjs
+npx @powerhousedao/switchboard@6.2.3-dev.11
 ```
 
 `ADMINS` must equal `ADMIN_ADDRESS` in `src/config.ts`. The demo mints its own
@@ -131,8 +144,9 @@ pnpm --filter @powerhousedao/example-anonymous-subscriptions start
 ```
 
 Scenario 0 needs a third Switchboard that lacks the fix, started with the port
-4101 environment and `PH_SWITCHBOARD_PORT=4103`. Any build through
-`6.2.3-dev.3` shows the old behaviour. Point the demo at it:
+4101 environment and `PH_SWITCHBOARD_PORT=4103`. Any release through
+`6.2.3-dev.3` shows the old behaviour, so run
+`npx @powerhousedao/switchboard@6.2.3-dev.3` there. Point the demo at it:
 
 ```sh
 pnpm --filter @powerhousedao/example-anonymous-subscriptions start -- \
@@ -161,29 +175,40 @@ unusable bearer.
    after a second write, anonymous: ["readable-one","readable-two"]
    the same document over HTTP: Forbidden: insufficient permissions to read this document
 3. REQUIRE_AUTHENTICATED_CALLER=true, then a sign-in on the live client
-  signing-in: socket closed 4403 Forbidden
-  signing-in: socket closed 4403 Forbidden
-  signing-in: socket closed 4403 Forbidden
+  signing-in: socket closed 4403 authentication-required
+  signing-in: socket closed 4403 authentication-required
+  signing-in: socket closed 4403 authentication-required
    attempt 4 carries the bearer
   signing-in: connected (ack received)
    received after signing in: ["after-sign-in"]
    abandoned: no
 4. A bearer that is present and unusable
-  bad-bearer: socket closed 4403 Forbidden
-   abandoned: {"code":4403,"reason":"Forbidden"}
+  bad-bearer: socket closed 4403 bearer-rejected
+  bad-bearer: socket closed 4403 bearer-rejected
+  bad-bearer: socket closed 4403 bearer-rejected
+  bad-bearer: gave up: {"code":4403,"reason":"bearer-rejected"}
+   abandoned: {"code":4403,"reason":"bearer-rejected"}
 ```
 
 Scenario 4 sets `retryAttempts: 2`, so three closes are recorded: the first
-connect and two retries. The client cannot tell that refusal from scenario 3's,
-because both close `4403` with the reason `Forbidden`.
+connect and two retries. Scenario 3's closes carry the same `4403`, and the
+reason is what separates them: `authentication-required` is answered by signing
+in, which attempt 4 does, while `bearer-rejected` is answered by nothing the
+client can retry.
 
 ## Version requirement
 
-The behaviour this recipe runs on ships in commit `bb20f8945`, "fix(reactor-api):
-answer a tokenless websocket as the http path does". No published Switchboard
-carries that commit yet. Every release through `6.2.3-dev.3`, including the
-`6.2.2-dev.62` this repo's catalog pins, acks a tokenless connection and then
-closes `4500 Missing authorization in connection parameters` on the first
-`subscribe`, and the client abandons the socket. Scenarios 1 through 4 need a
-Switchboard built from a tree containing `bb20f8945`. Scenario 0 needs one
-without it.
+Scenarios 1 through 4 need Switchboard `6.2.3-dev.4` or newer. That release
+carries both commits this recipe reads: `bb20f8945`, "fix(reactor-api): answer
+a tokenless websocket as the http path does", and `f773b8e671`, "fix: say why a
+websocket auth refusal closed, and retry on that answer", which replaced
+graphql-ws's own `Forbidden` close reason with the two named ones. The output
+above was recorded against `6.2.3-dev.11`, the current `dev` tag.
+
+Every release through `6.2.3-dev.3` acks a tokenless connection and then closes
+`4500 Missing authorization in connection parameters` on the first `subscribe`,
+and the client abandons the socket. Scenario 0 needs one of those.
+
+The repo catalog pins `6.2.2-dev.62`, which this recipe uses only for
+`@renown/sdk` to mint a bearer. The Switchboard it runs against is a separate
+install, so the two do not have to match.
