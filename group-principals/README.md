@@ -24,8 +24,8 @@ as a **membership removal on a different document** than the one being judged.
 Group principals apply only with `authGroups`, third of the reactor's cascading
 auth flags (`documentDecisions` → `authEnforcement` → `authGroups`). Below
 `authGroups` a `{ group }` grant parses and stores but never matches, as
-[`document-acl`](../document-acl) warns. The catalog pins `6.2.2-dev.62`, which
-carries that flag.
+[`document-acl`](../document-acl) warns. The catalog pins `6.2.3-dev.11`,
+which carries that flag.
 
 ```sh
 pnpm install

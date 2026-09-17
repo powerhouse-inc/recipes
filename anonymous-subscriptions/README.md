@@ -209,6 +209,6 @@ Every release through `6.2.3-dev.3` acks a tokenless connection and then closes
 `4500 Missing authorization in connection parameters` on the first `subscribe`,
 and the client abandons the socket. Scenario 0 needs one of those.
 
-The repo catalog pins `6.2.2-dev.62`, which this recipe uses only for
+The repo catalog pins `6.2.3-dev.11`, which this recipe uses only for
 `@renown/sdk` to mint a bearer. The Switchboard it runs against is a separate
 install, so the two do not have to match.
