@@ -59,8 +59,8 @@ serves it as an `evaluateActions` GraphQL query through
 
 ## Running it
 
-`evaluateActions` ships in `6.2.2-dev.62`, which this repo's catalog pins, so the
-recipe runs standalone:
+`evaluateActions` ships in `6.2.2-dev.62`, below the `6.2.3-dev.11` this
+repo's catalog pins, so the recipe runs standalone:
 
 ```sh
 pnpm install
