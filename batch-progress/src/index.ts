@@ -1,5 +1,6 @@
 import {
   ReactorBuilder,
+  ReactorClientBuilder,
   ReactorEventTypes,
   JobStatus,
   JobAwaiter,
@@ -9,6 +10,11 @@ import {
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
 import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { MultiBar, type SingleBar } from "cli-progress";
 import {
   buildCreateProjectBatch,
@@ -35,16 +41,27 @@ async function main() {
   // 1. Build embedded reactor with in-memory PGlite
   process.stdout.write("Starting reactor...");
   const t0 = performance.now();
-  const reactorModule = await new ReactorBuilder()
-    .withDocumentModelSources([
-      documentModelDocumentModelModule,
-      driveDocumentModelModule,
-    ])
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "batch-progress-demo",
+  );
+  const clientModule = await new ReactorClientBuilder()
+    .withReactorBuilder(
+      new ReactorBuilder().withDocumentModelSources([
+        documentModelDocumentModelModule,
+        driveDocumentModelModule,
+      ]),
+    )
+    .withSigner(signer)
     .buildModule();
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 
-  const reactor: IReactor = reactorModule.reactor;
-  const eventBus: IEventBus = reactorModule.eventBus;
+  const { client } = clientModule;
+  const reactor: IReactor = clientModule.reactor;
+  const eventBus: IEventBus = clientModule.eventBus;
   const jobAwaiter = new JobAwaiter(eventBus, (jobId, signal) =>
     reactor.getJobStatus(jobId, signal),
   );
@@ -82,8 +99,12 @@ async function main() {
   process.stdout.write("Creating drive...");
   const driveDoc = driveCreateDocument();
   const driveId = driveDoc.header.id;
-  const driveJob = await reactor.create(driveDoc);
-  await jobAwaiter.waitForJob(driveJob.id);
+  const driveJob = await jobAwaiter.waitForJob(
+    (await reactor.create(driveDoc, signer)).id,
+  );
+  if (driveJob.status === JobStatus.FAILED) {
+    throw new Error(`drive creation failed: ${driveJob.error?.message}`);
+  }
   console.log(` ${driveId}\n`);
 
   // Reset event log (clear drive events)
@@ -93,7 +114,7 @@ async function main() {
   // 4. Build and execute batch
   const { request, ids } = buildCreateProjectBatch(driveId);
   const startTime = performance.now();
-  const result = await reactor.executeBatch(request);
+  const result = await client.executeBatch(request);
 
   // 5. Build jobId → key mapping
   const jobIdToKey = new Map<string, string>();
@@ -172,7 +193,7 @@ async function main() {
   unsubscribes.forEach((unsub) => unsub());
   jobAwaiter.shutdown();
   reactor.kill();
-  process.exit(0);
+  process.exit(failed === 0 ? 0 : 1);
 }
 
 main().catch((err) => {

@@ -20,11 +20,14 @@ filter in `src/export-reactor.ts`.
 |---|---|---|
 | Mutations return | `JobInfo` (must await manually) | The document (job awaited internally) |
 | Consistency | You pass `ConsistencyToken` to reads | Managed automatically |
-| Signing | Manual (mutations like `create()` take an optional `ISigner`) | Automatic, from `ReactorClientBuilder.withSigner()` |
+| Signing | Manual: `create()` takes an `ISigner`, and `execute()` takes actions signed with `ISigner.signAction(action, { documentId, branch })` | Automatic, from `ReactorClientBuilder.withSigner()` |
 | `getOperations()` returns | `Record<string, PagedResults>` keyed by scope | `PagedResults` (flat) |
 | Use when | You need fine-grained control over job lifecycle | You do not need access to `JobInfo` or consistency tokens |
 
 `ISigner` is the action-signing interface exported by `@powerhousedao/shared/document-model`.
+Both modes sign with the same `RenownCryptoSigner` key, because a reactor that verifies
+signatures refuses an unsigned write. `sign()` in `src/export-reactor.ts` attaches the
+tuple to the action as `context.signer`.
 A scope is one named slice of a document's state. `reactor.getOperations()` keys its result
 by scope name (`global` and `document` in these exports), and `exportWithReactor` flattens
 that map into one array, tagging each operation with its `scope`.

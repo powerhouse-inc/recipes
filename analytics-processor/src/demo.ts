@@ -12,10 +12,20 @@
 import { PGlite } from "@electric-sql/pglite";
 import { BrowserAnalyticsStore } from "@powerhousedao/analytics-engine-browser";
 import { AnalyticsQueryEngine } from "@powerhousedao/analytics-engine-core";
-import { JobAwaiter, ReactorBuilder } from "@powerhousedao/reactor";
+import {
+  JobAwaiter,
+  JobStatus,
+  ReactorBuilder,
+  ReactorClientBuilder,
+} from "@powerhousedao/reactor";
 import type { Action } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
 import { driveCreateDocument, driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { DateTime } from "luxon";
 import {
   addLineItem,
@@ -53,17 +63,36 @@ async function main() {
   // 2. Build the reactor
   process.stdout.write("Starting reactor...");
   const t0 = performance.now();
-  const reactorModule = await new ReactorBuilder()
-    .withDocumentModelSources([
-      documentModelDocumentModelModule,
-      driveDocumentModelModule,
-      ExpenseReport,
-    ])
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "analytics-processor-demo",
+  );
+  const clientModule = await new ReactorClientBuilder()
+    .withReactorBuilder(
+      new ReactorBuilder().withDocumentModelSources([
+        documentModelDocumentModelModule,
+        driveDocumentModelModule,
+        ExpenseReport,
+      ]),
+    )
+    .withSigner(signer)
     .buildModule();
+  const { client } = clientModule;
+  const reactorModule = clientModule.reactorModule!;
   const { reactor, eventBus, processorManager } = reactorModule;
   const jobAwaiter = new JobAwaiter(eventBus, (jobId, signal) =>
     reactor.getJobStatus(jobId, signal),
   );
+  const settle = async (jobId: string) => {
+    const job = await jobAwaiter.waitForJob(jobId);
+    if (job.status === JobStatus.FAILED) {
+      throw new Error(`job ${jobId} failed: ${job.error?.message}`);
+    }
+    return job;
+  };
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)`);
 
   // 3. Register the analytics processor (default filter: expense-report
@@ -76,8 +105,8 @@ async function main() {
 
   // 4. Processor factories activate per drive, so create one
   const driveDoc = driveCreateDocument();
-  const driveJob = await reactor.create(driveDoc);
-  await jobAwaiter.waitForJob(driveJob.id);
+  const driveJob = await reactor.create(driveDoc, signer);
+  await settle(driveJob.id);
   console.log(`Created drive ${driveDoc.header.id}\n`);
 
   // 5. Create three expense report documents
@@ -89,8 +118,8 @@ async function main() {
   ].map((r) => ({ ...r, document: expenseReportUtils.createDocument() }));
 
   for (const report of reports) {
-    const job = await reactor.create(report.document);
-    await jobAwaiter.waitForJob(job.id);
+    const job = await reactor.create(report.document, signer);
+    await settle(job.id);
     console.log(`  ${report.label}: ${report.document.header.id}`);
   }
   const [travel, software, headcount] = reports.map(
@@ -113,10 +142,10 @@ async function main() {
     { docId: travel, action: deleteLineItem({ id: "t-3" }), note: "DELETE Travel/Meals             320.00 EUR  2025-01  (removed)" },
   ];
 
-  const lastJobPerDoc = new Map<string, Awaited<ReturnType<typeof jobAwaiter.waitForJob>>>();
+  const lastJobPerDoc = new Map<string, Awaited<ReturnType<typeof settle>>>();
   for (const step of story) {
-    const job = await reactor.execute(step.docId, "main", [step.action]);
-    const completed = await jobAwaiter.waitForJob(job.id);
+    const job = await client.executeAsync(step.docId, "main", [step.action]);
+    const completed = await settle(job.id);
     lastJobPerDoc.set(step.docId, completed);
     console.log(`  ${step.note}`);
   }

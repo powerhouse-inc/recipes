@@ -10,6 +10,7 @@ import {
   JobStatus,
   ReactorBuilder,
   type IReactor,
+  type IReactorClient,
   type JobInfo,
 } from "@powerhousedao/reactor";
 import {
@@ -17,7 +18,7 @@ import {
   isDenied,
   sortOperations,
 } from "@powerhousedao/shared/document-model";
-import type { ILogger, Operation } from "document-model";
+import type { ILogger, ISigner, Operation } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
 import {
   FieldLog,
@@ -25,7 +26,8 @@ import {
   utils,
   type FieldLogDocument,
 } from "document-models/field-log/v1";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { buildSignedReactor, createSigner } from "../src/signers.js";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -44,14 +46,35 @@ function quietLogger(): ILogger {
   };
 }
 
-function buildReactor(documentDecisions: boolean): Promise<IReactor> {
-  return new ReactorBuilder()
-    .withDocumentModelSources([FieldLog, documentModelDocumentModelModule])
-    .withLogger(quietLogger())
-    .withExecutorConfig({
-      featureFlags: { documentDecisions },
-    })
-    .build();
+const STATION_A = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
+const STATION_B = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
+
+let stationA: ISigner;
+let stationB: ISigner;
+/** Each reactor's own client, signing as the station that hosts it. */
+const hostClient = new WeakMap<IReactor, IReactorClient>();
+
+beforeAll(async () => {
+  stationA = await createSigner("positional-delete-tests", STATION_A);
+  stationB = await createSigner("positional-delete-tests", STATION_B);
+});
+
+async function buildReactor(
+  documentDecisions: boolean,
+  host: ISigner,
+  peer: ISigner,
+): Promise<IReactor> {
+  const { module } = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([FieldLog, documentModelDocumentModelModule])
+      .withLogger(quietLogger())
+      .withExecutorConfig({
+        featureFlags: { documentDecisions },
+      }),
+    [host, peer],
+  );
+  hostClient.set(module.reactor, module.client);
+  return module.reactor;
 }
 
 describe("positional deletion", () => {
@@ -78,7 +101,9 @@ describe("positional deletion", () => {
     await sleep(10); // give every operation its own millisecond
     await settle(
       reactor,
-      await reactor.execute(docId, "main", [logObservation({ id, note })]),
+      await hostClient
+        .get(reactor)!
+        .executeAsync(docId, "main", [logObservation({ id, note })]),
     );
   }
 
@@ -118,12 +143,12 @@ describe("positional deletion", () => {
   async function splitBrain(): Promise<void> {
     const document = utils.createDocument();
     docId = document.header.id;
-    await settle(reactorA, await reactorA.create(document));
+    await settle(reactorA, await reactorA.create(document, stationA));
     await sync(reactorA, reactorB, "document");
 
     await log(reactorB, "obs-before", "sorts before the delete");
     await sleep(10);
-    await settle(reactorA, await reactorA.deleteDocument(docId));
+    await settle(reactorA, await reactorA.deleteDocument(docId, stationA));
     await log(reactorB, "obs-after", "sorts after the delete");
 
     await sync(reactorA, reactorB, "document");
@@ -137,8 +162,8 @@ describe("positional deletion", () => {
 
   describe("with the decision model", () => {
     beforeEach(async () => {
-      reactorA = await buildReactor(true);
-      reactorB = await buildReactor(true);
+      reactorA = await buildReactor(true, stationA, stationB);
+      reactorB = await buildReactor(true, stationB, stationA);
       await splitBrain();
     });
 
@@ -195,15 +220,15 @@ describe("positional deletion", () => {
 
   describe("without the decision model (legacy)", () => {
     it("rejects the whole load, legitimate pre-delete history included", async () => {
-      reactorA = await buildReactor(true);
-      reactorB = await buildReactor(false);
+      reactorA = await buildReactor(true, stationA, stationB);
+      reactorB = await buildReactor(false, stationB, stationA);
 
       const document = utils.createDocument();
       docId = document.header.id;
-      await settle(reactorA, await reactorA.create(document));
+      await settle(reactorA, await reactorA.create(document, stationA));
       await log(reactorA, "obs-before", "sorts before the delete");
       await sleep(10);
-      await settle(reactorA, await reactorA.deleteDocument(docId));
+      await settle(reactorA, await reactorA.deleteDocument(docId, stationA));
 
       // The delete lands on B first, then B is offered the history. With
       // the decision model this exact sequence admits obs-before (that is

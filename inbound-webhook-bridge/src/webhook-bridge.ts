@@ -5,7 +5,12 @@ import {
   type ServerResponse,
 } from "node:http";
 import type { Action } from "document-model";
-import { JobAwaiter, JobStatus, type IEventBus, type IReactor } from "@powerhousedao/reactor";
+import {
+  JobAwaiter,
+  JobStatus,
+  type IEventBus,
+  type IReactorClient,
+} from "@powerhousedao/reactor";
 import type { PaymentDocument } from "document-models/payment/v1";
 import { markFailed, recordPayment, recordRefund } from "document-models/payment/v1";
 import {
@@ -75,14 +80,15 @@ export function mapEventToAction(event: WebhookEvent): Action {
 export class WebhookBridge {
   private readonly awaiter: JobAwaiter;
 
+  /** `client` signs every action it writes, with the signer it was built with. */
   constructor(
-    private readonly reactor: IReactor,
+    private readonly client: IReactorClient,
     eventBus: IEventBus,
     private readonly resolveDocumentId: DocumentResolver,
     private readonly branch = "main",
   ) {
     this.awaiter = new JobAwaiter(eventBus, (jobId, signal) =>
-      reactor.getJobStatus(jobId, signal),
+      client.getJobStatus(jobId, signal),
     );
   }
 
@@ -103,12 +109,14 @@ export class WebhookBridge {
     // so a redelivery is ignored even across reactor restarts. The reducer
     // enforces this too, but short-circuiting here keeps history clean — the
     // duplicate never becomes an operation at all.
-    const doc = await this.reactor.get<PaymentDocument>(documentId);
+    const doc = await this.client.get<PaymentDocument>(documentId);
     if (doc.state.global.processedEventIds.includes(event.id)) {
       return { status: "duplicate", documentId };
     }
 
-    const job = await this.reactor.execute(documentId, this.branch, [action]);
+    const job = await this.client.executeAsync(documentId, this.branch, [
+      action,
+    ]);
     try {
       const info = await this.awaiter.waitForJob(job.id);
       if (info.status === JobStatus.FAILED) {

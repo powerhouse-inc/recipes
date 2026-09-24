@@ -2,7 +2,6 @@
 import {
   JobStatus,
   ReactorBuilder,
-  ReactorClientBuilder,
   type IReactor,
   type IReactorClient,
   type JobInfo,
@@ -16,7 +15,6 @@ import {
 import {
   initializeAuth,
   type Grant,
-  type ISigner,
   type PHDocument,
 } from "@powerhousedao/shared/document-model";
 import type { Action, ILogger } from "document-model";
@@ -27,6 +25,11 @@ import {
   submitExpense,
   utils as expenseUtils,
 } from "document-models/expense-report/v1";
+import {
+  buildSignedReactor,
+  createSigner,
+  type SignedReactor,
+} from "./signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -121,33 +124,6 @@ function quietLogger(): ILogger {
   };
 }
 
-/** A client reads and writes as whoever its signer names. */
-function signerFor(address: string): ISigner {
-  return {
-    user: { address, networkId: "eip155", chainId: 1 },
-    app: { name: "scoped-reads-demo", key: `did:demo:${label(address)}` },
-    publicKey: {} as CryptoKey,
-    sign: () => Promise.resolve(new Uint8Array(0)),
-    verify: () => Promise.resolve(),
-    signAction: () => Promise.resolve(["", "", "", "", ""] as never),
-  } as ISigner;
-}
-
-/** Attaches signer context the way a signing client would. */
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "scoped-reads-demo", key: `did:demo:${label(address)}` },
-        signatures: [],
-      },
-    },
-  };
-}
-
 async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
   for (;;) {
     const status = await reactor.getJobStatus(job.id);
@@ -162,7 +138,7 @@ async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
 }
 
 async function step(
-  reactor: IReactor,
+  { reactor, clients }: SignedReactor,
   docId: string,
   caller: string,
   action: Action,
@@ -170,7 +146,7 @@ async function step(
 ): Promise<void> {
   // The auth stream must be strictly timestamp-monotonic.
   await sleep(15);
-  const job = await reactor.execute(docId, "main", [signedBy(action, caller)]);
+  const job = await clients.get(caller)!.executeAsync(docId, "main", [action]);
   const done = await waitForJob(reactor, job);
   console.log(
     done.status === JobStatus.FAILED
@@ -208,41 +184,45 @@ async function main() {
 
   process.stdout.write("Starting reactor and client...");
   const t0 = performance.now();
-  const module = await new ReactorClientBuilder()
-    .withReactorBuilder(
-      new ReactorBuilder()
-        .withDocumentModelSources([
-          ExpenseReport,
-          ReactorGroup,
-          documentModelDocumentModelModule,
-        ])
-        .withLogger(quietLogger())
-        .withExecutorConfig({
-          featureFlags: {
-            documentDecisions: true,
-            authEnforcement: true,
-            authGroups: true,
-          },
-        }),
-    )
-    .withSigner(signerFor(ALICE))
-    .buildModule();
-  const reactor: IReactor = module.reactor;
-  const client: IReactorClient = module.client;
+  const alice = await createSigner("scoped-reads-demo", ALICE);
+  const session = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([
+        ExpenseReport,
+        ReactorGroup,
+        documentModelDocumentModelModule,
+      ])
+      .withLogger(quietLogger())
+      .withExecutorConfig({
+        featureFlags: {
+          documentDecisions: true,
+          authEnforcement: true,
+          authGroups: true,
+        },
+      }),
+    [
+      alice,
+      await createSigner("scoped-reads-demo", BOB),
+      await createSigner("scoped-reads-demo", CAROL),
+    ],
+  );
+  const reactor: IReactor = session.reactor;
+  // Alice's client: reads through it are gated, and its writes sign as her.
+  const client: IReactorClient = session.module.client;
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 
   const roster = groupUtils.createDocument();
   const rosterId = roster.header.id;
-  await waitForJob(reactor, await reactor.create(roster));
+  await waitForJob(reactor, await reactor.create(roster, alice));
   await step(
-    reactor,
+    session,
     rosterId,
     ALICE,
     initializeAuth({ version: 1, grants: rosterPolicy() }),
     `governs roster ${rosterId.slice(0, 8)} (Alice only)`,
   );
   await step(
-    reactor,
+    session,
     rosterId,
     ALICE,
     addMember({ address: BOB }),
@@ -251,23 +231,23 @@ async function main() {
 
   const report = expenseUtils.createDocument();
   const reportId = report.header.id;
-  await waitForJob(reactor, await reactor.create(report));
+  await waitForJob(reactor, await reactor.create(report, alice));
   await step(
-    reactor,
+    session,
     reportId,
     ALICE,
     initializeAuth({ version: 1, grants: expensePolicy(rosterId) }),
     `governs expense report ${reportId.slice(0, 8)}`,
   );
   await step(
-    reactor,
+    session,
     reportId,
     ALICE,
     submitExpense({ id: "e-1", memo: "Taxi to the airport", amountCents: 4200 }),
     "submits an expense",
   );
   await step(
-    reactor,
+    session,
     reportId,
     BOB,
     addReviewNote({ expenseId: "e-1", note: "Receipt looks altered." }),
@@ -310,7 +290,7 @@ async function main() {
   console.log("   Carol reads the same scope through a plain read grant, and");
   console.log("   cannot write it:");
   await step(
-    reactor,
+    session,
     reportId,
     CAROL,
     submitExpense({ id: "e-2", memo: "Carol's dinner", amountCents: 9900 }),
@@ -334,7 +314,7 @@ async function main() {
     `   Bob reads: ${(await scopesFor(client, reportId, BOB)).join(", ")}`,
   );
   await step(
-    reactor,
+    session,
     rosterId,
     ALICE,
     removeMember({ address: BOB }),
@@ -343,7 +323,7 @@ async function main() {
   console.log(
     `   Bob reads: ${(await scopesFor(client, reportId, BOB)).join(", ")}`,
   );
-  await step(reactor, rosterId, ALICE, addMember({ address: BOB }), "re-hires Bob");
+  await step(session, rosterId, ALICE, addMember({ address: BOB }), "re-hires Bob");
   console.log(
     `   Bob reads: ${(await scopesFor(client, reportId, BOB)).join(", ")}`,
   );

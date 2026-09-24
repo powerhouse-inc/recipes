@@ -2,8 +2,7 @@
  * WARNING: DO NOT EDIT
  * This file is auto-generated and updated by codegen
  */
-// at document-model@6.0.2-staging.2 this is only exported from the /core subpath
-import { createAction } from "document-model/core";
+import { createAction } from "document-model";
 import {
   AddLineItemInputSchema,
   DeleteLineItemInputSchema,

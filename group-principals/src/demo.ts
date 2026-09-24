@@ -41,6 +41,11 @@ import {
   submitExpense,
   utils as expenseUtils,
 } from "document-models/expense-report/v1";
+import {
+  buildSignedReactor,
+  createSigner,
+  type SignedReactor,
+} from "./signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -91,28 +96,6 @@ function reviewersGrant(rosterId: string): Grant {
   };
 }
 
-/**
- * Attaches signer context the way a signing client would. The admission
- * gate evaluates grants against action.context.signer — in production the
- * ReactorClient populates (and signs) this via .withSigner().
- */
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: {
-          name: "group-principals-demo",
-          key: `did:demo:${label(address)}`,
-        },
-        signatures: [],
-      },
-    },
-  };
-}
-
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /** Refusals are expected here; keep the reactor's error channel quiet. */
@@ -144,7 +127,7 @@ async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
 }
 
 async function step(
-  reactor: IReactor,
+  { reactor, clients }: SignedReactor,
   docId: string,
   caller: string,
   action: Action,
@@ -153,7 +136,7 @@ async function step(
   // The auth stream must be strictly timestamp-monotonic, so give every
   // step its own millisecond.
   await sleep(15);
-  const job = await reactor.execute(docId, "main", [signedBy(action, caller)]);
+  const job = await clients.get(caller)!.executeAsync(docId, "main", [action]);
   const done = await waitForJob(reactor, job);
   if (done.status === JobStatus.FAILED) {
     console.log(`[${label(caller)}] ${description}`);
@@ -185,32 +168,37 @@ async function main() {
     "Starting reactor (documentDecisions + authEnforcement + authGroups)...",
   );
   const t0 = performance.now();
-  const reactorModule = await new ReactorBuilder()
-    .withDocumentModelSources([
-      ExpenseReport,
-      ReactorGroup,
-      documentModelDocumentModelModule,
-    ])
-    .withLogger(quietLogger())
-    .withExecutorConfig({
-      featureFlags: {
-        documentDecisions: true,
-        authEnforcement: true,
-        authGroups: true,
-      },
-    })
-    .buildModule();
-  const reactor: IReactor = reactorModule.reactor;
+  const alice = await createSigner("group-principals-demo", ALICE);
+  const bob = await createSigner("group-principals-demo", BOB);
+  const carol = await createSigner("group-principals-demo", CAROL);
+  const session = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([
+        ExpenseReport,
+        ReactorGroup,
+        documentModelDocumentModelModule,
+      ])
+      .withLogger(quietLogger())
+      .withExecutorConfig({
+        featureFlags: {
+          documentDecisions: true,
+          authEnforcement: true,
+          authGroups: true,
+        },
+      }),
+    [alice, bob, carol],
+  );
+  const { reactor } = session;
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 
   // ─── The roster: an ordinary document, governed like any other ───────
   const roster = groupUtils.createDocument();
   const rosterId = roster.header.id;
-  await waitForJob(reactor, await reactor.create(roster));
+  await waitForJob(reactor, await reactor.create(roster, alice));
   console.log(`[Alice] created reviewers roster ${rosterId}\n`);
 
   await step(
-    reactor,
+    session,
     rosterId,
     ALICE,
     initializeAuth({ version: 1, grants: adminGrants() }),
@@ -218,7 +206,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     rosterId,
     BOB,
     addMember({ address: BOB }),
@@ -226,7 +214,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     rosterId,
     ALICE,
     addMember({ address: BOB }),
@@ -236,11 +224,11 @@ async function main() {
   // ─── The expense report: its policy names the roster ─────────────────
   const expense = expenseUtils.createDocument();
   const expenseId = expense.header.id;
-  await waitForJob(reactor, await reactor.create(expense));
+  await waitForJob(reactor, await reactor.create(expense, alice));
   console.log(`\n[Alice] created expense report ${expenseId}`);
 
   await step(
-    reactor,
+    session,
     expenseId,
     ALICE,
     initializeAuth({
@@ -251,7 +239,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     expenseId,
     ALICE,
     submitExpense({ id: "e1", memo: "team lunch", amountCents: 4800 }),
@@ -259,7 +247,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     expenseId,
     BOB,
     approveExpense({ id: "e1" }),
@@ -267,7 +255,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     expenseId,
     ALICE,
     submitExpense({ id: "e2", memo: "conference travel", amountCents: 92000 }),
@@ -275,7 +263,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     expenseId,
     CAROL,
     approveExpense({ id: "e2" }),
@@ -286,7 +274,7 @@ async function main() {
     "\n— Hiring Carol is one operation on the roster. No policy write. —",
   );
   await step(
-    reactor,
+    session,
     rosterId,
     ALICE,
     addMember({ address: CAROL }),
@@ -294,7 +282,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     expenseId,
     CAROL,
     approveExpense({ id: "e2" }),
@@ -312,7 +300,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     expenseId,
     ALICE,
     submitExpense({ id: "e3", memo: "new laptop", amountCents: 210000 }),
@@ -321,7 +309,7 @@ async function main() {
 
   const beforeApproval = new Date(Date.now() - 5).toISOString();
   await step(
-    reactor,
+    session,
     expenseId,
     BOB,
     approveExpense({ id: "e3" }),
@@ -333,7 +321,7 @@ async function main() {
     timestampUtcMs: beforeApproval,
   };
   await step(
-    reactor,
+    session,
     rosterId,
     ALICE,
     backdated,

@@ -21,7 +21,7 @@ external feed ──fetchSince(watermark)──▶ FeedPoller
     corrections)                            │  2. skip ids already in state
                                             │  3. map event → recordEntry / markSuperseded
                                             ▼
-                                    reactor.execute → Ledger document
+                                client.executeAsync → Ledger document
                                        { source, watermark, entries[] }
 ```
 
@@ -29,7 +29,9 @@ external feed ──fetchSince(watermark)──▶ FeedPoller
 
 - **A poll loop** dispatching actions into a document through the reactor
   (`FeedPoller.pollOnce`, or `start` for the interval version, which backs off
-  exponentially on errors).
+  exponentially on errors). The poller writes through an `IReactorClient` built
+  with `withSigner`, so every entry is signed: a reactor that verifies signatures
+  refuses unsigned writes.
 - **Corrections as explicit operations.** An upstream rewrite becomes a
   `markSuperseded` op that flips the old entry's status and appends the
   corrected value as a *new* entry. The original payload is never mutated.

@@ -3,6 +3,8 @@ import { KyselyPGlite } from "kysely-pglite";
 import {
   ReactorBuilder,
   JobAwaiter,
+  JobStatus,
+  ReactorClientBuilder,
 } from "@powerhousedao/reactor";
 import {
   documentModelDocumentModelModule,
@@ -10,6 +12,11 @@ import {
   setName,
 } from "document-model";
 import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import type { SearchDB } from "./schema.js";
 import { up } from "./migrations.js";
 import { SearchProcessor } from "./processor.js";
@@ -28,18 +35,35 @@ async function main() {
   // 2. Build reactor
   process.stdout.write("Starting reactor...");
   const t0 = performance.now();
-  const reactorModule = await new ReactorBuilder()
-    .withDocumentModelSources([
-      documentModelDocumentModelModule,
-      driveDocumentModelModule,
-    ])
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "full-text-search-demo",
+  );
+  const clientModule = await new ReactorClientBuilder()
+    .withReactorBuilder(
+      new ReactorBuilder().withDocumentModelSources([
+        documentModelDocumentModelModule,
+        driveDocumentModelModule,
+      ]),
+    )
+    .withSigner(signer)
     .buildModule();
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)`);
 
-  const { reactor, eventBus, processorManager } = reactorModule;
+  const { client } = clientModule;
+  const { reactor, eventBus, processorManager } = clientModule.reactorModule!;
   const jobAwaiter = new JobAwaiter(eventBus, (jobId, signal) =>
     reactor.getJobStatus(jobId, signal),
   );
+  const settle = async (jobId: string) => {
+    const job = await jobAwaiter.waitForJob(jobId);
+    if (job.status === JobStatus.FAILED) {
+      throw new Error(`job ${jobId} failed: ${job.error?.message}`);
+    }
+  };
 
   // 3. Register search processor
   const processor = new SearchProcessor(db);
@@ -55,8 +79,7 @@ async function main() {
   // 4. Create a drive
   process.stdout.write("\nCreating drive...");
   const driveDoc = driveCreateDocument();
-  const driveJob = await reactor.create(driveDoc);
-  await jobAwaiter.waitForJob(driveJob.id);
+  await settle((await reactor.create(driveDoc, signer)).id);
   console.log(` ${driveDoc.header.id}`);
 
   // 5. Create some documents and give them distinct names
@@ -68,12 +91,11 @@ async function main() {
   console.log("\nCreating documents...");
   for (const name of docNames) {
     const doc = documentModelCreateDocument();
-    const createJob = await reactor.create(doc);
-    await jobAwaiter.waitForJob(createJob.id);
-    const nameJob = await reactor.execute(doc.header.id, "main", [
+    await settle((await reactor.create(doc, signer)).id);
+    const nameJob = await client.executeAsync(doc.header.id, "main", [
       setName(name),
     ]);
-    await jobAwaiter.waitForJob(nameJob.id);
+    await settle(nameJob.id);
     console.log(`  ${doc.header.id} — "${name}"`);
   }
 

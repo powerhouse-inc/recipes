@@ -15,6 +15,7 @@
     "@powerhousedao/reactor": "catalog:",
     "@powerhousedao/reactor-browser": "catalog:",
     "@powerhousedao/shared": "catalog:",
+    "@renown/sdk": "catalog:",
     "document-model": "catalog:",
     "zod": "^4.3.6"
   },

@@ -15,6 +15,13 @@ the consensus string the reactor would have recorded
 (`no grant permits this operation`). `anyAllowed` and `allAllowed` answer what a
 toolbar and a form each ask, and every aggregate is false over an empty batch.
 
+The manager and the clerk each submit through a `ReactorClient` that signs with
+their own `RenownCryptoSigner` key (`buildSignedReactor` in `src/signers.ts`). The
+submit is judged as the signature's `signer.user.address`, and the preflight asks
+as the same `{ address }`. Under `authEnforcement` the reactor also needs a trust
+policy that accepts each key for its address (`trustPolicyFor`). 6.2.3-dev.11 does
+not verify signatures and ignores `trustPolicy`.
+
 ## The policy
 
 This recipe picks up where [`document-acl`](../document-acl) leaves off, with the

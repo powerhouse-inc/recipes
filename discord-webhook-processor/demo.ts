@@ -2,9 +2,15 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import {
   ReactorBuilder,
   JobAwaiter,
+  JobStatus,
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
 import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { createDiscordWebhookFactory } from "./discord-webhook-processor.js";
 
 const WEBHOOK_PORT = 9123;
@@ -70,9 +76,20 @@ async function main() {
 
   // 4. Create a drive (triggers processor)
   process.stdout.write("\nCreating drive...");
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "discord-webhook-processor-demo",
+  );
   const driveDoc = driveCreateDocument();
-  const driveJob = await reactor.create(driveDoc);
-  await jobAwaiter.waitForJob(driveJob.id);
+  const driveJob = await jobAwaiter.waitForJob(
+    (await reactor.create(driveDoc, signer)).id,
+  );
+  if (driveJob.status === JobStatus.FAILED) {
+    throw new Error(`drive creation failed: ${driveJob.error?.message}`);
+  }
   console.log(` ${driveDoc.header.id}`);
 
   // 5. Wait for async processor delivery

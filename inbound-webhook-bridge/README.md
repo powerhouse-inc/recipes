@@ -31,12 +31,15 @@ provider ──POST raw body + x-webhook-signature──▶ createWebhookServer 
                                                      │  5. dedup vs persisted processedEventIds
                                                      │  6. map event type → typed action
                                                      ▼
-                                                  reactor.execute → Payment document
+                                                  client.executeAsync → Payment document
 ```
 
-`reactor.execute` hands the mapped action to the reactor, the
+`client.executeAsync` hands the mapped action to the reactor, the
 `@powerhousedao/reactor` instance that stores the documents and applies
-operations to them.
+operations to them. The bridge takes an `IReactorClient` built with `withSigner`,
+so the action is signed as the bridge's own key. A reactor that verifies
+signatures refuses unsigned writes. That action signature is separate from the
+webhook signature below, which only proves the provider sent the request.
 
 ### Signature scheme (modelled on Stripe)
 

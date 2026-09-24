@@ -2,13 +2,45 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   JobAwaiter,
+  JobStatus,
   type IReactor,
   type IEventBus,
   type ConsistencyToken,
   type OperationFilter,
 } from "@powerhousedao/reactor";
-import { documentModelCreateDocument } from "document-model";
+import {
+  documentModelCreateDocument,
+  type Action,
+  type ISigner,
+  type Signature,
+} from "document-model";
 import { driveCreateDocument, addFile } from "@powerhousedao/shared/document-drive";
+
+type SigningTarget = { documentId: string; branch: string };
+
+// 6.2.3-dev.11 types arg 2 as an AbortSignal and ignores an unaborted object.
+async function sign(
+  signer: ISigner,
+  action: Action,
+  target: SigningTarget,
+): Promise<Action> {
+  const signAction = signer.signAction.bind(signer) as unknown as (
+    action: Action,
+    target: SigningTarget,
+  ) => Promise<Signature>;
+  const signature = await signAction(action, target);
+  return {
+    ...action,
+    context: {
+      ...action.context,
+      signer: {
+        user: signer.user ?? { address: "", networkId: "", chainId: 0 },
+        app: signer.app ?? { name: "", key: "" },
+        signatures: [signature],
+      },
+    },
+  };
+}
 
 /**
  * Exports document snapshots using the low-level IReactor API.
@@ -22,6 +54,7 @@ import { driveCreateDocument, addFile } from "@powerhousedao/shared/document-dri
 export async function exportWithReactor(
   reactor: IReactor,
   eventBus: IEventBus,
+  signer: ISigner,
   outDir: string,
 ) {
   mkdirSync(outDir, { recursive: true });
@@ -29,15 +62,23 @@ export async function exportWithReactor(
   const jobAwaiter = new JobAwaiter(eventBus, (jobId, signal) =>
     reactor.getJobStatus(jobId, signal),
   );
+  const settle = async (jobId: string) => {
+    const job = await jobAwaiter.waitForJob(jobId);
+    if (job.status === JobStatus.FAILED) {
+      throw new Error(`job ${jobId} failed: ${job.error?.message}`);
+    }
+    return job;
+  };
 
   // --- 1. Create drive ---
   // reactor.create() returns a JobInfo — not the document itself.
   // We must wait for the job to reach a terminal state before reading.
+  // IReactor never signs on its own: create() takes the signer.
   console.log("  Creating drive...");
   const driveDoc = driveCreateDocument();
   const driveId = driveDoc.header.id;
-  const driveJob = await reactor.create(driveDoc);
-  const driveCompleted = await jobAwaiter.waitForJob(driveJob.id);
+  const driveJob = await reactor.create(driveDoc, signer);
+  const driveCompleted = await settle(driveJob.id);
 
   // The consistency token captures the exact write position (document,
   // scope, branch, operation index) so reads can wait for read models
@@ -53,24 +94,28 @@ export async function exportWithReactor(
 
   for (let i = 0; i < 2; i++) {
     const doc = documentModelCreateDocument();
-    const job = await reactor.create(doc);
-    const completed = await jobAwaiter.waitForJob(job.id);
+    const job = await reactor.create(doc, signer);
+    const completed = await settle(job.id);
     docIds.push(doc.header.id);
     docTokens.push(completed.consistencyToken);
   }
 
   // --- 3. Register documents in the drive ---
-  // We execute addFile actions against the drive document.
+  // We execute addFile actions against the drive document. execute()
+  // takes actions already signed for the document they are written to.
   console.log("  Registering documents in drive...");
   for (let i = 0; i < docIds.length; i++) {
-    const job = await reactor.execute(driveId, "main", [
+    const action = await sign(
+      signer,
       addFile({
         id: docIds[i],
         name: `Document-${i + 1}`,
         documentType: "powerhouse/document-model",
       }),
-    ]);
-    const completed = await jobAwaiter.waitForJob(job.id);
+      { documentId: driveId, branch: "main" },
+    );
+    const job = await reactor.execute(driveId, "main", [action]);
+    const completed = await settle(job.id);
     // Update the drive token to the latest write position
     docTokens[i] = completed.consistencyToken;
   }

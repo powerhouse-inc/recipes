@@ -4,7 +4,7 @@ import type {
   ProcessorFactory,
   ProcessorFilter,
 } from "@powerhousedao/reactor";
-import type { IReactor } from "@powerhousedao/reactor";
+import type { IReactorClient } from "@powerhousedao/reactor";
 import type { Kysely } from "kysely";
 import { setName } from "document-model";
 import type { SagaDB } from "./schema.js";
@@ -34,7 +34,7 @@ export type SagaStepDefinition = {
  *
  * When an operation matches a saga step definition, the processor:
  * 1. Resolves or creates a saga_id (new for initial steps, looked up from DB for subsequent steps)
- * 2. Dispatches follow-up actions to a target document via IReactor.execute()
+ * 2. Dispatches follow-up actions to a target document via IReactorClient.executeAsync(), which signs them
  * 3. Logs the step to the saga_log table for traceability
  *
  * A re-entrancy guard prevents the processor from reacting to its own dispatched operations.
@@ -44,7 +44,7 @@ export class SagaProcessor implements IProcessor {
 
   constructor(
     private readonly db: Kysely<SagaDB>,
-    private readonly reactor: IReactor,
+    private readonly client: IReactorClient,
     private readonly steps: SagaStepDefinition[],
   ) {}
 
@@ -97,11 +97,9 @@ export class SagaProcessor implements IProcessor {
         try {
           for (const action of actions) {
             if (action.type === "SET_NAME") {
-              await this.reactor.execute(
-                targetDocId,
-                "main",
-                [setName(action.input.name)],
-              );
+              await this.client.executeAsync(targetDocId, "main", [
+                setName(action.input.name),
+              ]);
             }
           }
         } finally {
@@ -123,7 +121,7 @@ export class SagaProcessor implements IProcessor {
  *   "saga",
  *   createSagaFactory({
  *     db,
- *     reactor,
+ *     client,
  *     steps: [...],
  *     filter: { branch: ["main"] },
  *   }),
@@ -132,13 +130,13 @@ export class SagaProcessor implements IProcessor {
  */
 export function createSagaFactory(config: {
   db: Kysely<SagaDB>;
-  reactor: IReactor;
+  client: IReactorClient;
   steps: SagaStepDefinition[];
   filter: ProcessorFilter;
 }): ProcessorFactory {
   return () => [
     {
-      processor: new SagaProcessor(config.db, config.reactor, config.steps),
+      processor: new SagaProcessor(config.db, config.client, config.steps),
       filter: config.filter,
       startFrom: "beginning",
     },

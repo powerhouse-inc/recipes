@@ -3,8 +3,9 @@
 The same policy that refuses a write decides what a read returns. A subject
 that may not read a scope does not receive it. `IReactor` is inside the trust
 boundary and serves every scope of every document to every caller, so the gate
-sits on the `ReactorClient`, which [`document-acl`](../document-acl) and
-[`group-principals`](../group-principals) never build.
+sits on the `ReactorClient`. [`document-acl`](../document-acl) and
+[`group-principals`](../group-principals) write through signing clients but read
+straight from `IReactor`.
 
 ## What it demonstrates
 
@@ -15,6 +16,10 @@ sits on the `ReactorClient`, which [`document-acl`](../document-acl) and
   withheld scope is *absent* from `document.state` rather than present and
   empty. `client.execute()` hands back a document gated as the client's own
   identity.
+- **The client reads as its signer**: Alice's client is built with her
+  `RenownCryptoSigner` key (`buildSignedReactor` in `src/signers.ts`), so a
+  `client.get()` with no subject, and `client.execute()`, are gated as Alice.
+  Bob and Carol write through clients of their own.
 - **The read gate carries no feature flag**: with `featureFlags: {}` the read
   is filtered, while admission waits on `authEnforcement`.
 

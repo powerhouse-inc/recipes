@@ -4,12 +4,18 @@ import {
   ReactorBuilder,
   JobAwaiter,
   createRelationalDb,
+  JobStatus,
 } from "@powerhousedao/reactor";
 import {
   documentModelDocumentModelModule,
   documentModelCreateDocument,
 } from "document-model";
 import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import type { CatalogDB } from "./schema.js";
 import { CatalogProcessor } from "./processor.js";
 import { createCatalogQuery } from "./query.js";
@@ -49,6 +55,12 @@ async function main() {
   const jobAwaiter = new JobAwaiter(eventBus, (jobId, signal) =>
     reactor.getJobStatus(jobId, signal),
   );
+  const settle = async (jobId: string) => {
+    const job = await jobAwaiter.waitForJob(jobId);
+    if (job.status === JobStatus.FAILED) {
+      throw new Error(`job ${jobId} failed: ${job.error?.message}`);
+    }
+  };
 
   // 4. Register processor
   await processorManager.registerFactory("catalog", () => [
@@ -61,17 +73,22 @@ async function main() {
   console.log("Registered catalog processor");
 
   // 5. Create a drive and some documents
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "relational-db-subgraph-demo",
+  );
   process.stdout.write("\nCreating drive...");
   const driveDoc = driveCreateDocument();
-  const driveJob = await reactor.create(driveDoc);
-  await jobAwaiter.waitForJob(driveJob.id);
+  await settle((await reactor.create(driveDoc, signer)).id);
   console.log(` ${driveDoc.header.id}`);
 
   console.log("Creating documents...");
   for (let i = 0; i < 3; i++) {
     const doc = documentModelCreateDocument();
-    const job = await reactor.create(doc);
-    await jobAwaiter.waitForJob(job.id);
+    await settle((await reactor.create(doc, signer)).id);
     console.log(`  Document ${i + 1}: ${doc.header.id}`);
   }
 

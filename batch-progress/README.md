@@ -29,7 +29,7 @@ Four sequential calls, manual error handling, and nothing keeping other writes f
 ### With Reactor
 
 ```ts
-await reactor.executeBatch({
+await client.executeBatch({
   jobs: [
     { key: "budget",  documentId: budgetId,  actions: [initBudget],  dependsOn: [] },
     { key: "scope",   documentId: scopeId,   actions: [initScope],   dependsOn: [] },
@@ -43,8 +43,8 @@ One call. `executeBatch` sorts the jobs topologically and turns each `dependsOn`
 
 ## How it works
 
-1. Spins up an in-memory Reactor with `ReactorBuilder`: PGlite, an in-process Postgres, no external DB.
-2. Creates a drive document to hold the project files, then submits the 4 jobs built by `buildCreateProjectBatch` via `IReactor.executeBatch`.
+1. Spins up an in-memory Reactor with `ReactorBuilder`: PGlite, an in-process Postgres, no external DB. It is wrapped in a `ReactorClient` built with `withSigner` and a `RenownCryptoSigner` key, because a reactor that verifies signatures refuses unsigned writes.
+2. Creates a drive document to hold the project files, signed with `reactor.create(driveDoc, signer)`, then submits the 4 jobs built by `buildCreateProjectBatch` via `IReactorClient.executeBatch`, which signs every action for the document it lands in. The three project documents are created by `createDocumentAction` under ids chosen up front, so they are legacy documents: a v2-required document derives its id from its header.
 3. Subscribes on the EventBus to the five `JOB_*` events for status updates.
 4. Renders a multi-bar terminal display showing each job's status. Recorded events replay with a short delay, since they fire while `executeBatch` runs.
 
