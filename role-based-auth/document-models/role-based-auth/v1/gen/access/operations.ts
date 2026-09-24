@@ -1,42 +1,46 @@
+/**
+ * WARNING: DO NOT EDIT
+ * This file is auto-generated and updated by codegen
+ */
 import { type SignalDispatch } from "document-model";
+import type { RoleBasedAuthGlobalState } from "../types.js";
 import type {
+  AddMemberAction,
   BootstrapAction,
   GrantAdminAction,
-  RevokeAdminAction,
-  AddMemberAction,
   RemoveMemberAction,
+  RevokeAdminAction,
   WriteNoteAction,
 } from "./actions.js";
-import type { RoleBasedAuthState } from "../types.js";
 
 export interface RoleBasedAuthAccessOperations {
   bootstrapOperation: (
-    state: RoleBasedAuthState,
+    state: RoleBasedAuthGlobalState,
     action: BootstrapAction,
     dispatch?: SignalDispatch,
   ) => void;
   grantAdminOperation: (
-    state: RoleBasedAuthState,
+    state: RoleBasedAuthGlobalState,
     action: GrantAdminAction,
     dispatch?: SignalDispatch,
   ) => void;
   revokeAdminOperation: (
-    state: RoleBasedAuthState,
+    state: RoleBasedAuthGlobalState,
     action: RevokeAdminAction,
     dispatch?: SignalDispatch,
   ) => void;
   addMemberOperation: (
-    state: RoleBasedAuthState,
+    state: RoleBasedAuthGlobalState,
     action: AddMemberAction,
     dispatch?: SignalDispatch,
   ) => void;
   removeMemberOperation: (
-    state: RoleBasedAuthState,
+    state: RoleBasedAuthGlobalState,
     action: RemoveMemberAction,
     dispatch?: SignalDispatch,
   ) => void;
   writeNoteOperation: (
-    state: RoleBasedAuthState,
+    state: RoleBasedAuthGlobalState,
     action: WriteNoteAction,
     dispatch?: SignalDispatch,
   ) => void;
