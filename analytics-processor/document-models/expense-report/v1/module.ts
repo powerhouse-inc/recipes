@@ -3,10 +3,7 @@
  * This file is auto-generated and updated by codegen
  */
 import type { DocumentModelModule } from "document-model";
-// at document-model@6.0.2-staging.2 defaultBaseState is only exported from the
-// /core subpath, while createState only from the package root
-import { createState } from "document-model";
-import { defaultBaseState } from "document-model/core";
+import { createState, defaultBaseState } from "document-model";
 import { actions } from "./actions.js";
 import { documentModel } from "./gen/document-model.js";
 import { reducer } from "./gen/reducer.js";

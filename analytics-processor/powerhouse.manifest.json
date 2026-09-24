@@ -8,8 +8,8 @@
   },
   "documentModels": [
     {
-      "name": "Expense Report",
-      "id": "example/expense-report"
+      "id": "example/expense-report",
+      "name": "Expense Report"
     }
   ],
   "apps": [],

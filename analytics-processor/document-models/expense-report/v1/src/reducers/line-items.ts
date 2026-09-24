@@ -1,8 +1,8 @@
+import type { ExpenseReportLineItemsOperations } from "document-models/expense-report/v1";
 import {
   DuplicateLineItem as DuplicateLineItemError,
   LineItemNotFound as LineItemNotFoundError,
 } from "../../gen/line-items/error.js";
-import type { ExpenseReportLineItemsOperations } from "document-models/expense-report/v1";
 
 export const expenseReportLineItemsOperations: ExpenseReportLineItemsOperations =
   {

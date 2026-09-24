@@ -4,8 +4,7 @@
  * Factory methods for creating ExpenseReportDocument instances
  */
 import type { PHAuthState, PHBaseState, PHDocumentState } from "document-model";
-// at document-model@6.0.2-staging.2 these are only exported from the /core subpath
-import { createBaseState, defaultBaseState } from "document-model/core";
+import { createBaseState, defaultBaseState } from "document-model";
 import type {
   ExpenseReportDocument,
   ExpenseReportGlobalState,
@@ -74,13 +73,11 @@ export function createExpenseReportDocument(
   }>,
 ): ExpenseReportDocument {
   const document = utils.createDocument(
-    state
-      ? createState(
-          createBaseState(state.auth, state.document),
-          state.global,
-          state.local,
-        )
-      : undefined,
+    createState(
+      createBaseState(state?.auth, { version: 1, ...state?.document }),
+      state?.global,
+      state?.local,
+    ),
   );
 
   return document;
