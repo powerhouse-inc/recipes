@@ -18,6 +18,7 @@ import {
   JobStatus,
   ReactorBuilder,
   type IReactor,
+  type IReactorClient,
   type JobInfo,
 } from "@powerhousedao/reactor";
 import {
@@ -29,7 +30,7 @@ import {
   sortOperations,
   type Grant,
 } from "@powerhousedao/shared/document-model";
-import type { Action, ILogger, Operation } from "document-model";
+import type { Action, ILogger, ISigner, Operation } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
 import {
   approveExpense,
@@ -38,6 +39,7 @@ import {
   utils,
   type ExpenseReportDocument,
 } from "document-models/expense-report/v1";
+import { buildSignedReactor, createSigner } from "./signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -78,20 +80,6 @@ function label(address: string): string {
   return address === ALICE ? "Alice@A" : "Bob@B";
 }
 
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "revocation-race-demo", key: `did:demo:${address}` },
-        signatures: [],
-      },
-    },
-  };
-}
-
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /** Refusals are the point of this demo; keep the reactor's error channel quiet. */
@@ -109,14 +97,22 @@ function quietLogger(): ILogger {
   };
 }
 
+const signers = new Map<string, ISigner>();
+const clientsOf = new WeakMap<IReactor, Map<string, IReactorClient>>();
+
+/** A reactor that trusts Alice's and Bob's keys, with a signing client each. */
 async function buildReactor(): Promise<IReactor> {
-  return new ReactorBuilder()
-    .withDocumentModelSources([ExpenseReport, documentModelDocumentModelModule])
-    .withLogger(quietLogger())
-    .withExecutorConfig({
-      featureFlags: { documentDecisions: true, authEnforcement: true },
-    })
-    .build();
+  const { reactor, clients } = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([ExpenseReport, documentModelDocumentModelModule])
+      .withLogger(quietLogger())
+      .withExecutorConfig({
+        featureFlags: { documentDecisions: true, authEnforcement: true },
+      }),
+    [...signers.values()],
+  );
+  clientsOf.set(reactor, clients);
+  return reactor;
 }
 
 async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
@@ -140,7 +136,8 @@ async function step(
   description: string,
 ): Promise<void> {
   await sleep(15); // give every operation its own millisecond
-  const job = await reactor.execute(docId, "main", [signedBy(action, caller)]);
+  const client = clientsOf.get(reactor)!.get(caller)!;
+  const job = await client.executeAsync(docId, "main", [action]);
   const done = await waitForJob(reactor, job);
   if (done.status === JobStatus.FAILED) {
     console.log(`[${label(caller)}] ${description}`);
@@ -203,13 +200,19 @@ async function main() {
   process.stdout.write(
     "Starting two reactors (documentDecisions + authEnforcement)...",
   );
+  for (const address of [ALICE, BOB]) {
+    signers.set(address, await createSigner("revocation-race-demo", address));
+  }
   const reactorA = await buildReactor();
   const reactorB = await buildReactor();
   console.log(" done\n");
 
   const document = utils.createDocument();
   const docId = document.header.id;
-  await waitForJob(reactorA, await reactorA.create(document));
+  await waitForJob(
+    reactorA,
+    await reactorA.create(document, signers.get(ALICE)),
+  );
 
   await step(
     reactorA,
