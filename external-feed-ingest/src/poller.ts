@@ -3,7 +3,7 @@ import {
   JobAwaiter,
   JobStatus,
   type IEventBus,
-  type IReactor,
+  type IReactorClient,
 } from "@powerhousedao/reactor";
 import type { FeedEvent } from "./feed.js";
 import {
@@ -55,15 +55,16 @@ export class FeedPoller {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private stopped = false;
 
+  /** `client` signs every action it writes, with the signer it was built with. */
   constructor(
-    private readonly reactor: IReactor,
+    private readonly client: IReactorClient,
     eventBus: IEventBus,
     private readonly documentId: string,
     private readonly feed: Feed,
     private readonly branch = "main",
   ) {
     this.awaiter = new JobAwaiter(eventBus, (jobId, signal) =>
-      reactor.getJobStatus(jobId, signal),
+      client.getJobStatus(jobId, signal),
     );
   }
 
@@ -73,7 +74,7 @@ export class FeedPoller {
    * in-memory-only checkpoint is the bug this pattern exists to prevent.
    */
   async seedFromState(): Promise<void> {
-    const doc = await this.reactor.get<FeedLedgerDocument>(this.documentId);
+    const doc = await this.client.get<FeedLedgerDocument>(this.documentId);
     this.watermark = doc.state.global.watermark;
     this.seen = new Set(doc.state.global.entries.map((e) => e.externalId));
   }
@@ -126,9 +127,11 @@ export class FeedPoller {
             ts: event.ts,
           });
 
-      const job = await this.reactor.execute(this.documentId, this.branch, [
-        action,
-      ]);
+      const job = await this.client.executeAsync(
+        this.documentId,
+        this.branch,
+        [action],
+      );
       const info = await this.awaiter.waitForJob(job.id);
       if (info.status === JobStatus.FAILED) {
         // Don't advance past an event we failed to apply — surface it so the

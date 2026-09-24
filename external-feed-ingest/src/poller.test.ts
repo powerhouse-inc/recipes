@@ -1,10 +1,14 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import {
   ReactorBuilder,
+  ReactorClientBuilder,
   JobAwaiter,
+  JobStatus,
   type IEventBus,
   type IReactor,
+  type IReactorClient,
 } from "@powerhousedao/reactor";
+import type { ISigner } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
 import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
 import {
@@ -12,17 +16,24 @@ import {
   FeedLedger,
   type FeedLedgerDocument,
 } from "document-models/feed-ledger/v1";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { MockFeed, scriptedFeed, type FeedEvent } from "./feed.js";
 import { FeedPoller, type Feed } from "./poller.js";
 
 let reactor: IReactor;
+let client: IReactorClient;
 let eventBus: IEventBus;
+let signer: ISigner;
 let awaiter: JobAwaiter;
 
 async function freshLedger(source: string): Promise<string> {
   const doc = createFeedLedgerDocument({ global: { source } });
-  const job = await reactor.create(doc);
-  await awaiter.waitForJob(job.id);
+  const job = await awaiter.waitForJob((await reactor.create(doc, signer)).id);
+  if (job.status === JobStatus.FAILED) throw new Error(job.error?.message);
   return doc.header.id;
 }
 
@@ -32,14 +43,24 @@ function entriesOf(doc: FeedLedgerDocument) {
 
 beforeEach(async () => {
   // Fresh reactor per test so document state never leaks between cases.
-  const built = await new ReactorBuilder()
-    .withDocumentModelSources([
-      documentModelDocumentModelModule,
-      driveDocumentModelModule,
-      FeedLedger,
-    ])
+  signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "external-feed-ingest-test",
+  );
+  const built = await new ReactorClientBuilder()
+    .withReactorBuilder(
+      new ReactorBuilder().withDocumentModelSources([
+        documentModelDocumentModelModule,
+        driveDocumentModelModule,
+        FeedLedger,
+      ]),
+    )
+    .withSigner(signer)
     .buildModule();
   reactor = built.reactor;
+  client = built.client;
   eventBus = built.eventBus;
   awaiter = new JobAwaiter(eventBus, (jobId, signal) =>
     reactor.getJobStatus(jobId, signal),
@@ -54,7 +75,7 @@ afterAll(() => {
 describe("FeedPoller", () => {
   it("ingests the scripted feed: normal, out-of-order, dedup, correction", async () => {
     const documentId = await freshLedger("invoices");
-    const poller = new FeedPoller(reactor, eventBus, documentId, scriptedFeed());
+    const poller = new FeedPoller(client, eventBus, documentId, scriptedFeed());
     await poller.seedFromState();
     const result = await poller.pollOnce();
     poller.shutdown();
@@ -79,7 +100,7 @@ describe("FeedPoller", () => {
       fetchSince: async (since) =>
         (await feed.fetchSince(since)).filter((e) => e.sequence <= 3),
     };
-    const p1 = new FeedPoller(reactor, eventBus, documentId, truncated);
+    const p1 = new FeedPoller(client, eventBus, documentId, truncated);
     await p1.seedFromState();
     const r1 = await p1.pollOnce();
     p1.shutdown();
@@ -87,7 +108,7 @@ describe("FeedPoller", () => {
 
     // Poller #2 is a fresh instance — no in-memory carryover. It re-seeds from
     // the document and sees the full feed (incl. the po-002 redelivery).
-    const p2 = new FeedPoller(reactor, eventBus, documentId, feed);
+    const p2 = new FeedPoller(client, eventBus, documentId, feed);
     await p2.seedFromState();
     expect(p2.currentWatermark).toBe(3);
     expect(p2.seenCount).toBe(3);
@@ -112,7 +133,7 @@ describe("FeedPoller", () => {
         { externalId: "po-002", sequence: 2, payload: "v", ts: "t" },
       ],
     };
-    const warm = new FeedPoller(reactor, eventBus, documentId, seedFeed);
+    const warm = new FeedPoller(client, eventBus, documentId, seedFeed);
     await warm.seedFromState();
     await warm.pollOnce();
     warm.shutdown();
@@ -125,7 +146,7 @@ describe("FeedPoller", () => {
         { externalId: "po-002", sequence: 9, payload: "v", ts: "t" },
       ],
     };
-    const p = new FeedPoller(reactor, eventBus, documentId, redeliver);
+    const p = new FeedPoller(client, eventBus, documentId, redeliver);
     await p.seedFromState();
     const r = await p.pollOnce();
     p.shutdown();
@@ -138,7 +159,7 @@ describe("FeedPoller", () => {
 
   it("correction produces a markSuperseded op, not a mutated entry", async () => {
     const documentId = await freshLedger("invoices");
-    const poller = new FeedPoller(reactor, eventBus, documentId, scriptedFeed());
+    const poller = new FeedPoller(client, eventBus, documentId, scriptedFeed());
     await poller.seedFromState();
     await poller.pollOnce();
     poller.shutdown();
@@ -162,7 +183,7 @@ describe("FeedPoller", () => {
       [{ externalId: "x", sequence: 1, payload: "p", ts: "t" } as FeedEvent],
       { failOnceAtCursor: [0] },
     );
-    const poller = new FeedPoller(reactor, eventBus, documentId, feed);
+    const poller = new FeedPoller(client, eventBus, documentId, feed);
     await poller.seedFromState();
 
     // pollOnce surfaces the transient error to the caller...
