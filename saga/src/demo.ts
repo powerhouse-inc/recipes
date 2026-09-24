@@ -9,6 +9,11 @@ import {
   documentModelCreateDocument,
 } from "document-model";
 import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import type { SagaDB } from "./schema.js";
 import type { SagaStepDefinition } from "./processor.js";
 import { up } from "./migrations.js";
@@ -42,6 +47,13 @@ async function main() {
   process.stdout.write("  Starting reactor...");
   const t0 = performance.now();
 
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "saga-demo",
+  );
   const clientModule = await new ReactorClientBuilder()
     .withReactorBuilder(
       new ReactorBuilder().withDocumentModelSources([
@@ -49,10 +61,10 @@ async function main() {
         driveDocumentModelModule,
       ]),
     )
+    .withSigner(signer)
     .buildModule();
 
   const { client, reactorModule } = clientModule;
-  const reactor = clientModule.reactor;
   const processorManager = reactorModule!.processorManager;
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 
@@ -160,7 +172,7 @@ async function main() {
     "saga",
     createSagaFactory({
       db,
-      reactor,
+      client,
       steps,
       filter: { branch: ["main"] },
     }),
