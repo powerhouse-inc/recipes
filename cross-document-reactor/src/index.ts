@@ -10,6 +10,11 @@ import {
   documentModelCreateDocument,
 } from "document-model";
 import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -33,6 +38,13 @@ async function main() {
   process.stdout.write("Starting reactor...");
   const t0 = performance.now();
 
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "cross-document-reactor-demo",
+  );
   const clientModule = await new ReactorClientBuilder()
     .withReactorBuilder(
       new ReactorBuilder().withDocumentModelSources([
@@ -40,6 +52,7 @@ async function main() {
         driveDocumentModelModule,
       ]),
     )
+    .withSigner(signer)
     .buildModule();
 
   const client: IReactorClient = clientModule.client;
