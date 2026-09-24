@@ -15,7 +15,9 @@
 import {
   JobStatus,
   ReactorBuilder,
+  ReactorClientBuilder,
   type IReactor,
+  type IReactorClient,
   type JobInfo,
 } from "@powerhousedao/reactor";
 import {
@@ -35,6 +37,7 @@ import {
   utils,
   type TeamJournalDocument,
 } from "document-models/team-journal/v1";
+import { clientFor, createSigner, trustPolicyFor } from "./signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -77,25 +80,6 @@ function label(address: string): string {
   return address === ALICE ? "Alice" : address === BOB ? "Bob" : address;
 }
 
-/**
- * Attaches signer context the way a signing client would. The admission
- * gate evaluates grants against action.context.signer — in production the
- * ReactorClient populates (and signs) this via .withSigner().
- */
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "document-acl-demo", key: `did:demo:${label(address)}` },
-        signatures: [],
-      },
-    },
-  };
-}
-
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /**
@@ -130,8 +114,11 @@ async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
   }
 }
 
+/** The reactor, and one signing client per principal. */
+type Session = { reactor: IReactor; clients: Map<string, IReactorClient> };
+
 async function step(
-  reactor: IReactor,
+  { reactor, clients }: Session,
   docId: string,
   caller: string,
   action: Action,
@@ -140,7 +127,7 @@ async function step(
   // The auth stream must be strictly timestamp-monotonic, so give every
   // step its own millisecond.
   await sleep(15);
-  const job = await reactor.execute(docId, "main", [signedBy(action, caller)]);
+  const job = await clients.get(caller)!.executeAsync(docId, "main", [action]);
   const done = await waitForJob(reactor, job);
   if (done.status === JobStatus.FAILED) {
     console.log(`[${label(caller)}] ${description}`);
@@ -156,23 +143,44 @@ async function main() {
 
   process.stdout.write("Starting reactor (documentDecisions + authEnforcement)...");
   const t0 = performance.now();
-  const reactorModule = await new ReactorBuilder()
-    .withDocumentModelSources([TeamJournal, documentModelDocumentModelModule])
-    .withLogger(quietLogger())
-    .withExecutorConfig({
-      featureFlags: { documentDecisions: true, authEnforcement: true },
-    })
+  const alice = await createSigner("document-acl-demo", ALICE);
+  const bob = await createSigner("document-acl-demo", BOB);
+  // A separate object: 6.2.3-dev.11's SignerConfig has no trustPolicy.
+  const signerConfig = {
+    signer: alice,
+    trustPolicy: trustPolicyFor([alice, bob]),
+  };
+  const module = await new ReactorClientBuilder()
+    .withReactorBuilder(
+      new ReactorBuilder()
+        .withDocumentModelSources([
+          TeamJournal,
+          documentModelDocumentModelModule,
+        ])
+        .withLogger(quietLogger())
+        .withExecutorConfig({
+          featureFlags: { documentDecisions: true, authEnforcement: true },
+        }),
+    )
+    .withSigner(signerConfig)
     .buildModule();
-  const reactor: IReactor = reactorModule.reactor;
+  const reactor: IReactor = module.reactor;
+  const session: Session = {
+    reactor,
+    clients: new Map<string, IReactorClient>([
+      [ALICE, module.client],
+      [BOB, await clientFor(module, bob)],
+    ]),
+  };
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 
   const document = utils.createDocument();
   const docId = document.header.id;
-  await waitForJob(reactor, await reactor.create(document));
+  await waitForJob(reactor, await reactor.create(document, alice));
   console.log(`[Alice] created journal ${docId} — no policy yet\n`);
 
   await step(
-    reactor,
+    session,
     docId,
     BOB,
     addEntry({ id: "e-open", text: "first!" }),
@@ -180,7 +188,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     ALICE,
     initializeAuth({
@@ -191,7 +199,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     BOB,
     addEntry({ id: "e-covered", text: "still allowed to add" }),
@@ -199,7 +207,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     BOB,
     setTitle({ title: "Bob's journal now" }),
@@ -207,7 +215,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     BOB,
     pinEntry({ id: "e-covered" }),
@@ -215,7 +223,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     ALICE,
     pinEntry({ id: "e-covered" }),
@@ -223,7 +231,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     BOB,
     setGrant({
@@ -239,7 +247,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     ALICE,
     setGrant({ grant: GRANT_DENY_BOB }),
@@ -247,7 +255,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     BOB,
     addEntry({ id: "e-denied", text: "am I still welcome?" }),
@@ -255,7 +263,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     ALICE,
     moveGrant({ id: GRANT_DENY_BOB.id, index: 0 }),
@@ -263,7 +271,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     BOB,
     addEntry({ id: "e-reordered", text: "order decides, not existence" }),
@@ -271,7 +279,7 @@ async function main() {
   );
 
   await step(
-    reactor,
+    session,
     docId,
     ALICE,
     removeGrant({ id: GRANT_DENY_BOB.id }),

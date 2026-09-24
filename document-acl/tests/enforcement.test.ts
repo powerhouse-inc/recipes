@@ -7,7 +7,9 @@
 import {
   JobStatus,
   ReactorBuilder,
+  ReactorClientBuilder,
   type IReactor,
+  type IReactorClient,
   type JobInfo,
 } from "@powerhousedao/reactor";
 import {
@@ -16,7 +18,7 @@ import {
   setGrant,
   type Grant,
 } from "@powerhousedao/shared/document-model";
-import type { Action, ILogger } from "document-model";
+import type { Action, ILogger, ISigner } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
 import {
   addEntry,
@@ -26,7 +28,8 @@ import {
   utils,
   type TeamJournalDocument,
 } from "document-models/team-journal/v1";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { clientFor, createSigner, trustPolicyFor } from "../src/signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -80,23 +83,17 @@ function quietLogger(): ILogger {
   };
 }
 
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "document-acl-tests", key: `did:test:${address}` },
-        signatures: [],
-      },
-    },
-  };
-}
-
 describe("platform-enforced document ACLs", () => {
   let reactor: IReactor;
+  let clients: Map<string, IReactorClient>;
   let docId: string;
+  let alice: ISigner;
+  let bob: ISigner;
+
+  beforeAll(async () => {
+    alice = await createSigner("document-acl-tests", ALICE);
+    bob = await createSigner("document-acl-tests", BOB);
+  });
 
   async function settle(job: JobInfo): Promise<void> {
     for (;;) {
@@ -114,7 +111,7 @@ describe("platform-enforced document ACLs", () => {
     // action its own millisecond.
     await sleep(10);
     await settle(
-      await reactor.execute(docId, "main", [signedBy(action, caller)]),
+      await clients.get(caller)!.executeAsync(docId, "main", [action]),
     );
   }
 
@@ -127,20 +124,34 @@ describe("platform-enforced document ACLs", () => {
   }
 
   beforeEach(async () => {
-    reactor = await new ReactorBuilder()
-      .withDocumentModelSources([
-        TeamJournal,
-        documentModelDocumentModelModule,
-      ])
-      .withLogger(quietLogger())
-      .withExecutorConfig({
-        featureFlags: { documentDecisions: true, authEnforcement: true },
-      })
-      .build();
+    // A separate object: 6.2.3-dev.11's SignerConfig has no trustPolicy.
+    const signerConfig = {
+      signer: alice,
+      trustPolicy: trustPolicyFor([alice, bob]),
+    };
+    const module = await new ReactorClientBuilder()
+      .withReactorBuilder(
+        new ReactorBuilder()
+          .withDocumentModelSources([
+            TeamJournal,
+            documentModelDocumentModelModule,
+          ])
+          .withLogger(quietLogger())
+          .withExecutorConfig({
+            featureFlags: { documentDecisions: true, authEnforcement: true },
+          }),
+      )
+      .withSigner(signerConfig)
+      .buildModule();
+    reactor = module.reactor;
+    clients = new Map<string, IReactorClient>([
+      [ALICE, module.client],
+      [BOB, await clientFor(module, bob)],
+    ]);
 
     const document = utils.createDocument();
     docId = document.header.id;
-    await settle(await reactor.create(document));
+    await settle(await reactor.create(document, alice));
   });
 
   afterEach(() => {

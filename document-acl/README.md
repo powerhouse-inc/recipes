@@ -11,12 +11,22 @@ baked into its reducers.
 
 An uninitialized policy (`state.auth.version === 0`) leaves the document open, and
 `initializeAuth` flips the default to deny. A write that no grant covers fails the job
-`reactor.execute` returns, with `AuthorizationDeniedError`. Nothing is stored and the
+`executeAsync` returns, with `AuthorizationDeniedError`. Nothing is stored and the
 reducer never runs.
 
 The reducers (`document-models/team-journal/v1/src/reducers/journal.ts`) throw
 `DuplicateEntry` and `EntryNotFound` for domain invariants, and read the signer only
 for an entry's `author`.
+
+## Signed writes
+
+Alice and Bob each hold their own `RenownCryptoSigner` key (`createSigner` in
+`src/signers.ts`), and each writes through a `ReactorClient` built with `withSigner`.
+The client signs every action for the document it writes to, and the grant stack is
+evaluated against the signature's `signer.user.address`. `trustPolicyFor` tells the
+reactor which key may sign as which address. Under `authEnforcement`, a reactor with
+no trust policy refuses every signed write but its own. 6.2.3-dev.11 does not verify
+signatures and ignores `trustPolicy`.
 
 ## The policy the demo installs
 
