@@ -1,5 +1,10 @@
 import type { AddressInfo } from "node:net";
-import { ReactorBuilder, JobAwaiter } from "@powerhousedao/reactor";
+import {
+  JobAwaiter,
+  JobStatus,
+  ReactorBuilder,
+  ReactorClientBuilder,
+} from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
 import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
 import {
@@ -7,6 +12,11 @@ import {
   Payment,
   type PaymentDocument,
 } from "document-models/payment/v1";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { WebhookBridge, createWebhookServer, type WebhookEvent } from "./webhook-bridge.js";
 import { signWebhook, SIGNATURE_HEADER } from "./signature.js";
 
@@ -22,12 +32,22 @@ async function main() {
   // 1. Build a reactor that knows about the payment document model.
   process.stdout.write("Starting reactor...");
   const t0 = performance.now();
-  const { reactor, eventBus } = await new ReactorBuilder()
-    .withDocumentModelSources([
-      documentModelDocumentModelModule,
-      driveDocumentModelModule,
-      Payment,
-    ])
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "inbound-webhook-bridge-demo",
+  );
+  const { client, reactor, eventBus } = await new ReactorClientBuilder()
+    .withReactorBuilder(
+      new ReactorBuilder().withDocumentModelSources([
+        documentModelDocumentModelModule,
+        driveDocumentModelModule,
+        Payment,
+      ]),
+    )
+    .withSigner(signer)
     .buildModule();
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)`);
 
@@ -39,14 +59,18 @@ async function main() {
   const paymentDoc = createPaymentDocument({
     global: { orderId: ORDER_ID, amountCents: 4200, currency: "usd" },
   });
-  const createJob = await reactor.create(paymentDoc);
-  await jobAwaiter.waitForJob(createJob.id);
+  const created = await jobAwaiter.waitForJob(
+    (await reactor.create(paymentDoc, signer)).id,
+  );
+  if (created.status === JobStatus.FAILED) {
+    throw new Error(`payment creation failed: ${created.error?.message}`);
+  }
   const documentId = paymentDoc.header.id;
   console.log(`Created payment document ${documentId} for ${ORDER_ID} (PENDING)\n`);
 
   // 3. Wire the bridge. The resolver maps a provider order id to its document.
   //    In production this would be a read-model lookup; here a single order.
-  const bridge = new WebhookBridge(reactor, eventBus, async (orderId) =>
+  const bridge = new WebhookBridge(client, eventBus, async (orderId) =>
     orderId === ORDER_ID ? documentId : null,
   );
   const server = createWebhookServer({ secret: SECRET, bridge });
