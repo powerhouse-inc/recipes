@@ -21,12 +21,13 @@ for an entry's `author`.
 ## Signed writes
 
 Alice and Bob each hold their own `RenownCryptoSigner` key (`createSigner` in
-`src/signers.ts`), and each writes through a `ReactorClient` built with `withSigner`.
-The client signs every action for the document it writes to, and the grant stack is
-evaluated against the signature's `signer.user.address`. `trustPolicyFor` tells the
-reactor which key may sign as which address. Under `authEnforcement`, a reactor with
-no trust policy refuses every signed write but its own. 6.2.3-dev.11 does not verify
-signatures and ignores `trustPolicy`.
+`src/signers.ts`). `buildSignedReactor` gives each of them a `ReactorClient` built
+with `withSigner`, and every step writes through the caller's client, which signs the
+action for the document it writes to. The grant stack is evaluated against the
+signature's `signer.user.address`. `buildSignedReactor` also gives the reactor a
+trust policy (`trustPolicyFor`) that says which key may sign as which address: under
+`authEnforcement`, a reactor with no trust policy refuses every signed write but its
+own. 6.2.3-dev.11 does not verify signatures and ignores `trustPolicy`.
 
 ## The policy the demo installs
 

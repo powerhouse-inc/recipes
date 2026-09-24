@@ -15,9 +15,7 @@
 import {
   JobStatus,
   ReactorBuilder,
-  ReactorClientBuilder,
   type IReactor,
-  type IReactorClient,
   type JobInfo,
 } from "@powerhousedao/reactor";
 import {
@@ -37,7 +35,11 @@ import {
   utils,
   type TeamJournalDocument,
 } from "document-models/team-journal/v1";
-import { clientFor, createSigner, trustPolicyFor } from "./signers.js";
+import {
+  buildSignedReactor,
+  createSigner,
+  type SignedReactor,
+} from "./signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -114,11 +116,8 @@ async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
   }
 }
 
-/** The reactor, and one signing client per principal. */
-type Session = { reactor: IReactor; clients: Map<string, IReactorClient> };
-
 async function step(
-  { reactor, clients }: Session,
+  { reactor, clients }: SignedReactor,
   docId: string,
   caller: string,
   action: Action,
@@ -145,33 +144,16 @@ async function main() {
   const t0 = performance.now();
   const alice = await createSigner("document-acl-demo", ALICE);
   const bob = await createSigner("document-acl-demo", BOB);
-  // A separate object: 6.2.3-dev.11's SignerConfig has no trustPolicy.
-  const signerConfig = {
-    signer: alice,
-    trustPolicy: trustPolicyFor([alice, bob]),
-  };
-  const module = await new ReactorClientBuilder()
-    .withReactorBuilder(
-      new ReactorBuilder()
-        .withDocumentModelSources([
-          TeamJournal,
-          documentModelDocumentModelModule,
-        ])
-        .withLogger(quietLogger())
-        .withExecutorConfig({
-          featureFlags: { documentDecisions: true, authEnforcement: true },
-        }),
-    )
-    .withSigner(signerConfig)
-    .buildModule();
-  const reactor: IReactor = module.reactor;
-  const session: Session = {
-    reactor,
-    clients: new Map<string, IReactorClient>([
-      [ALICE, module.client],
-      [BOB, await clientFor(module, bob)],
-    ]),
-  };
+  const session = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([TeamJournal, documentModelDocumentModelModule])
+      .withLogger(quietLogger())
+      .withExecutorConfig({
+        featureFlags: { documentDecisions: true, authEnforcement: true },
+      }),
+    [alice, bob],
+  );
+  const { reactor } = session;
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 
   const document = utils.createDocument();

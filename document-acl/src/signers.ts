@@ -1,7 +1,9 @@
 import {
   ReactorClientBuilder,
   type InProcessReactorClientModule,
-  type ReactorClient,
+  type IReactor,
+  type IReactorClient,
+  type ReactorBuilder,
 } from "@powerhousedao/reactor";
 import type { ISigner } from "document-model";
 import {
@@ -36,18 +38,39 @@ export function trustPolicyFor(signers: ISigner[]) {
   };
 }
 
-/** A second client on `host`'s reactor that signs as `signer`. */
-export function clientFor(
-  host: InProcessReactorClientModule,
-  signer: ISigner,
-): Promise<ReactorClient> {
-  return new ReactorClientBuilder()
-    .withReactor(
-      host.reactor,
-      host.eventBus,
-      host.documentIndexer,
-      host.documentView,
-    )
-    .withSigner(signer)
-    .build();
+export type SignedReactor = {
+  module: InProcessReactorClientModule;
+  reactor: IReactor;
+  /** One client per signer, keyed by address, each signing as that signer. */
+  clients: Map<string, IReactorClient>;
+};
+
+/** A reactor that trusts every signer's key; the first signer is the host. */
+export async function buildSignedReactor(
+  reactorBuilder: ReactorBuilder,
+  signers: ISigner[],
+): Promise<SignedReactor> {
+  // A separate object: 6.2.3-dev.11's SignerConfig has no trustPolicy.
+  const signerConfig = {
+    signer: signers[0],
+    trustPolicy: trustPolicyFor(signers),
+  };
+  const module = await new ReactorClientBuilder()
+    .withReactorBuilder(reactorBuilder)
+    .withSigner(signerConfig)
+    .buildModule();
+  const clients = new Map<string, IReactorClient>();
+  for (const signer of signers) {
+    const client = await new ReactorClientBuilder()
+      .withReactor(
+        module.reactor,
+        module.eventBus,
+        module.documentIndexer,
+        module.documentView,
+      )
+      .withSigner(signer)
+      .build();
+    clients.set(signer.user!.address, client);
+  }
+  return { module, reactor: module.reactor, clients };
 }

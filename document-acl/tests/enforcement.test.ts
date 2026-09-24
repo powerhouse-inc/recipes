@@ -7,7 +7,6 @@
 import {
   JobStatus,
   ReactorBuilder,
-  ReactorClientBuilder,
   type IReactor,
   type IReactorClient,
   type JobInfo,
@@ -29,7 +28,7 @@ import {
   type TeamJournalDocument,
 } from "document-models/team-journal/v1";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { clientFor, createSigner, trustPolicyFor } from "../src/signers.js";
+import { buildSignedReactor, createSigner } from "../src/signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -124,30 +123,20 @@ describe("platform-enforced document ACLs", () => {
   }
 
   beforeEach(async () => {
-    // A separate object: 6.2.3-dev.11's SignerConfig has no trustPolicy.
-    const signerConfig = {
-      signer: alice,
-      trustPolicy: trustPolicyFor([alice, bob]),
-    };
-    const module = await new ReactorClientBuilder()
-      .withReactorBuilder(
-        new ReactorBuilder()
-          .withDocumentModelSources([
-            TeamJournal,
-            documentModelDocumentModelModule,
-          ])
-          .withLogger(quietLogger())
-          .withExecutorConfig({
-            featureFlags: { documentDecisions: true, authEnforcement: true },
-          }),
-      )
-      .withSigner(signerConfig)
-      .buildModule();
-    reactor = module.reactor;
-    clients = new Map<string, IReactorClient>([
-      [ALICE, module.client],
-      [BOB, await clientFor(module, bob)],
-    ]);
+    const session = await buildSignedReactor(
+      new ReactorBuilder()
+        .withDocumentModelSources([
+          TeamJournal,
+          documentModelDocumentModelModule,
+        ])
+        .withLogger(quietLogger())
+        .withExecutorConfig({
+          featureFlags: { documentDecisions: true, authEnforcement: true },
+        }),
+      [alice, bob],
+    );
+    reactor = session.reactor;
+    clients = session.clients;
 
     const document = utils.createDocument();
     docId = document.header.id;
