@@ -58,5 +58,5 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 |---------|-------------|
 | [db-migrate](./db-migrate) | PostgreSQL database export, import, and migration scripts using Docker (no local pg tools required) |
 | [document-snapshot-exporter](./document-snapshot-exporter) | Read-after-write export of document state to JSON using IReactor consistency tokens |
-| [signed-operations-verifier](./signed-operations-verifier) | Standalone script that signs a document operation history with `RenownCryptoSigner`, then verifies every signature |
+| [signed-operations-verifier](./signed-operations-verifier) | Standalone script that signs a document operation history with `RenownCryptoSigner`, then verifies each operation with the checks a reactor runs, for v2 and legacy tuples |
 | [subscription-cli](./subscription-cli) | Monitors Reactor GraphQL subscriptions in real time |
