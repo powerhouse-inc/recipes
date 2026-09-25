@@ -1,7 +1,9 @@
 /**
+ * WARNING: DO NOT EDIT
+ * This file is auto-generated and updated by codegen
  * Factory methods for creating RoleBasedAuthDocument instances
  */
-import type { PHAuthState, PHDocumentState, PHBaseState } from "document-model";
+import type { PHAuthState, PHBaseState, PHDocumentState } from "document-model";
 import { createBaseState, defaultBaseState } from "document-model";
 import type {
   RoleBasedAuthDocument,
@@ -33,7 +35,7 @@ export function createGlobalState(
   return {
     ...defaultGlobalState(),
     ...(state || {}),
-  } as RoleBasedAuthGlobalState;
+  };
 }
 
 export function createLocalState(
@@ -71,13 +73,11 @@ export function createRoleBasedAuthDocument(
   }>,
 ): RoleBasedAuthDocument {
   const document = utils.createDocument(
-    state
-      ? createState(
-          createBaseState(state.auth, state.document),
-          state.global,
-          state.local,
-        )
-      : undefined,
+    createState(
+      createBaseState(state?.auth, { version: 1, ...state?.document }),
+      state?.global,
+      state?.local,
+    ),
   );
 
   return document;

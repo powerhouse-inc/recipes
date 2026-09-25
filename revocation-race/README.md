@@ -47,7 +47,6 @@ Alice and Bob sign with their own `RenownCryptoSigner` keys, through the clients
 `buildSignedReactor` (`src/signers.ts`) builds on each reactor. A synced operation
 keeps its signature, and the receiving reactor checks it on load against the same
 trust policy (`trustPolicyFor`), so both reactors judge it as the same address.
-6.2.3-dev.11 does not verify signatures and ignores `trustPolicy`.
 
 ## State shape
 

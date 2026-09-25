@@ -19,8 +19,7 @@ The manager and the clerk each submit through a `ReactorClient` that signs with
 their own `RenownCryptoSigner` key (`buildSignedReactor` in `src/signers.ts`). The
 submit is judged as the signature's `signer.user.address`, and the preflight asks
 as the same `{ address }`. Under `authEnforcement` the reactor also needs a trust
-policy that accepts each key for its address (`trustPolicyFor`). 6.2.3-dev.11 does
-not verify signatures and ignores `trustPolicy`.
+policy that accepts each key for its address (`trustPolicyFor`).
 
 ## The policy
 
@@ -66,7 +65,7 @@ serves it as an `evaluateActions` GraphQL query through
 
 ## Running it
 
-`evaluateActions` ships in `6.2.2-dev.62`, below the `6.2.3-dev.11` this
+`evaluateActions` ships in `6.2.2-dev.62`, below the `6.2.3-dev.25` this
 repo's catalog pins, so the recipe runs standalone:
 
 ```sh

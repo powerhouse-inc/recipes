@@ -1,6 +1,8 @@
-import type { DocumentModelModule } from "document-model";
-import { RoleBasedAuth as RoleBasedAuthV1 } from "./role-based-auth/v1/module.js";
+import { RoleBasedAuth as RoleBasedAuthV1 } from "document-models/role-based-auth/v1";
 
-export const documentModels: DocumentModelModule<any>[] = [
-  RoleBasedAuthV1,
-];
+/**
+ * WARNING: DO NOT EDIT
+ * This file is auto-generated and updated by codegen
+ */
+
+export const documentModels = [RoleBasedAuthV1] as const;

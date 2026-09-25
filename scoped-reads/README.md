@@ -67,7 +67,7 @@ holds one test per act of it, plus two with the feature flags off.
 ## Version requirement
 
 Per-scope read filtering ships in `6.2.2-dev.62`, well below the
-`6.2.3-dev.11` this repo's catalog pins in `pnpm-workspace.yaml`. To run
+`6.2.3-dev.25` this repo's catalog pins in `pnpm-workspace.yaml`. To run
 against a local monorepo checkout instead:
 
 ```sh

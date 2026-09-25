@@ -27,7 +27,7 @@ action for the document it writes to. The grant stack is evaluated against the
 signature's `signer.user.address`. `buildSignedReactor` also gives the reactor a
 trust policy (`trustPolicyFor`) that says which key may sign as which address: under
 `authEnforcement`, a reactor with no trust policy refuses every signed write but its
-own. 6.2.3-dev.11 does not verify signatures and ignores `trustPolicy`.
+own.
 
 ## The policy the demo installs
 

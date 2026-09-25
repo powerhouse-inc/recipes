@@ -4,6 +4,7 @@ import {
   type IReactor,
   type IReactorClient,
   type ReactorBuilder,
+  type SignatureTrustPolicy,
 } from "@powerhousedao/reactor";
 import type { ISigner } from "document-model";
 import {
@@ -28,12 +29,12 @@ export async function createSigner(
 }
 
 /** Accepts each signer's own key for its address. A host checks a credential. */
-export function trustPolicyFor(signers: ISigner[]) {
+export function trustPolicyFor(signers: ISigner[]): SignatureTrustPolicy {
   const keys = new Map(
     signers.map((signer) => [signer.user?.address, signer.app?.key]),
   );
   return {
-    authorizeSigner: (signer: { user: { address: string } }, key: string) =>
+    authorizeSigner: (signer, key) =>
       Promise.resolve(keys.get(signer.user.address) === key),
   };
 }
@@ -50,14 +51,9 @@ export async function buildSignedReactor(
   reactorBuilder: ReactorBuilder,
   signers: ISigner[],
 ): Promise<SignedReactor> {
-  // A separate object: 6.2.3-dev.11's SignerConfig has no trustPolicy.
-  const signerConfig = {
-    signer: signers[0],
-    trustPolicy: trustPolicyFor(signers),
-  };
   const module = await new ReactorClientBuilder()
     .withReactorBuilder(reactorBuilder)
-    .withSigner(signerConfig)
+    .withSigner({ signer: signers[0], trustPolicy: trustPolicyFor(signers) })
     .buildModule();
   const clients = new Map<string, IReactorClient>();
   for (const signer of signers) {

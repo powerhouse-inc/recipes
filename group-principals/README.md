@@ -24,7 +24,7 @@ as a **membership removal on a different document** than the one being judged.
 Group principals apply only with `authGroups`, third of the reactor's cascading
 auth flags (`documentDecisions` → `authEnforcement` → `authGroups`). Below
 `authGroups` a `{ group }` grant parses and stores but never matches, as
-[`document-acl`](../document-acl) warns. The catalog pins `6.2.3-dev.11`,
+[`document-acl`](../document-acl) warns. The catalog pins `6.2.3-dev.25`,
 which carries that flag.
 
 ```sh
@@ -39,8 +39,7 @@ with `withSigner`, so every action is signed for its document. It also gives the
 reactor a trust policy (`trustPolicyFor`) that says which key may sign as which
 address: under `authEnforcement`, a reactor with no trust policy refuses every
 signed write but its own. The two-replica test gives both reactors the same policy,
-because a load checks it too. 6.2.3-dev.11 does not verify signatures and ignores
-`trustPolicy`.
+because a load checks it too.
 
 ## The shape of the policy
 

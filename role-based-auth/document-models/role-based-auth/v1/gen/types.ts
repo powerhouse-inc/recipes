@@ -1,4 +1,8 @@
-import type { PHDocument, PHBaseState } from "document-model";
+/**
+ * WARNING: DO NOT EDIT
+ * This file is auto-generated and updated by codegen
+ */
+import type { PHBaseState, PHDocument } from "document-model";
 import type { RoleBasedAuthAction } from "./actions.js";
 import type { RoleBasedAuthState as RoleBasedAuthGlobalState } from "./schema/types.js";
 
@@ -13,9 +17,9 @@ type RoleBasedAuthDocument = PHDocument<RoleBasedAuthPHState>;
 export * from "./schema/types.js";
 
 export type {
+  RoleBasedAuthAction,
+  RoleBasedAuthDocument,
   RoleBasedAuthGlobalState,
   RoleBasedAuthLocalState,
   RoleBasedAuthPHState,
-  RoleBasedAuthAction,
-  RoleBasedAuthDocument,
 };

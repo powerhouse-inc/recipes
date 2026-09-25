@@ -1,4 +1,4 @@
-import type { RoleBasedAuthState } from "../../gen/types.js";
+import type { RoleBasedAuthAccessOperations } from "document-models/role-based-auth/v1";
 import {
   AddressAlreadyAdmin,
   AlreadyBootstrapped,
@@ -7,7 +7,7 @@ import {
   NotAdmin,
   NotAuthorized,
 } from "../../gen/access/error.js";
-import type { RoleBasedAuthAccessOperations } from "document-models/role-based-auth/v1";
+import type { RoleBasedAuthState } from "../../gen/types.js";
 
 function requireSigner(action: {
   context?: { signer?: { user: { address: string } } };
