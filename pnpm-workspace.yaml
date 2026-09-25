@@ -27,16 +27,50 @@ allowBuilds:
 # answered as the http path answers it, and the two named 4403 close reasons
 # (authentication-required, bearer-rejected) that replaced graphql-ws's own
 # Forbidden.
+# 6.2.3-dev.25 carries action signature integrity: ISigner.signAction takes the
+# document and branch it signs for and emits a v2 tuple, the reactor verifies
+# every write it stores, new documents are v2-required, and SignerConfig takes
+# the trustPolicy the auth recipes give their reactors.
 catalog:
-  "@powerhousedao/analytics-engine-browser": 6.2.3-dev.11
-  "@powerhousedao/analytics-engine-core": 6.2.3-dev.11
-  "@powerhousedao/ph-cli": 6.2.3-dev.11
-  "@powerhousedao/reactor": 6.2.3-dev.11
-  "@powerhousedao/reactor-browser": 6.2.3-dev.11
-  "@powerhousedao/reactor-group": 6.2.3-dev.11
-  "@powerhousedao/shared": 6.2.3-dev.11
-  "@renown/sdk": 6.2.3-dev.11
-  document-model: 6.2.3-dev.11
+  "@powerhousedao/analytics-engine-browser": 6.2.3-dev.25
+  "@powerhousedao/analytics-engine-core": 6.2.3-dev.25
+  "@powerhousedao/ph-cli": 6.2.3-dev.25
+  "@powerhousedao/reactor": 6.2.3-dev.25
+  "@powerhousedao/reactor-browser": 6.2.3-dev.25
+  "@powerhousedao/reactor-group": 6.2.3-dev.25
+  "@powerhousedao/shared": 6.2.3-dev.25
+  "@renown/sdk": 6.2.3-dev.25
+  document-model: 6.2.3-dev.25
+
+minimumReleaseAgeExclude:
+  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.25'
+  - '@powerhousedao/analytics-engine-core@6.2.3-dev.25'
+  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.25'
+  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.25'
+  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.25'
+  - '@powerhousedao/builder-tools@6.2.3-dev.25'
+  - '@powerhousedao/codegen@6.2.3-dev.25'
+  - '@powerhousedao/common@6.2.3-dev.25'
+  - '@powerhousedao/config@6.2.3-dev.25'
+  - '@powerhousedao/design-system@6.2.3-dev.25'
+  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.25'
+  - '@powerhousedao/pglite-fs@6.2.3-dev.25'
+  - '@powerhousedao/ph-cli@6.2.3-dev.25'
+  - '@powerhousedao/pieces-framework@6.2.3-dev.25'
+  - '@powerhousedao/reactor-api@6.2.3-dev.25'
+  - '@powerhousedao/reactor-attachments@6.2.3-dev.25'
+  - '@powerhousedao/reactor-browser@6.2.3-dev.25'
+  - '@powerhousedao/reactor-drive@6.2.3-dev.25'
+  - '@powerhousedao/reactor-group@6.2.3-dev.25'
+  - '@powerhousedao/reactor-mcp@6.2.3-dev.25'
+  - '@powerhousedao/reactor-workflow@6.2.3-dev.25'
+  - '@powerhousedao/reactor@6.2.3-dev.25'
+  - '@powerhousedao/shared@6.2.3-dev.25'
+  - '@powerhousedao/switchboard@6.2.3-dev.25'
+  - '@powerhousedao/vetra@6.2.3-dev.25'
+  - '@powerhousedao/workflow@6.2.3-dev.25'
+  - '@renown/sdk@6.2.3-dev.25'
+  - document-model@6.2.3-dev.25
 
 packages:
   - analytics-processor
