@@ -13,7 +13,7 @@ Every signature is the 5-tuple `[timestamp, signerKey, actionHash, prevStateHash
 
 A v2 tuple is bound to one document and one signer, so checking operation #0 against another document fails with `HASH_MISMATCH`. A legacy tuple binds neither, and passes. `buildLegacyOperation()` signs a legacy tuple directly, so both schemes are verified on every release.
 
-A reactor runs these checks itself, together with its document's signature policy and the host's trust policy, so a host does not wire a verifier. Releases after 6.2.3-dev.11 export the same integrity check as `verifyActionSignature` from `@powerhousedao/reactor`. On 6.2.3-dev.11, `signAction` emits the legacy tuple and the reactor does not verify by default.
+A reactor runs these checks itself, together with its document's signature policy and the host's trust policy, so a host does not wire a verifier. `@powerhousedao/reactor` exports the same integrity check as `verifyActionSignature`.
 
 ## Run
 

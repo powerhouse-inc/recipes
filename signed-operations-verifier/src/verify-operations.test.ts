@@ -39,8 +39,7 @@ describe("Signed Operations Verifier", () => {
 
     expect(timestamp).toMatch(/^\d+$/);
     expect(key).toMatch(/^did:key:z/);
-    // v2 where the signer takes a target, the legacy base64 hash before
-    expect(actionHash).toMatch(/^(v2:[A-Za-z0-9_-]{43}|[A-Za-z0-9+/]{43}=)$/);
+    expect(actionHash).toMatch(/^v2:[A-Za-z0-9_-]{43}$/);
     expect(typeof prevStateHash).toBe("string");
     expect(signatureHex).toMatch(/^0x[0-9a-f]{128}$/);
   });
@@ -101,16 +100,18 @@ describe("Signed Operations Verifier", () => {
   });
 
   it("binds a v2 tuple to its document, and a legacy tuple to none", async () => {
-    const { signedOperations } = await buildDemoOperations();
+    const { signedOperations, signer } = await buildDemoOperations();
     const elsewhere = { documentId: "another-document", branch: "main" };
 
-    const result = await verifyOperation(signedOperations[0], elsewhere);
+    const v2 = await verifyOperation(signedOperations[0], elsewhere);
+    const legacy = await verifyOperation(
+      await buildLegacyOperation(signer),
+      elsewhere,
+    );
 
-    if (result.scheme === "v2") {
-      expect(result.code).toBe("HASH_MISMATCH");
-    } else {
-      expect(result.status).toBe("valid");
-    }
+    expect(v2.scheme).toBe("v2");
+    expect(v2.code).toBe("HASH_MISMATCH");
+    expect(legacy.status).toBe("valid");
   });
 
   it("still verifies a legacy RenownCryptoSigner tuple", async () => {

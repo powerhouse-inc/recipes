@@ -58,17 +58,12 @@ const BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 // ── Signing ─────────────────────────────────────────────────────────────
 
-// 6.2.3-dev.11 types arg 2 as an AbortSignal and ignores an unaborted object.
 export async function signFor(
   signer: ISigner,
   action: Action,
   target: SigningTarget,
 ): Promise<Signature> {
-  const signAction = signer.signAction.bind(signer) as unknown as (
-    action: Action,
-    target: SigningTarget,
-  ) => Promise<Signature>;
-  return signAction(action, target);
+  return signer.signAction(action, target);
 }
 
 export async function createDemoSigner() {

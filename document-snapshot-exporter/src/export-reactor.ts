@@ -12,23 +12,17 @@ import {
   documentModelCreateDocument,
   type Action,
   type ISigner,
-  type Signature,
 } from "document-model";
 import { driveCreateDocument, addFile } from "@powerhousedao/shared/document-drive";
 
 type SigningTarget = { documentId: string; branch: string };
 
-// 6.2.3-dev.11 types arg 2 as an AbortSignal and ignores an unaborted object.
 async function sign(
   signer: ISigner,
   action: Action,
   target: SigningTarget,
 ): Promise<Action> {
-  const signAction = signer.signAction.bind(signer) as unknown as (
-    action: Action,
-    target: SigningTarget,
-  ) => Promise<Signature>;
-  const signature = await signAction(action, target);
+  const signature = await signer.signAction(action, target);
   return {
     ...action,
     context: {

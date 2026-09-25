@@ -39,8 +39,7 @@ with `withSigner`, so every action is signed for its document. It also gives the
 reactor a trust policy (`trustPolicyFor`) that says which key may sign as which
 address: under `authEnforcement`, a reactor with no trust policy refuses every
 signed write but its own. The two-replica test gives both reactors the same policy,
-because a load checks it too. 6.2.3-dev.11 does not verify signatures and ignores
-`trustPolicy`.
+because a load checks it too.
 
 ## The shape of the policy
 
