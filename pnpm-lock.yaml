@@ -87,6 +87,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -186,6 +189,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -328,6 +334,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -378,6 +387,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -415,6 +427,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -449,6 +464,9 @@ importers:
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -520,6 +538,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -554,6 +575,9 @@ importers:
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -588,6 +612,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -690,6 +717,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -715,6 +745,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -783,6 +816,9 @@ importers:
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
+      vite:
+        specifier: ^8.0.10
+        version: 8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
       vitest:
         specifier: ^4.1.0
         version: 4.1.0(@opentelemetry/api@1.9.1)(@types/node@22.19.15)(vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -15290,7 +15326,7 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.8
       estree-walker: 2.0.2
-      picomatch: 4.0.4
+      picomatch: 4.0.7
     optionalDependencies:
       rollup: 4.59.0
 
@@ -19248,7 +19284,7 @@ snapshots:
 
   postcss@8.5.15:
     dependencies:
-      nanoid: 3.3.12
+      nanoid: 3.3.17
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -20722,8 +20758,8 @@ snapshots:
 
   vite@8.0.10(@types/node@22.19.15)(esbuild@0.27.4)(jiti@2.7.0)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0):
     dependencies:
-      lightningcss: 1.32.0
-      picomatch: 4.0.4
+      lightningcss: 1.33.0
+      picomatch: 4.0.7
       postcss: 8.5.15
       rolldown: 1.0.0-rc.17
       tinyglobby: 0.2.17
