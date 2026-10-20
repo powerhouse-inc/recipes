@@ -1,0 +1,25 @@
+{
+  "name": "@powerhousedao/example-connect-routes",
+  "version": "1.0.0",
+  "description": "Project file routes that add pages, a sidebar link and a settings tab to Connect",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "studio": "ph-cli connect studio",
+    "build": "ph-cli connect build"
+  },
+  "dependencies": {
+    "@powerhousedao/connect": "dev",
+    "@powerhousedao/reactor-browser": "catalog:",
+    "@tanstack/react-router": "1.170.41",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@powerhousedao/ph-cli": "catalog:",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.9.3"
+  }
+}

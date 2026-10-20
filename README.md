@@ -11,6 +11,12 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [drive-override](./drive-override) | Custom container document that tracks children via the reactor's ADD_RELATIONSHIP action instead of document-drive's ADD_FILE |
 | [positional-delete](./positional-delete) | Deletion as a position in the merged operation order. Pre-delete operations survive sync |
 
+## Connect
+
+| Project | Description |
+|---------|-------------|
+| [connect-routes](./connect-routes) | Project file routes that add a page with a sidebar link, a settings tab and a full-page route to Connect |
+
 ## Authorization
 
 | Project | Description |
