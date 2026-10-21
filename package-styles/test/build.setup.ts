@@ -1,38 +1,15 @@
-// Runs the real `ph-cli build` once, so `pnpm test` works on its own. Skipped
-// when dist/style.css is newer than every input, as it is right after the
-// recipes CI job's build phase.
+// Runs the real `ph-cli build` before every test run, so the tests always read
+// what the installed Powerhouse release produces. It takes a few seconds; a
+// freshness check on the recipe's own files would miss a release bump.
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
 import { recipeDir } from "./css.js";
 
-const INPUTS = [
-  "package.json",
-  "powerhouse.manifest.json",
-  "tsconfig.json",
-  "style.css",
-  "index.ts",
-  "editors",
-];
-
-function newestInput(): number {
-  const mtimes = INPUTS.flatMap((input) => {
-    const path = join(recipeDir, input);
-    if (!existsSync(path)) return [];
-    if (!statSync(path).isDirectory()) return [statSync(path).mtimeMs];
-    return readdirSync(path, { recursive: true, encoding: "utf8" }).map(
-      (file) => statSync(join(path, file)).mtimeMs,
-    );
-  });
-  return Math.max(...mtimes);
-}
-
 export default function setup() {
-  const output = join(recipeDir, "dist/style.css");
-  if (existsSync(output) && statSync(output).mtimeMs > newestInput()) return;
   // CI makes `ph build` fail on a type error instead of asking whether to go on.
-  const result = spawnSync("pnpm", ["exec", "ph-cli", "build"], {
+  // One command string through the shell, so Windows finds pnpm.cmd.
+  const result = spawnSync("pnpm exec ph-cli build", {
     cwd: recipeDir,
+    shell: true,
     env: { ...process.env, CI: "true", FORCE_COLOR: "0" },
     encoding: "utf8",
   });
