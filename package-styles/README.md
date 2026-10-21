@@ -1,0 +1,44 @@
+# Package Styles
+
+Ship a package's own CSS without shipping a Connect theme. The package's stylesheet holds
+only its own classes; a host's theme lives in a separate file that `ph build` never reads.
+
+## What it demonstrates
+
+| File | Owner | Read by |
+|------|-------|---------|
+| [`style.css`](./style.css) | The package | `ph build` (becomes `dist/style.css`) and the host's build |
+| [`hosts/connect/style.css`](./hosts/connect/style.css) | This Connect | The host's build only |
+
+`ph build` compiles `style.css` with `@reference "@powerhousedao/connect/theme.css"` and
+Tailwind's utilities only. It scans `dist/browser`, so only code that ships adds classes, and the
+output goes in the `external-packages` layer. Connect's tokens, variants and plugins
+(`bg-background`, `dark:`, `scrollbar-thin`) resolve against the page's copy, so a package that
+used to ship about 199 KB of CSS ships about 2 KB.
+
+## Where a rule goes
+
+- A token or rule your editors need: root `style.css`. It reaches every Connect that loads
+  the package.
+- A theme override for one Connect (palette, `:root.dark` values, global rules):
+  `hosts/<host>/style.css`, next to the host's `routes` folder.
+- Override a token only a package uses with `@theme static`. Without `static`, Tailwind drops
+  tokens that no class on the page uses.
+
+## Try it
+
+1. Copy the two files into a Powerhouse project, keeping the paths.
+2. Run `ph connect studio`. Edits to `hosts/connect/style.css` apply without a reload.
+3. Run `ph build` and open `dist/style.css`. The host's `--color-brand` override is absent.
+
+## Migrating an existing project
+
+`ph migrate` removes the old package-CSS imports, creates `hosts/connect/style.css` if missing,
+and warns when the root `style.css` sets custom properties or `:root`, `html`, `body` or `.dark`
+rules. It does not move them: move the ones that are this Connect's theme into the host file,
+or they ship with the package and re-theme every Connect that installs it.
+
+A Tailwind host that imported `@powerhousedao/connect-core/theme.css` for core's classes now
+imports `@powerhousedao/connect-core/tailwind.css`.
+
+Source: [powerhouse#3262](https://github.com/powerhouse-inc/powerhouse/pull/3262).

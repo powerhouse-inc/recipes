@@ -1,0 +1,12 @@
+/* This Connect's theme. The host's build adds it after the root style.css;
+   `ph build` never reads it, so it reaches no other Connect. */
+
+/* `static` emits the overrides even if no class on the page uses them, so a
+   token only a package uses still changes. */
+@theme static {
+  --color-brand: #0a7;
+}
+
+:root.dark {
+  --background: #16181c;
+}

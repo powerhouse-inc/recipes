@@ -1,0 +1,11 @@
+/* The package's stylesheet. `ph build` compiles this file into dist/style.css:
+   only the classes the shipped browser build uses, plus the rules below. */
+@layer properties, theme, base, components, external-packages, utilities;
+@import "tailwindcss";
+@import "@powerhousedao/connect/tailwind.css";
+
+/* A token the package's editors use. It reaches every Connect that loads the
+   package, so it belongs here only if the package needs it. */
+@theme {
+  --color-brand: #f60;
+}
