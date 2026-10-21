@@ -5,7 +5,7 @@ Adding pages to Connect (the Powerhouse web app) from a project, with TanStack R
 ## What it demonstrates
 
 - `_app/inventory.tsx` renders inside Connect's layout at `/inventory`. `staticData.nav` lists it in the sidebar, after the drives, ordered by `order`.
-- Its `loader` reads Connect's store from the router context (`context.store.drives`), and its `head` sets the page title with the app name from `match.context.appName`.
+- Its `loader` reads Connect's store from the router context (`context.store.drives`). On a cold load the drives are still arriving, so `-drives.ts` waits on `context.arrivals` first. Its `head` sets the page title with the app name from `match.context.appName`.
 - `_app/settings/inventory.tsx` adds a tab to `/settings` through `staticData.settings`. `enabled` hides the tab, and redirects its URL to the first tab, while it returns false.
 - `status.tsx` sits outside `_app/`, so `/status` is a full page without the sidebar.
 
