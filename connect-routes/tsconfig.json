@@ -1,0 +1,21 @@
+{
+  "extends": "../tsconfig.options.json",
+  "compilerOptions": {
+    "target": "esnext",
+    "jsx": "react-jsx",
+    "lib": ["ESNext", "dom", "dom.iterable"],
+    "rootDir": ".",
+    "declarationDir": "./dist/types",
+    "emitDeclarationOnly": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    // Connect's routes plus hosts/connect/routes/, once ph-cli generates the tree.
+    "paths": {
+      "@powerhousedao/connect-core/route-tree": ["./.ph/connect-routes.gen.ts"],
+      "@powerhousedao/connect/route-tree": ["./.ph/connect-routes.gen.ts"]
+    }
+  },
+  // **/* skips dot folders, so of .ph only the route tree is checked: it types hosts/connect/routes/.
+  "include": ["**/*", ".ph/connect-routes.gen.ts"],
+  "exclude": ["dist", "node_modules", "main.tsx"]
+}

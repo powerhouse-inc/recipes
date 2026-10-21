@@ -1,15 +1,20 @@
 allowBuilds:
   '@apollo/protobufjs': true
   '@datadog/pprof': false
+  '@parcel/watcher': false
   '@prisma/client': true
   '@prisma/engines': true
+  '@reown/appkit': false
+  bufferutil: false
   esbuild: true
+  keccak: false
   msw: true
   onnxruntime-node: true
   prisma: true
   protobufjs: true
   sharp: true
   sqlite3: true
+  utf-8-validate: false
 
 # The 6.2.3-dev line (npm `dev` dist-tag). The document-drive package was
 # deleted upstream — its drive document model now lives at
@@ -43,34 +48,51 @@ catalog:
   document-model: 6.2.3-dev.25
 
 minimumReleaseAgeExclude:
-  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.25'
-  - '@powerhousedao/analytics-engine-core@6.2.3-dev.25'
-  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.25'
-  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.25'
-  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.25'
-  - '@powerhousedao/builder-tools@6.2.3-dev.25'
-  - '@powerhousedao/codegen@6.2.3-dev.25'
-  - '@powerhousedao/common@6.2.3-dev.25'
-  - '@powerhousedao/config@6.2.3-dev.25'
-  - '@powerhousedao/design-system@6.2.3-dev.25'
-  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.25'
+  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/analytics-engine-core@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/builder-tools@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/codegen@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/common@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/config@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/design-system@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.25 || 6.2.3-dev.69'
   - '@powerhousedao/pglite-fs@6.2.3-dev.25'
-  - '@powerhousedao/ph-cli@6.2.3-dev.25'
-  - '@powerhousedao/pieces-framework@6.2.3-dev.25'
-  - '@powerhousedao/reactor-api@6.2.3-dev.25'
-  - '@powerhousedao/reactor-attachments@6.2.3-dev.25'
-  - '@powerhousedao/reactor-browser@6.2.3-dev.25'
-  - '@powerhousedao/reactor-drive@6.2.3-dev.25'
-  - '@powerhousedao/reactor-group@6.2.3-dev.25'
-  - '@powerhousedao/reactor-mcp@6.2.3-dev.25'
-  - '@powerhousedao/reactor-workflow@6.2.3-dev.25'
-  - '@powerhousedao/reactor@6.2.3-dev.25'
-  - '@powerhousedao/shared@6.2.3-dev.25'
-  - '@powerhousedao/switchboard@6.2.3-dev.25'
-  - '@powerhousedao/vetra@6.2.3-dev.25'
-  - '@powerhousedao/workflow@6.2.3-dev.25'
-  - '@renown/sdk@6.2.3-dev.25'
-  - document-model@6.2.3-dev.25
+  - '@powerhousedao/ph-cli@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/pieces-framework@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/reactor-api@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/reactor-attachments@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/reactor-browser@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/reactor-drive@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/reactor-group@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/reactor-mcp@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/reactor-workflow@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/reactor@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/shared@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/switchboard@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/vetra@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@powerhousedao/workflow@6.2.3-dev.25 || 6.2.3-dev.69'
+  - '@renown/sdk@6.2.3-dev.25 || 6.2.3-dev.69'
+  - document-model@6.2.3-dev.25 || 6.2.3-dev.69
+  - '@powerhousedao/connect-core@6.2.3-dev.69'
+  - '@powerhousedao/connect@6.2.3-dev.69'
+  - '@powerhousedao/host-core@6.2.3-dev.69'
+  - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.69'
+  - '@powerhousedao/reactor-privacy@6.2.3-dev.69'
+  - '@powerhousedao/reactor-router@6.2.3-dev.69'
+
+# connect-routes runs Connect 6.2.3-dev.69 beside the dev.25 catalog.
+# powerhouse-vetra-packages, which Connect loads, imports these packages
+# without declaring them, so it resolved the hoisted dev.25 copies.
+packageExtensions:
+  '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.69':
+    dependencies:
+      '@powerhousedao/design-system': 6.2.3-dev.69
+      '@powerhousedao/reactor-browser': 6.2.3-dev.69
+      '@powerhousedao/shared': 6.2.3-dev.69
+      document-model: 6.2.3-dev.69
 
 packages:
   - analytics-processor
@@ -78,6 +100,7 @@ packages:
   - audit-trail
   - auth-preflight
   - batch-progress
+  - connect-routes
   - db-migrate
   - cross-document-reactor
   - custom-read-model

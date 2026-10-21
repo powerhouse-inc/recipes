@@ -7,19 +7,21 @@
   "private": true,
   "scripts": {
     "studio": "ph-cli connect studio",
-    "build": "ph-cli connect build"
+    "build": "ph-cli build"
   },
   "dependencies": {
-    "@powerhousedao/connect": "dev",
-    "@powerhousedao/reactor-browser": "catalog:",
-    "@tanstack/react-router": "1.170.41",
-    "lucide-react": "^0.468.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@powerhousedao/connect": "6.2.3-dev.69",
+    "@powerhousedao/reactor-browser": "6.2.3-dev.69",
+    "@tanstack/react-router": "^1.170.41",
+    "lucide-react": "^1.16.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
   },
   "devDependencies": {
-    "@powerhousedao/ph-cli": "catalog:",
+    "@powerhousedao/ph-cli": "6.2.3-dev.69",
+    "@tailwindcss/cli": "^4.1.18",
     "@types/react": "^19.0.0",
+    "tailwindcss": "^4.1.16",
     "typescript": "^5.9.3"
   }
 }
