@@ -16,7 +16,8 @@ The rest is the minimum `ph build` needs (`package.json`, `powerhouse.manifest.j
 
 `ph build` compiles `style.css` with `@reference "@powerhousedao/connect/theme.css"` and
 Tailwind's utilities only. It scans `dist/browser`, so only code that ships adds classes, and the
-output goes in the `external-packages` layer. Connect's tokens, variants and plugins
+output goes in the `external-packages` layer. The scan reads `dist/browser`'s source maps too, so a
+class named only in a comment in your source also ships. Connect's tokens, variants and plugins
 (`bg-background`, `dark:`, `scrollbar-thin`) resolve against the page's copy, so a package that
 used to ship about 199 KB of CSS ships about 2 KB.
 
@@ -56,8 +57,10 @@ pnpm --filter @powerhousedao/example-package-styles test
 This runs `ph-cli build` on the recipe, then checks the claims above without a browser:
 
 - `dist/style.css` starts with Connect's layer order and puts everything else in
-  `@layer external-packages`. It defines `--color-brand: #f60` and no other token, has no
-  reset, and has none of the host file's values.
+  `@layer external-packages`. Its only classes are the editor's `bg-brand` and `text-red-700`.
+  It defines `--color-brand: #f60` and no other token, has no reset, and has none of the host
+  file's values.
+- Built without `bg-brand`, the root `style.css` ships no `--color-brand`.
 - With the `:root.dark` rule moved into the root `style.css`, `#16181c` ships (step 3).
 - The host's page build, the root `style.css` with `hosts/connect/style.css` imported last, sets
   `--color-brand: #0a7` in a `:root` rule outside any layer, after the package's `@theme` value.
