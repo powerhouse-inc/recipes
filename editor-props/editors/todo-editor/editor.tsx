@@ -1,4 +1,5 @@
 import type { EditorProps } from "document-model";
+import { generateId } from "document-model";
 import type { TodoAction, TodoDocument } from "document-models/todo/v1";
 import { actions } from "document-models/todo/v1";
 import { useState } from "react";
@@ -15,8 +16,9 @@ export default function Editor({
   const [title, setTitle] = useState("");
 
   const handleAdd = () => {
-    if (!title.trim()) return;
-    dispatch(actions.addItem({ id: crypto.randomUUID(), title }));
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    dispatch(actions.addItem({ id: generateId(), title: trimmed }));
     setTitle("");
   };
 
