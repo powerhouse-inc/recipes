@@ -29,3 +29,13 @@ pnpm --filter @powerhousedao/example-connect-routes studio
 ```
 
 Open `/inventory`, `/settings/inventory` and `/status`.
+
+## Tests
+
+```sh
+pnpm --filter @powerhousedao/example-connect-routes test
+```
+
+- `test/routes.test.ts` (vitest) runs `ph-cli build` and reads the route tree it writes to `.ph/`. It checks that each route file has the parent this README names: `/status` under the root, `/_app/inventory` under `/_app`, and `/_app/settings/inventory` under `/_app/settings`.
+- `test/e2e/` (Playwright) starts `ph-cli connect studio` on port 4199 and checks the pages in Chromium. `/status` has no sidebar, `/inventory` has a sidebar link and its own title, and the settings tab shows. After it creates a drive, the loaders list it. `test:e2e` installs Chromium first.
+- Studio is a dev server, so `enabled` returns true and the tests cover the shown tab only, not the redirect a production build makes.
