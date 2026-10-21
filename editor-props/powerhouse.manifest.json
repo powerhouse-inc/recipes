@@ -1,0 +1,26 @@
+{
+  "name": "",
+  "description": "",
+  "category": "",
+  "publisher": {
+    "name": "",
+    "url": ""
+  },
+  "documentModels": [
+    {
+      "id": "powerhouse/editor-props-todo",
+      "name": "Todo"
+    }
+  ],
+  "apps": [],
+  "editors": [
+    {
+      "id": "todo-editor",
+      "name": "Todo Editor",
+      "documentTypes": ["powerhouse/editor-props-todo"]
+    }
+  ],
+  "processors": [],
+  "subgraphs": [],
+  "config": []
+}

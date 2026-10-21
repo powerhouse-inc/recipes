@@ -85,6 +85,7 @@ packages:
   - document-acl
   - document-snapshot-exporter
   - document-versioning
+  - editor-props
   - drive-override
   - external-feed-ingest
   - full-text-search
