@@ -1,9 +1,15 @@
 /* This Connect's theme. The host's build adds it after the root style.css;
    `ph build` never reads it, so it reaches no other Connect. */
 
-/* `static` emits the overrides even if no class on the page uses them, so a
-   token only a package uses still changes. */
+/* Connect's tokens. Packages' classes read them but don't ship them, and
+   `static` emits the overrides even if no class in the page's build uses them. */
 @theme static {
+  --color-red-700: #b42318;
+}
+
+/* A package's own token. The package ships it inside `@layer external-packages`,
+   which outranks `@theme`; a plain rule outside any layer wins over both. */
+:root {
   --color-brand: #0a7;
 }
 

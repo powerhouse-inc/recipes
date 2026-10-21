@@ -22,8 +22,11 @@ used to ship about 199 KB of CSS ships about 2 KB.
   the package.
 - A theme override for one Connect (palette, `:root.dark` values, global rules):
   `hosts/<host>/style.css`, next to the host's `routes` folder.
-- Override a token only a package uses with `@theme static`. Without `static`, Tailwind drops
-  tokens that no class on the page uses.
+- In the host file, override a Connect token that only a package's classes use with
+  `@theme static`. Without `static`, Tailwind drops tokens that no class on the page uses.
+- Override a token the package itself defines (here `--color-brand`) with a plain `:root` rule.
+  `ph build` puts the package's tokens in `@layer external-packages`, which outranks the host's
+  `@theme`, and a rule outside any layer outranks both.
 
 ## Try it
 
