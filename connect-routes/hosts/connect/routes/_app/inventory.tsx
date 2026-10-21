@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_app/inventory")({
     ),
   }),
   head: ({ match }) => ({
-    meta: [{ title: `Inventory · ${match.context.appName ?? "Connect"}` }],
+    meta: [{ title: `Inventory · ${match.context.appName || "Connect"}` }],
   }),
   component: Inventory,
 });
