@@ -1,15 +1,20 @@
 allowBuilds:
   '@apollo/protobufjs': true
   '@datadog/pprof': false
+  '@parcel/watcher': false
   '@prisma/client': true
   '@prisma/engines': true
+  '@reown/appkit': false
+  bufferutil: false
   esbuild: true
+  keccak: false
   msw: true
   onnxruntime-node: true
   prisma: true
   protobufjs: true
   sharp: true
   sqlite3: true
+  utf-8-validate: false
 
 # The 6.2.3-dev line (npm `dev` dist-tag). The document-drive package was
 # deleted upstream — its drive document model now lives at
@@ -34,6 +39,8 @@ allowBuilds:
 catalog:
   "@powerhousedao/analytics-engine-browser": 6.2.3-dev.25
   "@powerhousedao/analytics-engine-core": 6.2.3-dev.25
+  "@powerhousedao/builder-tools": 6.2.3-dev.25
+  "@powerhousedao/connect": 6.2.3-dev.25
   "@powerhousedao/ph-cli": 6.2.3-dev.25
   "@powerhousedao/reactor": 6.2.3-dev.25
   "@powerhousedao/reactor-browser": 6.2.3-dev.25
@@ -52,11 +59,13 @@ minimumReleaseAgeExclude:
   - '@powerhousedao/codegen@6.2.3-dev.25'
   - '@powerhousedao/common@6.2.3-dev.25'
   - '@powerhousedao/config@6.2.3-dev.25'
+  - '@powerhousedao/connect@6.2.3-dev.25'
   - '@powerhousedao/design-system@6.2.3-dev.25'
   - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.25'
   - '@powerhousedao/pglite-fs@6.2.3-dev.25'
   - '@powerhousedao/ph-cli@6.2.3-dev.25'
   - '@powerhousedao/pieces-framework@6.2.3-dev.25'
+  - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.25'
   - '@powerhousedao/reactor-api@6.2.3-dev.25'
   - '@powerhousedao/reactor-attachments@6.2.3-dev.25'
   - '@powerhousedao/reactor-browser@6.2.3-dev.25'
@@ -90,6 +99,7 @@ packages:
   - full-text-search
   - group-principals
   - inbound-webhook-bridge
+  - package-styles
   - positional-delete
   - rate-limiter
   - relational-db-subgraph
