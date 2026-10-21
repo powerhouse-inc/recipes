@@ -86,6 +86,8 @@ minimumReleaseAgeExclude:
 # connect-routes runs Connect 6.2.3-dev.69 beside the dev.25 catalog.
 # powerhouse-vetra-packages, which Connect loads, imports these packages
 # without declaring them, so it resolved the hoisted dev.25 copies.
+# The key names one version: move it with the connect-routes pins, or the
+# extension stops applying.
 packageExtensions:
   '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.69':
     dependencies:

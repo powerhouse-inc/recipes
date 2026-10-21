@@ -37,5 +37,5 @@ pnpm --filter @powerhousedao/example-connect-routes test
 ```
 
 - `test/routes.test.ts` (vitest) runs `ph-cli build` and reads the route tree it writes to `.ph/`. It checks that each route file has the parent this README names: `/status` under the root, `/_app/inventory` under `/_app`, and `/_app/settings/inventory` under `/_app/settings`.
-- `test/e2e/` (Playwright) starts `ph-cli connect studio` on port 4199 and checks the pages in Chromium. `/status` has no sidebar, `/inventory` has a sidebar link and its own title, and the settings tab shows. After it creates a drive, the loaders list it. `test:e2e` installs Chromium first.
-- Studio is a dev server, so `enabled` returns true and the tests cover the shown tab only, not the redirect a production build makes.
+- `test/e2e/` (Playwright) starts `ph-cli connect studio` on port 4199 and checks the pages in Chromium. `/status` has no sidebar, `/inventory` has a sidebar link and its own title, and the settings tab shows. After it creates a drive, the loaders list it. `test:e2e` installs Chromium first, but not the system libraries it needs on Linux. GitHub's Ubuntu runners already have them. On a bare Linux machine, run `pnpm exec playwright install-deps chromium` once (it uses `sudo`).
+- Studio is a dev server, so `enabled` returns true and the tests cover the shown tab only, not the hidden tab and the redirect of a production build. Checking those would take a production Connect build and a server for it, which would add minutes to every run.

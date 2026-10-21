@@ -68,7 +68,10 @@ test("the loaders read the drives from Connect's store", async ({ page }) => {
     links.map((a) => a.getAttribute("href") ?? ""),
   );
   const driveIndex = hrefs.findIndex((href) => href.startsWith("/d/"));
-  expect(hrefs.indexOf("/inventory")).toBeGreaterThan(driveIndex);
+  expect(driveIndex, "the drive's sidebar link").toBeGreaterThanOrEqual(0);
+  expect(
+    hrefs.findIndex((href) => href.endsWith("/inventory")),
+  ).toBeGreaterThan(driveIndex);
 
   await page.locator('#sidebar a[href$="/inventory"]').click();
   await expect(page).toHaveURL(/\/inventory$/);
