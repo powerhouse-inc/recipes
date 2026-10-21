@@ -30,16 +30,25 @@ used to ship about 199 KB of CSS ships about 2 KB.
 
 ## Try it
 
-1. Copy the two files into a Powerhouse project, keeping the paths.
+This needs a Powerhouse release that includes powerhouse#3262. The repo's catalog version
+(6.2.3-dev.25) predates it, and with that version `@powerhousedao/connect/tailwind.css` does
+not resolve.
+
+1. Copy the two files into a new project from `ph init`, keeping the paths. In an existing
+   project, merge the root file's `@theme` block into your `style.css` rather than replacing it.
 2. Run `ph connect studio`. Edits to `hosts/connect/style.css` apply without a reload.
-3. Run `ph build` and open `dist/style.css`. The host's `--color-brand` override is absent.
+3. Run `ph build` and open `dist/style.css`. The host file's `#0a7` and `#16181c` are absent.
+   Move the `:root.dark` rule into the root `style.css` and build again: `#16181c` now ships
+   with the package.
 
 ## Migrating an existing project
 
 `ph migrate` removes the old package-CSS imports, creates `hosts/connect/style.css` if missing,
 and warns when the root `style.css` sets custom properties or `:root`, `html`, `body` or `.dark`
 rules. It does not move them: move the ones that are this Connect's theme into the host file,
-or they ship with the package and re-theme every Connect that installs it.
+or they ship with the package and re-theme every Connect that installs it. The warning also
+fires on the package's own tokens, such as this recipe's `--color-brand`. Keep those in the
+root file.
 
 A Tailwind host that imported `@powerhousedao/connect-core/theme.css` for core's classes now
 imports `@powerhousedao/connect-core/tailwind.css`.
