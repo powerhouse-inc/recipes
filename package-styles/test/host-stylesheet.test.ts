@@ -45,7 +45,7 @@ describe("the host's page build", () => {
     const brand = declarations(page, "--color-brand");
     expect(brand.map((d) => d.value)).toEqual(["#f60", "#0a7"]);
     const [pkg, host] = brand;
-    expect(pkg.blocks[0]).toBe("@layertheme");
+    expect(pkg.blocks[0]).toBe("@layer theme");
     expect(host.blocks).toEqual([":root"]);
     expect(host.index).toBeGreaterThan(pkg.index);
   });
@@ -60,6 +60,6 @@ describe("the host's page build", () => {
   it("emits the @theme static override even when no class uses it", () => {
     const red = declarations(bare, "--color-red-700");
     expect(red.map((d) => d.value)).toEqual(["#b42318"]);
-    expect(red[0].blocks[0]).toBe("@layertheme");
+    expect(red[0].blocks[0]).toBe("@layer theme");
   });
 });

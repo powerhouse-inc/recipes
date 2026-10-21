@@ -4,14 +4,20 @@ import { fileURLToPath } from "node:url";
 
 export const recipeDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** The CSS with comments and all whitespace removed, so minified and
- * pretty-printed output compare alike. */
+/** The CSS without comments or the whitespace that carries no meaning, so
+ * minified and pretty-printed output compare alike. A space between selectors
+ * stays: `:root .dark` is not `:root.dark`. */
 export function squash(css: string): string {
-  return css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, "");
+  return css
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\s+/g, " ")
+    .replace(/ ?([{};,]) ?/g, "$1")
+    .replace(/: /g, ":")
+    .trim();
 }
 
 /** The preludes of the blocks around `index` in squashed CSS, outermost first:
- * ["@layertheme", ":root,:host"] for a token in Tailwind's theme layer. */
+ * ["@layer theme", ":root,:host"] for a token in Tailwind's theme layer. */
 export function enclosing(css: string, index: number): string[] {
   const stack: string[] = [];
   let start = 0;
@@ -43,6 +49,13 @@ export function declarations(css: string, name: string) {
     });
   }
   return found;
+}
+
+/** The classes a stylesheet's selectors name. */
+export function classes(css: string): Set<string> {
+  return new Set(
+    [...css.matchAll(/\.(-?[A-Za-z_](?:[\w-]|\\.)*)/g)].map((match) => match[1]),
+  );
 }
 
 /** The custom properties a stylesheet defines (not the ones it reads). */
