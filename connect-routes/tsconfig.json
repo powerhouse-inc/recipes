@@ -18,5 +18,5 @@
   },
   // **/* skips dot folders, so of .ph only the route tree is checked: it types hosts/connect/routes/.
   "include": ["**/*", ".ph/connect-routes.gen.ts"],
-  "exclude": ["dist", "node_modules", "main.tsx"]
+  "exclude": ["dist", "node_modules", "main.tsx", "test", "vitest.config.ts"]
 }

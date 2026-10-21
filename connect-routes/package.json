@@ -7,7 +7,8 @@
   "private": true,
   "scripts": {
     "studio": "ph-cli connect studio",
-    "build": "ph-cli build"
+    "build": "ph-cli build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@powerhousedao/connect": "6.2.3-dev.69",
@@ -29,6 +30,7 @@
     "tailwindcss": "^4.1.16",
     "typescript": "^5.9.3",
     "vite": "^8.0.10",
+    "vitest": "^4.1.0",
     "zod": "^4.5.4"
   }
 }
