@@ -1,7 +1,9 @@
 /* The package's stylesheet. `ph build` compiles this file into dist/style.css:
    only the classes the shipped browser build uses, plus the rules below. */
+/* Package CSS goes in external-packages, between Connect's components and utilities. */
 @layer properties, theme, base, components, external-packages, utilities;
 @import "tailwindcss";
+/* Connect's tokens, rules and classes, generated in this one build. */
 @import "@powerhousedao/connect/tailwind.css";
 
 /* A token the package's editors use. It reaches every Connect that loads the
