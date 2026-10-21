@@ -4,6 +4,7 @@
     "target": "esnext",
     "jsx": "react-jsx",
     "lib": ["ESNext", "dom", "dom.iterable"],
+    "types": ["vite/client"],
     "rootDir": ".",
     "declarationDir": "./dist/types",
     "emitDeclarationOnly": true,
