@@ -10,7 +10,9 @@ export default defineConfig({
   // The tests share one dev server.
   workers: 1,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // One retry: with every test failing, two would take the run past the
+  // recipes CI job's 600s per script.
+  retries: process.env.CI ? 1 : 0,
   // The recipes CI job prints the end of the output, so no HTML report.
   reporter: "list",
   // The first load waits on Vite's dependency optimizer and the browser reactor.
