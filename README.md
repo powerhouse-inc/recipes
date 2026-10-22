@@ -11,6 +11,12 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [drive-override](./drive-override) | Custom container document that tracks children via the reactor's ADD_RELATIONSHIP action instead of document-drive's ADD_FILE |
 | [positional-delete](./positional-delete) | Deletion as a position in the merged operation order. Pre-delete operations survive sync |
 
+## Host configs
+
+| Project | Description |
+|---------|-------------|
+| [host-output-tokens](./host-output-tokens) | `hosts/*/host.js` consuming another host's runtime values (bound port, drive URL) through plain-JSON `$output`, `$concat` and `$env` tokens |
+
 ## Authorization
 
 | Project | Description |

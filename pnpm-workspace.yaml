@@ -55,6 +55,8 @@ minimumReleaseAgeExclude:
   - '@powerhousedao/design-system@6.2.3-dev.25'
   - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.25'
   - '@powerhousedao/pglite-fs@6.2.3-dev.25'
+  - '@powerhousedao/host-core@6.2.3-dev.69'
+  - '@powerhousedao/shared@6.2.3-dev.69'
   - '@powerhousedao/ph-cli@6.2.3-dev.25'
   - '@powerhousedao/pieces-framework@6.2.3-dev.25'
   - '@powerhousedao/reactor-api@6.2.3-dev.25'
@@ -89,6 +91,7 @@ packages:
   - external-feed-ingest
   - full-text-search
   - group-principals
+  - host-output-tokens
   - inbound-webhook-bridge
   - positional-delete
   - rate-limiter
