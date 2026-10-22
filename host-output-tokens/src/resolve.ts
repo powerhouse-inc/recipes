@@ -14,9 +14,7 @@ export interface SwitchboardOutputs {
 
 /** An `OutputSource` over canned outputs, keyed by host name. In `ph run` the
  * source is a live compound member or the host's run record. */
-export function cannedOutputs(
-  outputs: Record<string, unknown>,
-): OutputSource {
+export function cannedOutputs(outputs: Record<string, unknown>): OutputSource {
   return {
     lookup: (ref) =>
       ref.host in outputs
@@ -28,15 +26,31 @@ export function cannedOutputs(
   };
 }
 
-/** Replaces every token in `host` with its value. */
-export function resolveHost<T>(
-  host: T,
+/** Replaces every token in `host` with its value. `R` is the resolved shape:
+ * the declared host types its token fields as objects, the result has strings. */
+export function resolveHost<R>(
+  host: unknown,
   outputs: Record<string, unknown>,
   env: Record<string, string | undefined> = {},
-): T {
+  where = "host.js",
+): R {
   return resolveHostOutputs(host, {
     outputs: cannedOutputs(outputs),
     env,
-    where: "hosts/connect/host.js",
-  });
+    where,
+  }) as R;
+}
+
+/** The part of the Connect host the examples read after resolving. */
+export interface ResolvedDrives {
+  reactor: { drives: { slug: string; remote: { url: string } }[] };
+}
+
+/** What a running switchboard on `port` produces. */
+export function switchboardOutputs(port: number): SwitchboardOutputs {
+  const origin = `http://localhost:${port}`;
+  return {
+    origin,
+    drives: { sektar: { id: "sektar", url: `${origin}/d/sektar` } },
+  };
 }

@@ -32,4 +32,4 @@ pnpm start
 
 ## Requirements
 
-Needs a `@powerhousedao/host-core` release that includes powerhouse PR #3258. `resolveHostOutputs` is not exported from 6.2.3-dev.69 or earlier, so bump the pin in `package.json` and `pnpm-workspace.yaml` to the first release that has it.
+Needs a `@powerhousedao/host-core` release that includes powerhouse PR #3258. `resolveHostOutputs` is not exported from 6.2.3-dev.69 or earlier, so bump the pin in `package.json` and the matching `minimumReleaseAgeExclude` entries in `pnpm-workspace.yaml` to the first release that has it.
