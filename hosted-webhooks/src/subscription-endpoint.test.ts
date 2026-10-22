@@ -17,6 +17,11 @@ import {
   type IHttpScope,
 } from "@powerhousedao/reactor-api";
 import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { documentModelDocumentModelModule } from "document-model";
 import {
   createSubscriptionDocument,
@@ -157,6 +162,13 @@ async function state(documentId: string) {
 }
 
 beforeAll(async () => {
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "hosted-webhooks",
+  );
   const built = await new ReactorClientBuilder()
     .withReactorBuilder(
       new ReactorBuilder().withDocumentModelSources([
@@ -165,6 +177,7 @@ beforeAll(async () => {
         Subscription,
       ]),
     )
+    .withSigner(signer)
     .buildModule();
   client = built.client;
 
