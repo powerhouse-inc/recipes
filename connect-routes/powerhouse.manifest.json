@@ -1,0 +1,15 @@
+{
+  "name": "@powerhousedao/example-connect-routes",
+  "description": "Project file routes that add pages, a sidebar link and a settings tab to Connect",
+  "category": "",
+  "publisher": {
+    "name": "@powerhousedao/example-connect-routes",
+    "url": ""
+  },
+  "documentModels": [],
+  "apps": [],
+  "editors": [],
+  "processors": [],
+  "subgraphs": [],
+  "config": []
+}

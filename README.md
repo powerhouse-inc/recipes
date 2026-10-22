@@ -16,6 +16,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | Project | Description |
 |---------|-------------|
 | [package-styles](./package-styles) | A package ships only its own CSS; a host's theme lives in `hosts/<host>/style.css`, which `ph build` never reads |
+| [connect-routes](./connect-routes) | Project file routes that add a page with a sidebar link, a settings tab and a full-page route to Connect |
 
 ## Authorization
 
