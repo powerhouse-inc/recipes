@@ -68,12 +68,12 @@ export const documentModel: DocumentModelGlobalState = {
               id: "b1f0c2d3-3333-4a5b-8c6d-000000000011",
               name: "MARK_PAST_DUE",
               description:
-                "Record a failed payment attempt (ACTIVE -> PAST_DUE).",
+                "Record a failed payment attempt (ACTIVE or PAST_DUE -> PAST_DUE). A repeated failure keeps the status and updates the reason.",
               schema:
                 "input MarkPastDueInput {\n  eventId: String!\n  reason: String!\n}",
               template: "",
               reducer:
-                'if (state.processedEventIds.includes(action.input.eventId)) {\n  throw new DuplicateEvent(`event ${action.input.eventId} already recorded`);\n}\nif (state.status !== "ACTIVE") {\n  throw new InvalidTransition(`markPastDue requires status ACTIVE, but the subscription is ${state.status}`);\n}\nstate.status = "PAST_DUE";\nstate.lastFailureReason = action.input.reason;\nstate.processedEventIds.push(action.input.eventId);',
+                'if (state.processedEventIds.includes(action.input.eventId)) {\n  throw new DuplicateEvent(`event ${action.input.eventId} already recorded`);\n}\nif (state.status !== "ACTIVE" && state.status !== "PAST_DUE") {\n  throw new InvalidTransition(`markPastDue requires status ACTIVE or PAST_DUE, but the subscription is ${state.status}`);\n}\nstate.status = "PAST_DUE";\nstate.lastFailureReason = action.input.reason;\nstate.processedEventIds.push(action.input.eventId);',
               errors: [
                 {
                   id: "duplicateEvent",
@@ -86,7 +86,8 @@ export const documentModel: DocumentModelGlobalState = {
                   id: "invalidTransition",
                   name: "InvalidTransition",
                   code: "INVALID_TRANSITION",
-                  description: "The subscription is not ACTIVE",
+                  description:
+                    "The subscription is neither ACTIVE nor PAST_DUE",
                   template: "",
                 },
               ],

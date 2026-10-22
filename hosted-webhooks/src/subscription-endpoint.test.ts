@@ -591,6 +591,34 @@ describe("a payment failure", () => {
     });
   });
 
+  it("is recorded again when a retry fails too, not dropped", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+    await send(url, stripeEvent("customer.subscription.created", "evt_r1"));
+    await send(
+      url,
+      stripeEvent("invoice.payment_failed", "evt_r2", { attemptCount: 1 }),
+    );
+
+    const second = await send(
+      url,
+      stripeEvent("invoice.payment_failed", "evt_r3", {
+        attemptCount: 2,
+        nextPaymentAttempt: null,
+      }),
+    );
+
+    expect(await second.json()).toEqual({
+      applied: "MARK_PAST_DUE",
+      eventId: "evt_r3",
+    });
+    expect(await state(documentId)).toMatchObject({
+      status: "PAST_DUE",
+      lastFailureReason: "payment attempt 2 failed, no retry scheduled",
+      processedEventIds: ["evt_r1", "evt_r2", "evt_r3"],
+    });
+  });
+
   it("prefers the invoice's finalization error when there is one", async () => {
     const documentId = await newSubscription();
     const url = await endpointFor(documentId);

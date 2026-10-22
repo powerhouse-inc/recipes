@@ -30,9 +30,12 @@ export const subscriptionSubscriptionOperations: SubscriptionSubscriptionOperati
           `event ${action.input.eventId} already recorded`,
         );
       }
-      if (state.status !== "ACTIVE") {
+      // PAST_DUE too: Stripe sends a payment_failed for every failed retry,
+      // and refusing the second one would drop it for good. A repeat keeps
+      // the status and records the latest reason.
+      if (state.status !== "ACTIVE" && state.status !== "PAST_DUE") {
         throw new InvalidTransition(
-          `markPastDue requires status ACTIVE, but the subscription is ${state.status}`,
+          `markPastDue requires status ACTIVE or PAST_DUE, but the subscription is ${state.status}`,
         );
       }
       state.status = "PAST_DUE";
