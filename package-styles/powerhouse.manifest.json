@@ -1,0 +1,9 @@
+{
+  "name": "@powerhousedao/example-package-styles",
+  "description": "A package whose stylesheet holds only its own classes and tokens.",
+  "category": "Examples",
+  "documentModels": [],
+  "editors": [],
+  "processors": [],
+  "subgraphs": []
+}
