@@ -203,12 +203,12 @@ carries both commits this recipe reads: `bb20f8945`, "fix(reactor-api): answer
 a tokenless websocket as the http path does", and `f773b8e671`, "fix: say why a
 websocket auth refusal closed, and retry on that answer", which replaced
 graphql-ws's own `Forbidden` close reason with the two named ones. The output
-above was recorded against `6.2.3-dev.25`, the current `dev` tag.
+above was recorded against `6.2.3-dev.25`.
 
 Every release through `6.2.3-dev.3` acks a tokenless connection and then closes
 `4500 Missing authorization in connection parameters` on the first `subscribe`,
 and the client abandons the socket. Scenario 0 needs one of those.
 
-The repo catalog pins `6.2.3-dev.25`, which this recipe uses only for
+The repo catalog pins `6.2.3-dev.71`, which this recipe uses only for
 `@renown/sdk` to mint a bearer. The Switchboard it runs against is a separate
 install, so the two do not have to match.

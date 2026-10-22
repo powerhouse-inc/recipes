@@ -11,6 +11,13 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [drive-override](./drive-override) | Custom container document that tracks children via the reactor's ADD_RELATIONSHIP action instead of document-drive's ADD_FILE |
 | [positional-delete](./positional-delete) | Deletion as a position in the merged operation order. Pre-delete operations survive sync |
 
+## Packages and Connect
+
+| Project | Description |
+|---------|-------------|
+| [package-styles](./package-styles) | A package ships only its own CSS; a host's theme lives in `hosts/<host>/style.css`, which `ph build` never reads |
+| [connect-routes](./connect-routes) | Project file routes that add a page with a sidebar link, a settings tab and a full-page route to Connect |
+
 ## Host configs
 
 | Project | Description |
