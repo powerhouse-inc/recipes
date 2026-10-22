@@ -6,23 +6,6 @@ transport: the token in the URL, verification over the received bytes, the
 replay window, redelivery and the body cap. The package decides which document
 a delivery belongs to, and what the event means.
 
-## Requires an unreleased build
-
-`subgraph.http` is on
-[powerhouse-inc/powerhouse#2980](https://github.com/powerhouse-inc/powerhouse/pull/2980),
-which is open, so no published build carries it. Link a local monorepo
-checkout until one does. Link `shared` and `reactor` too, or you get two
-incompatible copies of every type: `reactor-api` only re-exports the HTTP
-contract and `IReactorClient`.
-
-```yaml
-# pnpm-workspace.yaml. One machine's paths, so keep it out of every commit.
-overrides:
-  "@powerhousedao/reactor": "link:/path/to/powerhouse/packages/reactor"
-  "@powerhousedao/reactor-api": "link:/path/to/powerhouse/packages/reactor-api"
-  "@powerhousedao/shared": "link:/path/to/powerhouse/packages/shared"
-```
-
 ## Two URL shapes
 
 Package routes hang off the npm name, verbatim, under `<basePath>/api`:
@@ -34,7 +17,11 @@ GET    /api/@powerhousedao/example-hosted-webhooks/subscriptions/:id
 ```
 
 A path is relative to the scope, so a package cannot serve outside its
-namespace. Webhook endpoints are flat and token-addressed:
+namespace. Signing in is not enough to use the routes: mint and revoke ask the
+reactor's `authorizationService.canManage` (host admin, document owner or ADMIN
+grant), and the read asks `canRead`. A caller who may not touch a document gets
+the same `404` as for one that does not exist, and the read checks sign-in
+first, so no one can probe for document ids. Webhook endpoints are flat and token-addressed:
 
 ```
 POST /webhooks/2f7c0b9d41a8e35c6d0f1b8e7a4c92d0
@@ -76,9 +63,9 @@ const endpoints = await scope.webhooks.register({
   // Fixed for the family. Anything a document configures goes in policyFor.
   defaults: { methods: ["POST"] },
   policyFor: async (documentId) => {
+    // Only a missing document disarms. A canceled one stays armed.
     const document = await load(documentId);
     if (!document) return undefined;
-    if (document.state.global.status === "CANCELED") return undefined;
     return {
       dedupe: { field: "id", ttlSeconds: 3600 },
       verify: {
@@ -95,8 +82,14 @@ const endpoints = await scope.webhooks.register({
 `undefined` disarms the endpoint, which core answers as an unknown token:
 `404 {"error":"Unknown endpoint"}`. By `onRequest`, a delivery is
 method-checked, size-capped, verified against the exact octets and
-de-duplicated. It answers `200` to an event it ignores: Stripe retries a
-4xx, then disables the endpoint.
+de-duplicated. It answers `200` to an event it ignores and to one the document
+refuses, including anything that arrives after a cancel: Stripe retries a 4xx,
+then disables the endpoint.
+
+The event maps by what Stripe reports, not by its type. A subscription event
+follows `data.object.status` (`active` and `trialing` activate, `past_due` and
+`unpaid` mark it past due, `canceled` cancels), and the plan and seats come
+from `items.data[0]`.
 
 ## Two dedupe layers
 
@@ -104,6 +97,11 @@ de-duplicated. It answers `200` to an event it ignores: Stripe retries a
 inside the TTL with `200` and an empty body, calling nothing. That cache is per
 host and expires, so the document records every applied id in
 `processedEventIds` and its reducer throws `DuplicateEvent` on a repeat.
+
+Core records the id *before* it calls `onRequest`, and keeps it whatever the
+reply says. A delivery the package could not process (a failed load or write)
+answers `503` with `unprocessed: true`, which makes core forget the id so
+Stripe's retry is handled instead of answered as a redelivery.
 
 A field can also name a header (`{ header: "x-github-delivery" }`) or a nested
 path (`{ body: "a.b.c" }`). Name the id that identifies the delivery: Stripe's
@@ -113,15 +111,16 @@ repeats across events.
 ## Running
 
 ```sh
-pnpm start   # nine deliveries against one document, three of which stick
-pnpm test    # verification, redelivery, disarming, the routes
+pnpm start   # ten deliveries against one document, three of which stick
+pnpm test    # verification, redelivery, retries, Stripe's shapes, the routes
 ```
 
 Both speak real HTTP to core's own stack: the Express adapter,
 `HttpRouteService`, and `WebhookService` over a `MemoryWebhookStore`.
 `src/host.ts` is that wiring, which a reactor's `server.ts` does with the
 relational token store. The demo plays a provider: a valid delivery, a retry, a
-body altered after signing, and an hour-old replay.
+body altered after signing, an hour-old replay, a delivery after the cancel,
+and one to a revoked URL.
 
 ## Related recipes
 
