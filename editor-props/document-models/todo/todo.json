@@ -1,0 +1,59 @@
+{
+  "id": "powerhouse/editor-props-todo",
+  "name": "Todo",
+  "extension": "todo",
+  "description": "A todo list used to demonstrate editors that receive their document and dispatch as props",
+  "author": {
+    "name": "Powerhouse",
+    "website": "https://powerhouse.inc"
+  },
+  "specifications": [
+    {
+      "version": 1,
+      "changeLog": [],
+      "state": {
+        "global": {
+          "schema": "type TodoState {\n  items: [TodoItem!]!\n}\n\ntype TodoItem {\n  id: ID!\n  title: String!\n  checked: Boolean!\n}",
+          "initialValue": "{\"items\":[]}",
+          "examples": []
+        },
+        "local": {
+          "schema": "",
+          "initialValue": "",
+          "examples": []
+        }
+      },
+      "modules": [
+        {
+          "id": "a1b2c3d4-1111-4a1a-8a1a-000000000001",
+          "name": "todo",
+          "description": "Todo item operations.",
+          "operations": [
+            {
+              "id": "a1b2c3d4-1111-4a1a-8a1a-000000000010",
+              "name": "ADD_ITEM",
+              "description": "Append a new, unchecked item.",
+              "schema": "input AddItemInput {\n  id: ID!\n  title: String!\n}",
+              "template": "",
+              "reducer": "state.items.push({ id: action.input.id, title: action.input.title, checked: false });",
+              "errors": [],
+              "examples": [],
+              "scope": "global"
+            },
+            {
+              "id": "a1b2c3d4-1111-4a1a-8a1a-000000000011",
+              "name": "CHECK_ITEM",
+              "description": "Set an item's checked flag.",
+              "schema": "input CheckItemInput {\n  id: ID!\n  checked: Boolean!\n}",
+              "template": "",
+              "reducer": "const item = state.items.find((i) => i.id === action.input.id);\nif (item) item.checked = action.input.checked;",
+              "errors": [],
+              "examples": [],
+              "scope": "global"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -17,6 +17,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 |---------|-------------|
 | [package-styles](./package-styles) | A package ships only its own CSS; a host's theme lives in `hosts/<host>/style.css`, which `ph build` never reads |
 | [connect-routes](./connect-routes) | Project file routes that add a page with a sidebar link, a settings tab and a full-page route to Connect |
+| [editor-props](./editor-props) | An editor that receives its document and `dispatch` as props, typed for its document model, instead of `useSelected<Model>Document()` |
 
 ## Authorization
 
