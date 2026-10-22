@@ -269,6 +269,15 @@ export async function registerSubscriptionEndpoints(
     onRequest,
   });
 
+  /**
+   * The document behind a mint or revoke, when the caller manages it. The
+   * route's `:id` may be a slug, so the endpoint is keyed by the document's own
+   * id: a slug and an id then name one endpoint, and revoking by either
+   * retires it.
+   */
+  const manageable = async (identifier: string, user: RouteUser | undefined) =>
+    (await access.canManage(identifier, user)) ? load(identifier) : undefined;
+
   const routes: ScopedRouteHandle[] = [
     /**
      * The URL to paste into Stripe. Minting is idempotent per document, so
@@ -277,24 +286,17 @@ export async function registerSubscriptionEndpoints(
      * bearer; what is left is whether this caller manages this document.
      */
     scope.post("subscriptions/:id/endpoint", async (_request, ctx) => {
-      const documentId = ctx.params.id!;
-      if (
-        !(await access.canManage(documentId, ctx.user)) ||
-        !(await load(documentId))
-      ) {
-        return json(404, UNKNOWN_SUBSCRIPTION);
-      }
-      const minted = await endpoints.endpointFor(documentId);
+      const document = await manageable(ctx.params.id!, ctx.user);
+      if (!document) return json(404, UNKNOWN_SUBSCRIPTION);
+      const minted = await endpoints.endpointFor(document.header.id);
       return json(200, { url: minted.url, createdAt: minted.createdAt });
     }),
 
     /** Retires the URL. A later mint for the same document issues a new token. */
     scope.delete("subscriptions/:id/endpoint", async (_request, ctx) => {
-      const documentId = ctx.params.id!;
-      if (!(await access.canManage(documentId, ctx.user))) {
-        return json(404, UNKNOWN_SUBSCRIPTION);
-      }
-      await endpoints.revoke(documentId);
+      const document = await manageable(ctx.params.id!, ctx.user);
+      if (!document) return json(404, UNKNOWN_SUBSCRIPTION);
+      await endpoints.revoke(document.header.id);
       return new Response(null, { status: 204 });
     }),
 

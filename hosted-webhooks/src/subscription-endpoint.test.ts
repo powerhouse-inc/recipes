@@ -171,8 +171,10 @@ async function bootPackage(): Promise<{
   return { host: booted, scope: packageScope, subgraph: packageSubgraph };
 }
 
-async function newSubscription(): Promise<string> {
-  const document = await client.create(createSubscriptionDocument());
+async function newSubscription(slug?: string): Promise<string> {
+  const created = createSubscriptionDocument();
+  if (slug) created.header.slug = slug;
+  const document = await client.create(created);
   secrets.set(document.header.id, SECRET);
   owners.set(document.header.id, OPERATOR);
   return document.header.id;
@@ -415,6 +417,32 @@ describe("the endpoint URL", () => {
     const delivery = await send(
       url,
       stripeEvent("invoice.payment_failed", "evt_gone"),
+    );
+    expect(delivery.status).toBe(404);
+  });
+
+  it("is one endpoint whether the route names the document by slug or id", async () => {
+    const documentId = await newSubscription("acme-subscription");
+    const mint = async (identifier: string) => {
+      const response = await api(
+        "POST",
+        `subscriptions/${identifier}/endpoint`,
+        { bearer: OPERATOR_BEARER },
+      );
+      return ((await response.json()) as { url: string }).url;
+    };
+
+    const bySlug = await mint("acme-subscription");
+    expect(await mint(documentId)).toBe(bySlug);
+
+    // Revoked by id, the URL minted by slug stops answering too.
+    const revoke = await api("DELETE", `subscriptions/${documentId}/endpoint`, {
+      bearer: OPERATOR_BEARER,
+    });
+    expect(revoke.status).toBe(204);
+    const delivery = await send(
+      bySlug,
+      stripeEvent("customer.subscription.created", "evt_slug_revoked"),
     );
     expect(delivery.status).toBe(404);
   });
