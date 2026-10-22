@@ -83,6 +83,33 @@ let host: ReactorHost;
 let scope: IHttpScope;
 let subgraph: TestSubgraph;
 
+/**
+ * Failures to inject into the reactor the package sees, one per document id:
+ * the next `execute` against that document throws, as a write that failed in
+ * storage would. Everything else reaches the real client.
+ */
+const failNextExecute = new Set<string>();
+
+function faultyClient(inner: IReactorClient): IReactorClient {
+  return new Proxy(inner, {
+    get(target, property, receiver) {
+      if (property === "execute") {
+        return (documentId: string, ...rest: unknown[]) => {
+          if (failNextExecute.delete(documentId)) {
+            return Promise.reject(new Error("storage unavailable"));
+          }
+          return (target.execute as (...args: unknown[]) => unknown)(
+            documentId,
+            ...rest,
+          );
+        };
+      }
+      const value: unknown = Reflect.get(target, property, receiver);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+}
+
 /** Boots a host and puts the package's subgraph on it, as the reactor would. */
 async function bootPackage(): Promise<{
   host: ReactorHost;
@@ -98,7 +125,7 @@ async function bootPackage(): Promise<{
   });
   const packageScope = booted.scopeFor(PACKAGE_NAME);
   const packageSubgraph = new TestSubgraph(
-    subgraphArgs({ http: packageScope, reactorClient: client }),
+    subgraphArgs({ http: packageScope, reactorClient: faultyClient(client) }),
   );
   await packageSubgraph.onSetup();
   return { host: booted, scope: packageScope, subgraph: packageSubgraph };
@@ -392,6 +419,51 @@ describe("a redelivery", () => {
     expect(await response.json()).toEqual({ duplicate: "evt_ttl" });
     expect((await state(documentId)).processedEventIds).toEqual(["evt_ttl"]);
     await replica.host.close();
+  });
+});
+
+describe("a delivery the package could not process", () => {
+  it("is answered 503 and unprocessed, so Stripe's retry is applied", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+    const body = stripeEvent("customer.subscription.created", "evt_transient", {
+      customer: "cus_5",
+      quantity: 1,
+    });
+
+    failNextExecute.add(documentId);
+    const first = await send(url, body);
+    expect(first.status).toBe(503);
+    expect(await state(documentId)).toMatchObject({ status: "PENDING" });
+
+    // Inside core's dedupe window. Without `unprocessed` on the first reply,
+    // core would answer this with an empty 200 and never call the handler.
+    const retry = await send(url, body);
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toEqual({
+      applied: "ACTIVATE",
+      eventId: "evt_transient",
+    });
+    expect(await state(documentId)).toMatchObject({ status: "ACTIVE" });
+  });
+
+  it("is rejected with 200, not retried, when the reducer refuses it", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+
+    // A payment failure for a subscription that was never activated: the
+    // reducer refuses the transition, and a retry would be refused again.
+    const response = await send(
+      url,
+      stripeEvent("invoice.payment_failed", "evt_too_early"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      rejected: "MARK_PAST_DUE",
+      status: "PENDING",
+    });
+    expect((await state(documentId)).processedEventIds).toEqual([]);
   });
 });
 

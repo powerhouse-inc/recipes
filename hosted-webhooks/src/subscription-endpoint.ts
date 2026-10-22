@@ -44,6 +44,43 @@ function json(status: number, body: unknown): Response {
   return Response.json(body, { status });
 }
 
+function reply(body: unknown, status = RECEIVED): WebhookReply {
+  return { status, contentType: JSON_CONTENT_TYPE, body: JSON.stringify(body) };
+}
+
+/**
+ * The reply for a delivery this package could not process: a document it could
+ * not load, a write that failed, a handler that threw. `unprocessed` tells core
+ * to forget the delivery's dedupe key, so Stripe's retry (it retries any 5xx)
+ * reaches the handler again instead of being answered as a redelivery.
+ *
+ * Upstream documents `unprocessed` for a handler whose owner is shutting
+ * down. A transient failure is the same situation from the provider's side:
+ * the delivery did not happen, and the retry is the only copy of the event.
+ * The document's `processedEventIds` keeps a retry of a write that did land
+ * from applying twice.
+ */
+function notProcessed(): WebhookReply {
+  // The cause stays out of the body: the reply goes to the sender, and a
+  // storage error's text is the host's business, not the provider's.
+  return {
+    ...reply({ error: "delivery not processed, retry it" }, 503),
+    unprocessed: true,
+  };
+}
+
+/**
+ * The reactor's not-found errors. Matched by name because the classes are not
+ * exported, and because only the name survives the reactor's job queue.
+ */
+function isNotFound(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.name === "DocumentNotFoundError" ||
+      error.name === "DocumentPurgedError")
+  );
+}
+
 /**
  * Registers this package's HTTP surface on the scope the reactor handed it.
  *
@@ -62,11 +99,17 @@ export async function registerSubscriptionEndpoints(
 ): Promise<SubscriptionEndpoints> {
   const { reactorClient, secretFor } = deps;
 
+  /**
+   * The document, or undefined when it does not exist. Any other failure
+   * throws: a storage error is not an answer about the document, and treating
+   * it as "unknown" would disarm the endpoint or drop the delivery.
+   */
   const load = async (documentId: string) => {
     try {
       return await reactorClient.get<SubscriptionDocument>(documentId);
-    } catch {
-      return undefined;
+    } catch (error) {
+      if (isNotFound(error)) return undefined;
+      throw error;
     }
   };
 
@@ -79,6 +122,9 @@ export async function registerSubscriptionEndpoints(
   const policyFor = async (
     documentId: string,
   ): Promise<WebhookPolicy | undefined> => {
+    // A load that fails rather than finding nothing throws through here, and
+    // core answers 500. That is safe to retry: core resolves the policy before
+    // it records the delivery's dedupe key, so Stripe's retry is processed.
     const document = await load(documentId);
     if (!document) return undefined;
     if (document.state.global.status === "CANCELED") return undefined;
@@ -108,18 +154,28 @@ export async function registerSubscriptionEndpoints(
    *
    * `request.key` is the document id this endpoint was minted for, so there is
    * no provider id to map back to a document, and the id is not in the URL.
+   *
+   * Core records the delivery's dedupe key *before* calling this, and keeps it
+   * whatever the reply says unless the reply sets `unprocessed`. A reply that
+   * means "try again" therefore has to say so, or Stripe's retry inside the
+   * dedupe window is answered with an empty 200 and the event is lost. A
+   * thrown handler is no different: core answers 500 and keeps the key, so
+   * nothing below is allowed to throw.
    */
   const onRequest = async (request: WebhookRequest): Promise<WebhookReply> => {
-    const reply = (body: unknown, status = RECEIVED): WebhookReply => ({
-      status,
-      contentType: JSON_CONTENT_TYPE,
-      body: JSON.stringify(body),
-    });
+    try {
+      return await handle(request);
+    } catch {
+      return notProcessed();
+    }
+  };
 
+  const handle = async (request: WebhookRequest): Promise<WebhookReply> => {
     const parsed = parseStripeEvent(request.body);
     if (!parsed.ok) {
       // 400 on purpose: a body this endpoint cannot read is a configuration
-      // fault, and Stripe surfaces 4xx in its dashboard.
+      // fault, and Stripe surfaces 4xx in its dashboard. A retry carries the
+      // same bytes, so there is nothing for it to fix.
       return reply({ error: `unreadable event: ${parsed.reason}` }, 400);
     }
 
@@ -137,16 +193,23 @@ export async function registerSubscriptionEndpoints(
       return reply({ duplicate: event.id });
     }
 
-    try {
-      await reactorClient.execute(request.key, BRANCH, [action]);
-    } catch (error) {
-      // A reducer that refused this event will refuse it again, so a retry
-      // would only repeat the work. Answering 200 stops the retries, and the
-      // body records why.
-      return reply({
-        rejected: action.type,
-        reason: error instanceof Error ? error.message : String(error),
-      });
+    // `execute` throws only when the write itself failed: the job errored,
+    // storage refused, the document vanished. Those are retryable, and the
+    // catch in `onRequest` answers them as unprocessed. A reducer that refuses
+    // the action does not throw: the operation is stored with its error and
+    // the state is unchanged, so whether the event took is read off the
+    // document the write returns.
+    const result = await reactorClient.execute<SubscriptionDocument>(
+      request.key,
+      BRANCH,
+      [action],
+    );
+    const state = result.state.global;
+    if (!state.processedEventIds.includes(event.id)) {
+      // The reducer refused it, and it will refuse it again, so a retry would
+      // only repeat the work. Answering 200 stops the retries, and the body
+      // records why.
+      return reply({ rejected: action.type, status: state.status });
     }
 
     return reply({ applied: action.type, eventId: event.id });
