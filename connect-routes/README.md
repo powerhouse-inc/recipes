@@ -19,7 +19,9 @@ Adding pages to Connect (the Powerhouse web app) from a project, with TanStack R
 
 ## Requirements
 
-Project routes shipped with `@powerhousedao/connect-core` (powerhouse PR #3254), which no release includes yet. The workspace catalog's 6.2.3-dev.25 predates it, so this recipe pins `@powerhousedao/connect`, `@powerhousedao/reactor-browser` and `@powerhousedao/ph-cli` to 6.2.3-dev.69 instead of `catalog:`. The three must stay on the same version: `ph-cli` generates the route tree, and the `reactor-browser` helpers the routes import first appear on this line.
+Project routes shipped with `@powerhousedao/connect-core` (powerhouse PR #3254), first released in 6.2.3-dev.69. The recipe takes `@powerhousedao/connect`, `@powerhousedao/reactor-browser`, `@powerhousedao/ph-cli`, `@powerhousedao/design-system` and `document-model` from the workspace catalog, so they stay on one version: `ph-cli` generates the route tree, and the `reactor-browser` helpers the routes import first appear on this line.
+
+Connect 6.2.3-dev.70, the version the catalog pins, does not start in an installed project; powerhouse PR #3266 fixes that. Until the catalog moves to a release that includes it, `studio` and the Playwright tests fail in this repo, while the vitest test passes. The monorepo's recipes job links its own checkout, so the Playwright tests pass there.
 
 ## Running
 
