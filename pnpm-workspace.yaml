@@ -46,12 +46,15 @@ allowBuilds:
 # 6.2.3-dev.71 carries what connect-routes runs against: Connect's studio boots
 # in a project that installs it (powerhouse#3266, #3265) and connect-core ships
 # its route files compiled (powerhouse#3268).
+# It also carries the host-core output tokens host-output-tokens resolves:
+# resolveHostOutputs and the $output, $concat and $env tokens (powerhouse#3258).
 catalog:
   "@powerhousedao/analytics-engine-browser": 6.2.3-dev.71
   "@powerhousedao/analytics-engine-core": 6.2.3-dev.71
   "@powerhousedao/builder-tools": 6.2.3-dev.71
   "@powerhousedao/connect": 6.2.3-dev.71
   "@powerhousedao/design-system": 6.2.3-dev.71
+  "@powerhousedao/host-core": 6.2.3-dev.71
   "@powerhousedao/ph-cli": 6.2.3-dev.71
   "@powerhousedao/reactor": 6.2.3-dev.71
   "@powerhousedao/reactor-browser": 6.2.3-dev.71
@@ -128,6 +131,7 @@ packages:
   - external-feed-ingest
   - full-text-search
   - group-principals
+  - host-output-tokens
   - inbound-webhook-bridge
   - package-styles
   - positional-delete

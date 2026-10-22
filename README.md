@@ -19,6 +19,12 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [connect-routes](./connect-routes) | Project file routes that add a page with a sidebar link, a settings tab and a full-page route to Connect |
 | [editor-props](./editor-props) | An editor that receives its document and `dispatch` as props, typed for its document model, instead of `useSelected<Model>Document()` |
 
+## Host configs
+
+| Project | Description |
+|---------|-------------|
+| [host-output-tokens](./host-output-tokens) | `hosts/*/host.js` consuming another host's runtime values (bound port, drive URL) through plain-JSON `$output`, `$concat` and `$env` tokens |
+
 ## Authorization
 
 | Project | Description |
