@@ -45,6 +45,12 @@ export interface SubscriptionEndpointDeps {
    * the host's policy.
    */
   access: SubscriptionAccess;
+  /**
+   * Where a delivery that could not be processed is reported. The reply to
+   * Stripe carries no cause, so this is the operator's only record of it.
+   * Defaults to `console.error`.
+   */
+  onError?: (error: unknown) => void;
 }
 
 export interface SubscriptionAccess {
@@ -124,6 +130,10 @@ export async function registerSubscriptionEndpoints(
   deps: SubscriptionEndpointDeps,
 ): Promise<SubscriptionEndpoints> {
   const { reactorClient, secretFor, access } = deps;
+  const onError =
+    deps.onError ??
+    ((error: unknown) =>
+      console.error("hosted-webhooks: delivery not processed:", error));
 
   /**
    * The document, or undefined when it does not exist. Any other failure
@@ -194,7 +204,8 @@ export async function registerSubscriptionEndpoints(
   const onRequest = async (request: WebhookRequest): Promise<WebhookReply> => {
     try {
       return await handle(request);
-    } catch {
+    } catch (error) {
+      onError(error);
       return notProcessed();
     }
   };

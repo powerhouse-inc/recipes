@@ -30,7 +30,7 @@ import {
   Subscription,
   type SubscriptionDocument,
 } from "document-models/subscription/v1";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { startHost, subgraphArgs, type ReactorHost } from "./host.js";
 import { stripeSignature } from "./stripe-signature.js";
 import { SubscriptionWebhooksSubgraph } from "./subgraph.js";
@@ -754,8 +754,15 @@ describe("a delivery the package could not process", () => {
     });
 
     failNextExecute.add(documentId);
+    const reported = vi.spyOn(console, "error").mockImplementation(() => {});
     const first = await send(url, body);
     expect(first.status).toBe(503);
+    // The reply carries no cause, so the operator's log has to.
+    expect(reported).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ message: "storage unavailable" }),
+    );
+    reported.mockRestore();
     expect(await state(documentId)).toMatchObject({ status: "PENDING" });
 
     // Inside core's dedupe window. Without `unprocessed` on the first reply,
