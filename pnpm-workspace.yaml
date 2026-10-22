@@ -1,15 +1,20 @@
 allowBuilds:
   '@apollo/protobufjs': true
   '@datadog/pprof': false
+  '@parcel/watcher': false
   '@prisma/client': true
   '@prisma/engines': true
+  '@reown/appkit': false
+  bufferutil: false
   esbuild: true
+  keccak: false
   msw: true
   onnxruntime-node: true
   prisma: true
   protobufjs: true
   sharp: true
   sqlite3: true
+  utf-8-validate: false
 
 # The 6.2.3-dev line (npm `dev` dist-tag). The document-drive package was
 # deleted upstream — its drive document model now lives at
@@ -31,46 +36,57 @@ allowBuilds:
 # document and branch it signs for and emits a v2 tuple, the reactor verifies
 # every write it stores, new documents are v2-required, and SignerConfig takes
 # the trustPolicy the auth recipes give their reactors.
+# 6.2.3-dev.70 carries what package-styles builds against: packages ship only
+# their own CSS through Connect's package stylesheet entry
+# (@powerhousedao/connect/tailwind.css, powerhouse#3262), and ph build no longer
+# scans dist/browser's source maps for class names (f3bfe645e9).
 catalog:
-  "@powerhousedao/analytics-engine-browser": 6.2.3-dev.25
-  "@powerhousedao/analytics-engine-core": 6.2.3-dev.25
-  "@powerhousedao/ph-cli": 6.2.3-dev.25
-  "@powerhousedao/reactor": 6.2.3-dev.25
-  "@powerhousedao/reactor-browser": 6.2.3-dev.25
-  "@powerhousedao/reactor-group": 6.2.3-dev.25
-  "@powerhousedao/shared": 6.2.3-dev.25
-  "@renown/sdk": 6.2.3-dev.25
-  document-model: 6.2.3-dev.25
+  "@powerhousedao/analytics-engine-browser": 6.2.3-dev.70
+  "@powerhousedao/analytics-engine-core": 6.2.3-dev.70
+  "@powerhousedao/builder-tools": 6.2.3-dev.70
+  "@powerhousedao/connect": 6.2.3-dev.70
+  "@powerhousedao/ph-cli": 6.2.3-dev.70
+  "@powerhousedao/reactor": 6.2.3-dev.70
+  "@powerhousedao/reactor-browser": 6.2.3-dev.70
+  "@powerhousedao/reactor-group": 6.2.3-dev.70
+  "@powerhousedao/shared": 6.2.3-dev.70
+  "@renown/sdk": 6.2.3-dev.70
+  document-model: 6.2.3-dev.70
 
 minimumReleaseAgeExclude:
-  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.25'
-  - '@powerhousedao/analytics-engine-core@6.2.3-dev.25'
-  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.25'
-  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.25'
-  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.25'
-  - '@powerhousedao/builder-tools@6.2.3-dev.25'
-  - '@powerhousedao/codegen@6.2.3-dev.25'
-  - '@powerhousedao/common@6.2.3-dev.25'
-  - '@powerhousedao/config@6.2.3-dev.25'
-  - '@powerhousedao/design-system@6.2.3-dev.25'
-  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.25'
-  - '@powerhousedao/pglite-fs@6.2.3-dev.25'
-  - '@powerhousedao/ph-cli@6.2.3-dev.25'
-  - '@powerhousedao/pieces-framework@6.2.3-dev.25'
-  - '@powerhousedao/reactor-api@6.2.3-dev.25'
-  - '@powerhousedao/reactor-attachments@6.2.3-dev.25'
-  - '@powerhousedao/reactor-browser@6.2.3-dev.25'
-  - '@powerhousedao/reactor-drive@6.2.3-dev.25'
-  - '@powerhousedao/reactor-group@6.2.3-dev.25'
-  - '@powerhousedao/reactor-mcp@6.2.3-dev.25'
-  - '@powerhousedao/reactor-workflow@6.2.3-dev.25'
-  - '@powerhousedao/reactor@6.2.3-dev.25'
-  - '@powerhousedao/shared@6.2.3-dev.25'
-  - '@powerhousedao/switchboard@6.2.3-dev.25'
-  - '@powerhousedao/vetra@6.2.3-dev.25'
-  - '@powerhousedao/workflow@6.2.3-dev.25'
-  - '@renown/sdk@6.2.3-dev.25'
-  - document-model@6.2.3-dev.25
+  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.70'
+  - '@powerhousedao/analytics-engine-core@6.2.3-dev.70'
+  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.70'
+  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.70'
+  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.70'
+  - '@powerhousedao/builder-tools@6.2.3-dev.70'
+  - '@powerhousedao/codegen@6.2.3-dev.70'
+  - '@powerhousedao/common@6.2.3-dev.70'
+  - '@powerhousedao/config@6.2.3-dev.70'
+  - '@powerhousedao/connect-core@6.2.3-dev.70'
+  - '@powerhousedao/connect@6.2.3-dev.70'
+  - '@powerhousedao/design-system@6.2.3-dev.70'
+  - '@powerhousedao/host-core@6.2.3-dev.70'
+  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.70'
+  - '@powerhousedao/ph-cli@6.2.3-dev.70'
+  - '@powerhousedao/pieces-framework@6.2.3-dev.70'
+  - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.70'
+  - '@powerhousedao/reactor-api@6.2.3-dev.70'
+  - '@powerhousedao/reactor-attachments@6.2.3-dev.70'
+  - '@powerhousedao/reactor-browser@6.2.3-dev.70'
+  - '@powerhousedao/reactor-drive@6.2.3-dev.70'
+  - '@powerhousedao/reactor-group@6.2.3-dev.70'
+  - '@powerhousedao/reactor-mcp@6.2.3-dev.70'
+  - '@powerhousedao/reactor-privacy@6.2.3-dev.70'
+  - '@powerhousedao/reactor-router@6.2.3-dev.70'
+  - '@powerhousedao/reactor-workflow@6.2.3-dev.70'
+  - '@powerhousedao/reactor@6.2.3-dev.70'
+  - '@powerhousedao/shared@6.2.3-dev.70'
+  - '@powerhousedao/switchboard@6.2.3-dev.70'
+  - '@powerhousedao/vetra@6.2.3-dev.70'
+  - '@powerhousedao/workflow@6.2.3-dev.70'
+  - '@renown/sdk@6.2.3-dev.70'
+  - document-model@6.2.3-dev.70
 
 packages:
   - analytics-processor
@@ -90,6 +106,7 @@ packages:
   - full-text-search
   - group-principals
   - inbound-webhook-bridge
+  - package-styles
   - positional-delete
   - rate-limiter
   - relational-db-subgraph

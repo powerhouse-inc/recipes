@@ -1,0 +1,24 @@
+{
+  "name": "@powerhousedao/example-package-styles",
+  "version": "0.0.0",
+  "description": "Example: a package ships only its own CSS; a host's theme lives in hosts/<host>/style.css",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "ph-cli build",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@powerhousedao/builder-tools": "catalog:",
+    "@powerhousedao/connect": "catalog:",
+    "@powerhousedao/ph-cli": "catalog:",
+    "@powerhousedao/shared": "catalog:",
+    "@tailwindcss/cli": "4.2.2",
+    "@tailwindcss/node": "4.2.2",
+    "@types/node": "^22.0.0",
+    "tailwindcss": "4.2.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}
