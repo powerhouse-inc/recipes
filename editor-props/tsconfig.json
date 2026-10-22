@@ -1,0 +1,30 @@
+{
+  "extends": "../tsconfig.options.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "outDir": "./dist",
+    "rootDir": ".",
+    "paths": {
+      "document-models": [
+        "./document-models/index.ts"
+      ],
+      "document-models/*": [
+        "./document-models/*/index.ts"
+      ],
+      "editors": [
+        "./editors/index.ts"
+      ]
+    },
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}
