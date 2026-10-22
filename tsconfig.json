@@ -12,6 +12,7 @@
     { "path": "drive-override" },
     { "path": "full-text-search" },
     { "path": "host-output-tokens" },
+    { "path": "hosted-webhooks" },
     { "path": "inbound-webhook-bridge" },
     { "path": "rate-limiter" },
     { "path": "relational-db-subgraph" },

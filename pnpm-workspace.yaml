@@ -48,6 +48,8 @@ allowBuilds:
 # its route files compiled (powerhouse#3268).
 # It also carries the host-core output tokens host-output-tokens resolves:
 # resolveHostOutputs and the $output, $concat and $env tokens (powerhouse#3258).
+# 6.2.3-dev.0 onward carries the HTTP scope API hosted-webhooks uses
+# (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 catalog:
   "@powerhousedao/analytics-engine-browser": 6.2.3-dev.71
   "@powerhousedao/analytics-engine-core": 6.2.3-dev.71
@@ -57,6 +59,7 @@ catalog:
   "@powerhousedao/host-core": 6.2.3-dev.71
   "@powerhousedao/ph-cli": 6.2.3-dev.71
   "@powerhousedao/reactor": 6.2.3-dev.71
+  "@powerhousedao/reactor-api": 6.2.3-dev.71
   "@powerhousedao/reactor-browser": 6.2.3-dev.71
   "@powerhousedao/reactor-group": 6.2.3-dev.71
   "@powerhousedao/shared": 6.2.3-dev.71
@@ -132,6 +135,7 @@ packages:
   - full-text-search
   - group-principals
   - host-output-tokens
+  - hosted-webhooks
   - inbound-webhook-bridge
   - package-styles
   - positional-delete
