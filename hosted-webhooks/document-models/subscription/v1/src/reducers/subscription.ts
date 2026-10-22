@@ -51,6 +51,14 @@ export const subscriptionSubscriptionOperations: SubscriptionSubscriptionOperati
       if (state.status === "CANCELED") {
         throw new InvalidTransition("the subscription is already canceled");
       }
+      // Nothing to cancel before an activation. This also keeps a PENDING
+      // document, which has no customer to match events against yet, from
+      // being ended by another customer's deletion.
+      if (state.status === "PENDING") {
+        throw new InvalidTransition(
+          "a subscription that was never activated cannot be canceled",
+        );
+      }
       state.status = "CANCELED";
       state.processedEventIds.push(action.input.eventId);
     },

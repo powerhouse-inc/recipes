@@ -102,7 +102,7 @@ export const documentModel: DocumentModelGlobalState = {
               schema: "input CancelInput {\n  eventId: String!\n}",
               template: "",
               reducer:
-                'if (state.processedEventIds.includes(action.input.eventId)) {\n  throw new DuplicateEvent(`event ${action.input.eventId} already recorded`);\n}\nif (state.status === "CANCELED") {\n  throw new InvalidTransition("the subscription is already canceled");\n}\nstate.status = "CANCELED";\nstate.processedEventIds.push(action.input.eventId);',
+                'if (state.processedEventIds.includes(action.input.eventId)) {\n  throw new DuplicateEvent(`event ${action.input.eventId} already recorded`);\n}\nif (state.status === "CANCELED") {\n  throw new InvalidTransition("the subscription is already canceled");\n}\nif (state.status === "PENDING") {\n  throw new InvalidTransition("a subscription that was never activated cannot be canceled");\n}\nstate.status = "CANCELED";\nstate.processedEventIds.push(action.input.eventId);',
               errors: [
                 {
                   id: "duplicateEvent",
@@ -115,7 +115,7 @@ export const documentModel: DocumentModelGlobalState = {
                   id: "invalidTransition",
                   name: "InvalidTransition",
                   code: "INVALID_TRANSITION",
-                  description: "The subscription is already canceled",
+                  description: "The subscription is already canceled, or was never activated",
                   template: "",
                 },
               ],

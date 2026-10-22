@@ -33,7 +33,9 @@ is resolved first), so `request.key` names the document.
 Stripe sends every event on the account to every endpoint registered on it,
 and gives each endpoint its own signing secret. So a document applies only
 the events for the customer its first activation recorded, and acknowledges
-the rest. The manifest's single `STRIPE_WEBHOOK_SECRET` verifies one
+the rest. Before that activation it has no customer to match, and its reducer
+refuses a payment failure or a cancel, so another customer's event cannot
+move it either. The manifest's single `STRIPE_WEBHOOK_SECRET` verifies one
 document's endpoint; with more than one document, override `secretFor`.
 
 ## A subgraph, not a processor

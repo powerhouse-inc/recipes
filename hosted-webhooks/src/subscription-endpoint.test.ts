@@ -836,6 +836,32 @@ describe("an event about another customer", () => {
   });
 });
 
+describe("a deletion for a document that was never activated", () => {
+  it("is refused, so another customer's cancel cannot end it", async () => {
+    // A PENDING document has no customer yet, so the customer check cannot
+    // tell this event is someone else's. The reducer has nothing to cancel.
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+
+    const response = await send(
+      url,
+      stripeEvent("customer.subscription.deleted", "evt_not_yet", {
+        customer: "cus_theirs",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      rejected: "CANCEL",
+      status: "PENDING",
+    });
+    expect(await state(documentId)).toMatchObject({
+      status: "PENDING",
+      processedEventIds: [],
+    });
+  });
+});
+
 describe("an event type the endpoint does not act on", () => {
   it("is acknowledged rather than retried", async () => {
     const documentId = await newSubscription();
