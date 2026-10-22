@@ -87,8 +87,35 @@ async function main() {
     `  ${endpoint.url.includes(documentId) ? "✗ leaks" : "✓ does not name"} the document\n`,
   );
 
-  const event = (type: string, id: string, object: unknown = {}) =>
-    JSON.stringify({ id, type, data: { object } });
+  // Stripe's own shapes, trimmed: a Subscription carries its plan and quantity
+  // per item, and an Invoice carries the attempt count, not a decline message.
+  const subscription = (status: string) => ({
+    id: "sub_1Q",
+    object: "subscription",
+    customer: "cus_4242",
+    status,
+    items: {
+      object: "list",
+      data: [
+        {
+          id: "si_1Q",
+          object: "subscription_item",
+          quantity: 5,
+          price: { id: "price_1Q", object: "price", nickname: "team" },
+        },
+      ],
+    },
+  });
+  const invoice = {
+    id: "in_1Q",
+    object: "invoice",
+    customer: "cus_4242",
+    attempt_count: 1,
+    next_payment_attempt: Math.floor(Date.now() / 1000) + 3 * 86_400,
+    last_finalization_error: null,
+  };
+  const event = (type: string, id: string, object: unknown) =>
+    JSON.stringify({ id, object: "event", type, data: { object } });
 
   let deliveries = 0;
   const deliver = async (
@@ -115,11 +142,11 @@ async function main() {
     console.log(`  ${response.status} ${text || "(empty body)"}`);
   };
 
-  const activated = event("customer.subscription.created", "evt_1", {
-    customer: "cus_4242",
-    quantity: 5,
-    plan: { nickname: "team" },
-  });
+  const activated = event(
+    "customer.subscription.created",
+    "evt_1",
+    subscription("active"),
+  );
 
   await deliver("customer.subscription.created", activated);
   await deliver("the same delivery again (Stripe retrying)", activated);
@@ -136,21 +163,34 @@ async function main() {
   });
   await deliver(
     "invoice.payment_failed",
-    event("invoice.payment_failed", "evt_2", {
-      last_payment_error: { message: "card declined" },
-    }),
+    event("invoice.payment_failed", "evt_2", invoice),
   );
   await deliver(
     "charge.dispute.created, which this endpoint does not act on",
-    event("charge.dispute.created", "evt_3"),
+    event("charge.dispute.created", "evt_3", { object: "dispute" }),
   );
   await deliver(
     "customer.subscription.deleted",
-    event("customer.subscription.deleted", "evt_4"),
+    event("customer.subscription.deleted", "evt_4", subscription("canceled")),
   );
   await deliver(
-    "one more delivery, now that the subscription is canceled",
-    event("customer.subscription.created", "evt_5"),
+    "a late invoice.payment_failed, now that the subscription is canceled",
+    event("invoice.payment_failed", "evt_5", invoice),
+  );
+  console.log(
+    "  ✓ still armed: a 200 Stripe stops retrying, not a 4xx it counts against the endpoint",
+  );
+
+  // Retiring the URL is the operator's call, not the subscription's.
+  const revoked = await fetch(
+    `${scope.baseUrl}/subscriptions/${documentId}/endpoint`,
+    { method: "DELETE" },
+  );
+  console.log(`
+Revoked the endpoint (${revoked.status})`);
+  await deliver(
+    "a delivery to the revoked URL",
+    event("invoice.payment_failed", "evt_6", invoice),
   );
 
   const unknown = await fetch(`${host.publicUrl}/webhooks/${"f".repeat(32)}`, {
@@ -158,10 +198,10 @@ async function main() {
     headers: { "content-type": "application/json" },
     body: "{}",
   });
-  console.log("\n→ a token that was never minted");
+  console.log("→ a token that was never minted");
   console.log(`  ${unknown.status} ${await unknown.text()}`);
   console.log(
-    "  ✓ same answer as the canceled endpoint above, so probing tells nothing apart",
+    "  ✓ same answer as the revoked endpoint above, so probing tells nothing apart",
   );
 
   const read = await fetch(`${scope.baseUrl}/subscriptions/${documentId}`);
@@ -169,13 +209,17 @@ async function main() {
   console.log(`  ${read.status} ${await read.text()}`);
 
   const operations = await client.getOperations(documentId);
-  const applied = operations.results.filter((operation) =>
-    ["ACTIVATE", "MARK_PAST_DUE", "CANCEL"].includes(operation.action.type),
+  // A reducer refusal is stored as an operation with an error, so "applied"
+  // means one without.
+  const applied = operations.results.filter(
+    (operation) =>
+      ["ACTIVATE", "MARK_PAST_DUE", "CANCEL"].includes(operation.action.type) &&
+      !operation.error,
   );
   console.log("\n--- Document history ---");
   for (const operation of applied) console.log(`  ${operation.action.type}`);
   console.log(
-    `\n✓ ${applied.length} operations from ${deliveries} deliveries: the refused, duplicate and ignored ones wrote nothing`,
+    `\n✓ ${applied.length} operations from ${deliveries} deliveries: the refused, duplicate, ignored and late ones wrote nothing`,
   );
 
   const finalState = (await client.get<SubscriptionDocument>(documentId)).state

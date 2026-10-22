@@ -137,8 +137,68 @@ async function newSubscription(): Promise<string> {
   return document.header.id;
 }
 
-function stripeEvent(type: string, id: string, object: unknown = {}): string {
-  return JSON.stringify({ id, type, data: { object } });
+/** The fields a fixture varies. Everything else is Stripe's shape, filled in. */
+interface Fixture {
+  customer?: string;
+  status?: string;
+  plan?: string;
+  quantity?: number;
+  attemptCount?: number;
+  nextPaymentAttempt?: number | null;
+  finalizationError?: string;
+}
+
+/**
+ * A Stripe event as Stripe sends it: the envelope, and a `data.object` in the
+ * real Subscription or Invoice shape, trimmed to the fields that matter. Plan
+ * and quantity live on the subscription's first item, as they do in Stripe.
+ */
+function stripeEvent(type: string, id: string, fields: Fixture = {}): string {
+  let object: unknown;
+  if (type.startsWith("customer.subscription.")) {
+    object = {
+      id: "sub_1Q",
+      object: "subscription",
+      customer: fields.customer ?? "cus_1",
+      status:
+        fields.status ??
+        (type === "customer.subscription.deleted" ? "canceled" : "active"),
+      items: {
+        object: "list",
+        data: [
+          {
+            id: "si_1Q",
+            object: "subscription_item",
+            quantity: fields.quantity ?? 1,
+            price: {
+              id: "price_1Q",
+              object: "price",
+              nickname: fields.plan ?? null,
+              lookup_key: null,
+            },
+          },
+        ],
+      },
+    };
+  } else if (type.startsWith("invoice.")) {
+    object = {
+      id: "in_1Q",
+      object: "invoice",
+      customer: fields.customer ?? "cus_1",
+      status: "open",
+      attempt_count: fields.attemptCount ?? 1,
+      next_payment_attempt:
+        fields.nextPaymentAttempt === undefined
+          ? 1_767_225_600
+          : fields.nextPaymentAttempt,
+      last_finalization_error: fields.finalizationError
+        ? { message: fields.finalizationError, type: "invalid_request_error" }
+        : null,
+    };
+  } else {
+    object = { id: "obj_1Q", object: type.split(".")[0] };
+  }
+  return JSON.stringify({ id, object: "event", type, data: { object } });
 }
 
 /** A package route, over HTTP, relative to the scope's own base URL. */
@@ -289,7 +349,7 @@ describe("a delivery", () => {
     const body = stripeEvent("customer.subscription.created", "evt_activate", {
       customer: "cus_9",
       quantity: 5,
-      plan: { nickname: "team" },
+      plan: "team",
     });
 
     const response = await send(url, body);
@@ -422,6 +482,134 @@ describe("a redelivery", () => {
   });
 });
 
+describe("a subscription event", () => {
+  it("follows the status Stripe reports, not the event type", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+    const update = async (id: string, status: string) => {
+      const response = await send(
+        url,
+        stripeEvent("customer.subscription.updated", id, { status }),
+      );
+      return { status: response.status, body: await response.json() };
+    };
+
+    await send(url, stripeEvent("customer.subscription.created", "evt_s1"));
+    expect(await state(documentId)).toMatchObject({ status: "ACTIVE" });
+
+    expect(await update("evt_s2", "past_due")).toEqual({
+      status: 200,
+      body: { applied: "MARK_PAST_DUE", eventId: "evt_s2" },
+    });
+    expect(await state(documentId)).toMatchObject({
+      status: "PAST_DUE",
+      lastFailureReason: "subscription is past_due",
+    });
+
+    await update("evt_s3", "active");
+    expect(await state(documentId)).toMatchObject({
+      status: "ACTIVE",
+      lastFailureReason: null,
+    });
+
+    await update("evt_s4", "canceled");
+    expect(await state(documentId)).toMatchObject({ status: "CANCELED" });
+  });
+
+  it("acknowledges a status the document does not model, and changes nothing", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+
+    const response = await send(
+      url,
+      stripeEvent("customer.subscription.created", "evt_incomplete", {
+        status: "incomplete",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ignored: "customer.subscription.created",
+    });
+    expect(await state(documentId)).toMatchObject({ status: "PENDING" });
+  });
+
+  it("names the plan by its price, falling back to the price id", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+
+    await send(
+      url,
+      stripeEvent("customer.subscription.created", "evt_unnamed_price", {
+        quantity: 3,
+      }),
+    );
+
+    expect(await state(documentId)).toMatchObject({
+      plan: "price_1Q",
+      seats: 3,
+    });
+  });
+
+  it("is refused as unreadable when it is not Stripe's shape", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+
+    // Top-level plan and quantity, no items: not a Subscription object.
+    const response = await send(
+      url,
+      JSON.stringify({
+        id: "evt_invented",
+        type: "customer.subscription.created",
+        data: { object: { customer: "cus_1", quantity: 2 } },
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await state(documentId)).toMatchObject({ status: "PENDING" });
+  });
+});
+
+describe("a payment failure", () => {
+  it("records what the invoice says about the failed attempt", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+    await send(url, stripeEvent("customer.subscription.created", "evt_p1"));
+
+    await send(
+      url,
+      stripeEvent("invoice.payment_failed", "evt_p2", {
+        attemptCount: 2,
+        nextPaymentAttempt: 1_767_225_600,
+      }),
+    );
+
+    expect(await state(documentId)).toMatchObject({
+      status: "PAST_DUE",
+      lastFailureReason:
+        "payment attempt 2 failed, next attempt 2026-01-01T00:00:00.000Z",
+    });
+  });
+
+  it("prefers the invoice's finalization error when there is one", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+    await send(url, stripeEvent("customer.subscription.created", "evt_f1"));
+
+    await send(
+      url,
+      stripeEvent("invoice.payment_failed", "evt_f2", {
+        finalizationError: "The customer has no tax location.",
+      }),
+    );
+
+    expect(await state(documentId)).toMatchObject({
+      lastFailureReason:
+        "invoice could not be finalized: The customer has no tax location.",
+    });
+  });
+});
+
 describe("a delivery the package could not process", () => {
   it("is answered 503 and unprocessed, so Stripe's retry is applied", async () => {
     const documentId = await newSubscription();
@@ -547,7 +735,7 @@ describe("the read route", () => {
       stripeEvent("customer.subscription.created", "evt_read", {
         customer: "cus_3",
         quantity: 4,
-        plan: { nickname: "scale" },
+        plan: "scale",
       }),
     );
 
