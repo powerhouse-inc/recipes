@@ -10,6 +10,8 @@ import {
   ReactorBuilder,
   JobAwaiter,
   addRelationshipAction,
+  JobStatus,
+  ReactorClientBuilder,
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
 import type { PHDocument } from "document-model";
@@ -20,6 +22,11 @@ import {
   actions as containerActions,
   type CustomContainerPHState,
 } from "document-models/custom-container/v1";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 
 const TOTAL_CHILDREN = 10_000;
 const BATCH_SIZE = 100;
@@ -37,31 +44,51 @@ async function main() {
   //    deliberately not using document-drive as our container.
   process.stdout.write("Starting reactor... ");
   const t0 = performance.now();
-  const { reactor, eventBus, documentIndexer } = await new ReactorBuilder()
-    .withDocumentModelSources([
-      documentModelDocumentModelModule,
-      CustomContainer,
-    ])
-    .buildModule();
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "drive-override-demo",
+  );
+  const { client, reactor, eventBus, documentIndexer } =
+    await new ReactorClientBuilder()
+      .withReactorBuilder(
+        new ReactorBuilder().withDocumentModelSources([
+          documentModelDocumentModelModule,
+          CustomContainer,
+        ]),
+      )
+      .withSigner(signer)
+      .buildModule();
   const jobAwaiter = new JobAwaiter(eventBus, (jobId, signal) =>
     reactor.getJobStatus(jobId, signal),
   );
+  const settle = async (jobId: string) => {
+    const job = await jobAwaiter.waitForJob(jobId);
+    if (job.status === JobStatus.FAILED) {
+      throw new Error(`job ${jobId} failed: ${job.error?.message}`);
+    }
+    return job;
+  };
   console.log(`done (${((performance.now() - t0) / 1000).toFixed(2)}s)\n`);
 
   // 2. Create the custom container and apply SET_METADATA.
   const container = createCustomContainerDocument();
   const containerId = container.header.id;
-  const createJob = await reactor.create(container);
-  await jobAwaiter.waitForJob(createJob.id);
+  await settle((await reactor.create(container, signer)).id);
   console.log(`Created container ${containerId} (${customContainerDocumentType})`);
 
-  const metaJob = await reactor.execute(containerId, "main", [
-    containerActions.setMetadata({
-      name: "Library",
-      description: `Stress test with ${TOTAL_CHILDREN.toLocaleString()} children`,
-    }),
-  ]);
-  await jobAwaiter.waitForJob(metaJob.id);
+  const metaJob = await settle(
+    (
+      await client.executeAsync(containerId, "main", [
+        containerActions.setMetadata({
+          name: "Library",
+          description: `Stress test with ${TOTAL_CHILDREN.toLocaleString()} children`,
+        }),
+      ])
+    ).id,
+  );
   console.log("Applied SET_METADATA\n");
 
   // 3. Bulk-create children + wire each to the container in batches.
@@ -81,19 +108,19 @@ async function main() {
 
     const childDocs = Array.from({ length: batchSize }, makeChildDocument);
     const createInfos = await Promise.all(
-      childDocs.map((doc) => reactor.create(doc)),
+      childDocs.map((doc) => reactor.create(doc, signer)),
     );
-    await Promise.all(createInfos.map((info) => jobAwaiter.waitForJob(info.id)));
+    await Promise.all(createInfos.map((info) => settle(info.id)));
 
     const relInfos = await Promise.all(
       childDocs.map((doc) =>
-        reactor.execute(containerId, "main", [
+        client.executeAsync(containerId, "main", [
           addRelationshipAction(containerId, doc.header.id, RELATIONSHIP_TYPE),
         ]),
       ),
     );
     const relCompleted = await Promise.all(
-      relInfos.map((info) => jobAwaiter.waitForJob(info.id)),
+      relInfos.map((info) => settle(info.id)),
     );
     lastConsistencyToken = relCompleted[relCompleted.length - 1].consistencyToken;
 

@@ -1,6 +1,16 @@
-import { ReactorBuilder, JobAwaiter } from "@powerhousedao/reactor";
+import {
+  JobAwaiter,
+  JobStatus,
+  ReactorBuilder,
+  ReactorClientBuilder,
+} from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
 import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { scriptedFeed } from "./feed.js";
 import {
   createFeedLedgerDocument,
@@ -34,12 +44,22 @@ async function main() {
   // 1. Build a reactor that knows about the ledger document model.
   process.stdout.write("Starting reactor...");
   const t0 = performance.now();
-  const { reactor, eventBus } = await new ReactorBuilder()
-    .withDocumentModelSources([
-      documentModelDocumentModelModule,
-      driveDocumentModelModule,
-      FeedLedger,
-    ])
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "external-feed-ingest-demo",
+  );
+  const { client, reactor, eventBus } = await new ReactorClientBuilder()
+    .withReactorBuilder(
+      new ReactorBuilder().withDocumentModelSources([
+        documentModelDocumentModelModule,
+        driveDocumentModelModule,
+        FeedLedger,
+      ]),
+    )
+    .withSigner(signer)
     .buildModule();
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)`);
 
@@ -49,8 +69,12 @@ async function main() {
 
   // 2. Create the ledger document for this feed source.
   const ledgerDoc = createFeedLedgerDocument({ global: { source: SOURCE } });
-  const createJob = await reactor.create(ledgerDoc);
-  await jobAwaiter.waitForJob(createJob.id);
+  const created = await jobAwaiter.waitForJob(
+    (await reactor.create(ledgerDoc, signer)).id,
+  );
+  if (created.status === JobStatus.FAILED) {
+    throw new Error(`ledger creation failed: ${created.error?.message}`);
+  }
   const documentId = ledgerDoc.header.id;
   console.log(`Created ledger document ${documentId} for "${SOURCE}"\n`);
 
@@ -62,7 +86,7 @@ async function main() {
   //    mid-stream to simulate a crash. We drive pollOnce() explicitly so the
   //    kill point is deterministic; start()/stop() is the production loop.
   console.log("─── Poller #1 starts, ingests the first batch, then is killed ───\n");
-  const poller1 = new FeedPoller(reactor, eventBus, documentId, {
+  const poller1 = new FeedPoller(client, eventBus, documentId, {
     // A truncated view of the feed: cursors 1–3 only. Simulates the poller
     // dying before upstream delivered the rest.
     fetchSince: async (since) =>
@@ -79,7 +103,7 @@ async function main() {
   //    rebuild from the document. Now it sees the full feed, including the
   //    duplicate redelivery of po-002 and the correction of po-001.
   console.log("─── Poller #2 starts fresh, re-seeds from document state ───\n");
-  const poller2 = new FeedPoller(reactor, eventBus, documentId, feed);
+  const poller2 = new FeedPoller(client, eventBus, documentId, feed);
   await poller2.seedFromState();
   console.log(
     `  re-seeded: watermark=${poller2.currentWatermark}, ${poller2.seenCount} known ids\n`,

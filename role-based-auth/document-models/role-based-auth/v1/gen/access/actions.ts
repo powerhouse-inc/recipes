@@ -1,10 +1,14 @@
+/**
+ * WARNING: DO NOT EDIT
+ * This file is auto-generated and updated by codegen
+ */
 import type { Action } from "document-model";
 import type {
+  AddMemberInput,
   BootstrapInput,
   GrantAdminInput,
-  RevokeAdminInput,
-  AddMemberInput,
   RemoveMemberInput,
+  RevokeAdminInput,
   WriteNoteInput,
 } from "../types.js";
 

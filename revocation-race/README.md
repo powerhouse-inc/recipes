@@ -43,6 +43,11 @@ strictly timestamp-monotonic (a backdated policy edit is refused with
 from multiple reactors can conflict on merge. Positional judgment works only because
 the policy stream itself has one authoritative order.
 
+Alice and Bob sign with their own `RenownCryptoSigner` keys, through the clients
+`buildSignedReactor` (`src/signers.ts`) builds on each reactor. A synced operation
+keeps its signature, and the receiving reactor checks it on load against the same
+trust policy (`trustPolicyFor`), so both reactors judge it as the same address.
+
 ## State shape
 
 ```graphql

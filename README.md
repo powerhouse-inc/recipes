@@ -11,10 +11,25 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [drive-override](./drive-override) | Custom container document that tracks children via the reactor's ADD_RELATIONSHIP action instead of document-drive's ADD_FILE |
 | [positional-delete](./positional-delete) | Deletion as a position in the merged operation order. Pre-delete operations survive sync |
 
+## Packages and Connect
+
+| Project | Description |
+|---------|-------------|
+| [package-styles](./package-styles) | A package ships only its own CSS; a host's theme lives in `hosts/<host>/style.css`, which `ph build` never reads |
+| [connect-routes](./connect-routes) | Project file routes that add a page with a sidebar link, a settings tab and a full-page route to Connect |
+| [editor-props](./editor-props) | An editor that receives its document and `dispatch` as props, typed for its document model, instead of `useSelected<Model>Document()` |
+
+## Host configs
+
+| Project | Description |
+|---------|-------------|
+| [host-output-tokens](./host-output-tokens) | `hosts/*/host.js` consuming another host's runtime values (bound port, drive URL) through plain-JSON `$output`, `$concat` and `$env` tokens |
+
 ## Authorization
 
 | Project | Description |
 |---------|-------------|
+| [anonymous-subscriptions](./anonymous-subscriptions) | A tokenless WebSocket subscription admitted at `onConnect`, then filtered per document, and refused with a retryable 4403 |
 | [auth-preflight](./auth-preflight) | Asking the reactor what it would decide before submitting. One `evaluateActions` call answers a batch of candidate operations |
 | [document-acl](./document-acl) | Platform-enforced document ACLs via the auth scope, with zero authorization code in reducers |
 | [group-principals](./group-principals) | A `reactor-group` roster document decides who may approve via a `{ group }` grant |
@@ -58,5 +73,5 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 |---------|-------------|
 | [db-migrate](./db-migrate) | PostgreSQL database export, import, and migration scripts using Docker (no local pg tools required) |
 | [document-snapshot-exporter](./document-snapshot-exporter) | Read-after-write export of document state to JSON using IReactor consistency tokens |
-| [signed-operations-verifier](./signed-operations-verifier) | Standalone script that signs a document operation history with `RenownCryptoSigner`, then verifies every signature |
+| [signed-operations-verifier](./signed-operations-verifier) | Standalone script that signs a document operation history with `RenownCryptoSigner`, then verifies each operation with the checks a reactor runs, for v2 and legacy tuples |
 | [subscription-cli](./subscription-cli) | Monitors Reactor GraphQL subscriptions in real time |

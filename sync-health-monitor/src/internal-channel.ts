@@ -118,6 +118,17 @@ export class InternalChannel implements IChannel {
     /* no-op: the in-process bridge delivers operations as they are sent */
   }
 
+  notePoll(): void {
+    /* no-op: nothing polls this bridge, so it has no holder to hear from */
+  }
+
+  lastHolderPollUtcMs(): number | undefined {
+    // Both ends of this channel are in this process, so no remote holder is
+    // waiting on it. Making no liveness claim is what keeps the switchboard
+    // from removing the remote for a silence that means nothing here.
+    return undefined;
+  }
+
   getConnectionState(): ConnectionStateSnapshot {
     return this.snapshot;
   }

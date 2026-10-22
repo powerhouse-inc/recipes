@@ -1,48 +1,127 @@
 allowBuilds:
   '@apollo/protobufjs': true
   '@datadog/pprof': false
+  '@parcel/watcher': false
   '@prisma/client': true
   '@prisma/engines': true
+  '@reown/appkit': false
+  bufferutil: false
   esbuild: true
+  keccak: false
   msw: true
   onnxruntime-node: true
   prisma: true
   protobufjs: true
   sharp: true
   sqlite3: true
+  utf-8-validate: false
 
-# The 6.2.2-dev line (npm `dev` dist-tag). The document-drive package was
+# The 6.2.3-dev line (npm `dev` dist-tag). The document-drive package was
 # deleted upstream — its drive document model now lives at
 # @powerhousedao/shared/document-drive — and reactor declares its dependencies
 # properly from 6.1.0 on, so the whole family versions together as one group.
-# 6.2.2-dev.62 carries the ReactorBuilder.withDocumentModelSources rename the
-# recipes already use, the complete auth-scope enforcement stages (all four
-# feature flags through authConditions), the @powerhousedao/reactor-group
-# document model the group-principals recipe depends on,
-# IReactorClient.evaluateActions / useCanExecute (the read-only admission
-# preflight the auth-preflight recipe is built on), per-scope read filtering
-# (scoped-reads), and the document-model/mock subpath generateMock moved to.
-#
-# reactor-api is pinned with the family, but no published build carries the
-# HTTP scope API (subgraph.http) the hosted-webhooks recipe uses yet. That
-# recipe's README has the local link to use until one does.
+# Carried forward from the 6.2.2-dev line: the
+# ReactorBuilder.withDocumentModelSources rename the recipes already use, the
+# complete auth-scope enforcement stages (all four feature flags through
+# authConditions), the @powerhousedao/reactor-group document model the
+# group-principals recipe depends on, IReactorClient.evaluateActions /
+# useCanExecute (the read-only admission preflight the auth-preflight recipe is
+# built on), per-scope read filtering (scoped-reads), and the
+# document-model/mock subpath generateMock moved to.
+# 6.2.3-dev.4 added what anonymous-subscriptions reads: a tokenless websocket
+# answered as the http path answers it, and the two named 4403 close reasons
+# (authentication-required, bearer-rejected) that replaced graphql-ws's own
+# Forbidden.
+# 6.2.3-dev.25 carries action signature integrity: ISigner.signAction takes the
+# document and branch it signs for and emits a v2 tuple, the reactor verifies
+# every write it stores, new documents are v2-required, and SignerConfig takes
+# the trustPolicy the auth recipes give their reactors.
+# 6.2.3-dev.70 carries what package-styles builds against: packages ship only
+# their own CSS through Connect's package stylesheet entry
+# (@powerhousedao/connect/tailwind.css, powerhouse#3262), and ph build no longer
+# scans dist/browser's source maps for class names (f3bfe645e9).
+# It also carries the typed editor props editor-props is written against:
+# EditorProps<TDocument, TAction>, EditorModule's document and action type
+# parameters, and the DocumentDispatch export (powerhouse#3261).
+# 6.2.3-dev.71 carries what connect-routes runs against: Connect's studio boots
+# in a project that installs it (powerhouse#3266, #3265) and connect-core ships
+# its route files compiled (powerhouse#3268).
+# It also carries the host-core output tokens host-output-tokens resolves:
+# resolveHostOutputs and the $output, $concat and $env tokens (powerhouse#3258).
+# 6.2.3-dev.0 onward carries the HTTP scope API hosted-webhooks uses
+# (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 catalog:
-  "@powerhousedao/analytics-engine-browser": 6.2.2-dev.62
-  "@powerhousedao/analytics-engine-core": 6.2.2-dev.62
-  "@powerhousedao/ph-cli": 6.2.2-dev.62
-  "@powerhousedao/reactor": 6.2.2-dev.62
-  "@powerhousedao/reactor-api": 6.2.2-dev.62
-  "@powerhousedao/reactor-browser": 6.2.2-dev.62
-  "@powerhousedao/reactor-group": 6.2.2-dev.62
-  "@powerhousedao/shared": 6.2.2-dev.62
-  "@renown/sdk": 6.2.2-dev.62
-  document-model: 6.2.2-dev.62
+  "@powerhousedao/analytics-engine-browser": 6.2.3-dev.71
+  "@powerhousedao/analytics-engine-core": 6.2.3-dev.71
+  "@powerhousedao/builder-tools": 6.2.3-dev.71
+  "@powerhousedao/connect": 6.2.3-dev.71
+  "@powerhousedao/design-system": 6.2.3-dev.71
+  "@powerhousedao/host-core": 6.2.3-dev.71
+  "@powerhousedao/ph-cli": 6.2.3-dev.71
+  "@powerhousedao/reactor": 6.2.3-dev.71
+  "@powerhousedao/reactor-api": 6.2.3-dev.71
+  "@powerhousedao/reactor-browser": 6.2.3-dev.71
+  "@powerhousedao/reactor-group": 6.2.3-dev.71
+  "@powerhousedao/shared": 6.2.3-dev.71
+  "@renown/sdk": 6.2.3-dev.71
+  document-model: 6.2.3-dev.71
+
+minimumReleaseAgeExclude:
+  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.71'
+  - '@powerhousedao/analytics-engine-core@6.2.3-dev.71'
+  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.71'
+  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.71'
+  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.71'
+  - '@powerhousedao/builder-tools@6.2.3-dev.71'
+  - '@powerhousedao/codegen@6.2.3-dev.71'
+  - '@powerhousedao/common@6.2.3-dev.71'
+  - '@powerhousedao/config@6.2.3-dev.71'
+  - '@powerhousedao/connect-core@6.2.3-dev.71'
+  - '@powerhousedao/connect@6.2.3-dev.71'
+  - '@powerhousedao/design-system@6.2.3-dev.71'
+  - '@powerhousedao/host-core@6.2.3-dev.71'
+  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.71'
+  - '@powerhousedao/ph-cli@6.2.3-dev.71'
+  - '@powerhousedao/pieces-framework@6.2.3-dev.71'
+  - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.71'
+  - '@powerhousedao/reactor-api@6.2.3-dev.71'
+  - '@powerhousedao/reactor-attachments@6.2.3-dev.71'
+  - '@powerhousedao/reactor-browser@6.2.3-dev.71'
+  - '@powerhousedao/reactor-drive@6.2.3-dev.71'
+  - '@powerhousedao/reactor-group@6.2.3-dev.71'
+  - '@powerhousedao/reactor-mcp@6.2.3-dev.71'
+  - '@powerhousedao/reactor-privacy@6.2.3-dev.71'
+  - '@powerhousedao/reactor-router@6.2.3-dev.71'
+  - '@powerhousedao/reactor-workflow@6.2.3-dev.71'
+  - '@powerhousedao/reactor@6.2.3-dev.71'
+  - '@powerhousedao/shared@6.2.3-dev.71'
+  - '@powerhousedao/switchboard@6.2.3-dev.71'
+  - '@powerhousedao/vetra@6.2.3-dev.71'
+  - '@powerhousedao/workflow@6.2.3-dev.71'
+  - '@renown/sdk@6.2.3-dev.71'
+  - document-model@6.2.3-dev.71
+
+# powerhouse-vetra-packages, which Connect loads, imports these packages
+# without declaring them; 6.2.3-dev.71 still does. Without the extension it
+# resolves whatever copy pnpm hoists. With the whole family on the catalog that
+# copy is the same release, so the extension guards against drift rather than
+# fixing a mismatch. The key names one version: move it and the versions with
+# the catalog, or the extension stops applying.
+packageExtensions:
+  '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.71':
+    dependencies:
+      '@powerhousedao/design-system': 6.2.3-dev.71
+      '@powerhousedao/reactor-browser': 6.2.3-dev.71
+      '@powerhousedao/shared': 6.2.3-dev.71
+      document-model: 6.2.3-dev.71
 
 packages:
   - analytics-processor
+  - anonymous-subscriptions
   - audit-trail
   - auth-preflight
   - batch-progress
+  - connect-routes
   - db-migrate
   - cross-document-reactor
   - custom-read-model
@@ -51,11 +130,14 @@ packages:
   - document-snapshot-exporter
   - document-versioning
   - drive-override
+  - editor-props
   - external-feed-ingest
   - full-text-search
   - group-principals
+  - host-output-tokens
   - hosted-webhooks
   - inbound-webhook-bridge
+  - package-styles
   - positional-delete
   - rate-limiter
   - relational-db-subgraph

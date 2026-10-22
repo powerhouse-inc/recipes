@@ -274,14 +274,16 @@ operations barely matter here; the auth scope is the subject.
 
 **Demo walkthrough (flags: both):**
 1. Alice (signed creator) initializes a policy with no explicit auth-admin grant —
-   works, because the creator may always execute on scope `"auth"`.
+   works, because the creator may always execute on scope `"auth"`. The creator is
+   the key that signed the document header, and a header-signed document is created
+   legacy, because a v2-required document derives its id from its header instead.
 2. Alice grants Bob `{can:"execute", scope:"auth"}` — Bob can now `setGrant`.
 3. Bob tries to remove the grant that makes him admin while no other admin path exists
    → `AuthAdministrationLockoutError`; the policy refuses to orphan itself.
 4. Unsigned-creation variant: a document created without a signer has no creator
    carve-out, so `initializeAuth` *must* include a reachable auth-admin grant or it
    throws `AuthAdministrationMissingError`.
-5. Sidebar: `UNDO`/`REDO`/`PRUNE` are banned on the auth scope — policy history is
+5. Sidebar: `UNDO`/`REDO` are banned on the auth scope — policy history is
    append-only.
 
 **Key references:** guardrails `packages/shared/document-model/auth-v1.ts:372,395,475`,

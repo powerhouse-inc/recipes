@@ -17,6 +17,7 @@ import {
   JobStatus,
   ReactorBuilder,
   type IReactor,
+  type IReactorClient,
   type JobInfo,
 } from "@powerhousedao/reactor";
 import {
@@ -24,7 +25,7 @@ import {
   isDenied,
   sortOperations,
 } from "@powerhousedao/shared/document-model";
-import type { Action, ILogger, Operation } from "document-model";
+import type { ILogger, ISigner, Operation } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
 import {
   FieldLog,
@@ -32,26 +33,13 @@ import {
   utils,
   type FieldLogDocument,
 } from "document-models/field-log/v1";
+import { buildSignedReactor, createSigner } from "./signers.js";
 
 const STATION_A = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const STATION_B = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
 
 function label(address: string): string {
   return address === STATION_A ? "Station A" : "Station B";
-}
-
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "positional-delete-demo", key: `did:demo:${address}` },
-        signatures: [],
-      },
-    },
-  };
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -71,14 +59,21 @@ function quietLogger(): ILogger {
   };
 }
 
-async function buildReactor(): Promise<IReactor> {
-  return new ReactorBuilder()
-    .withDocumentModelSources([FieldLog, documentModelDocumentModelModule])
-    .withLogger(quietLogger())
-    .withExecutorConfig({
-      featureFlags: { documentDecisions: true },
-    })
-    .build();
+const clientsOf = new WeakMap<IReactor, Map<string, IReactorClient>>();
+
+/** A reactor hosted by `host`, with a client that signs as each station. */
+async function buildReactor(host: ISigner, peer: ISigner): Promise<IReactor> {
+  const { reactor, clients } = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([FieldLog, documentModelDocumentModelModule])
+      .withLogger(quietLogger())
+      .withExecutorConfig({
+        featureFlags: { documentDecisions: true },
+      }),
+    [host, peer],
+  );
+  clientsOf.set(reactor, clients);
+  return reactor;
 }
 
 async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
@@ -102,8 +97,9 @@ async function log(
   note: string,
 ): Promise<void> {
   await sleep(15); // give every operation its own millisecond
-  const job = await reactor.execute(docId, "main", [
-    signedBy(logObservation({ id, note }), station),
+  const client = clientsOf.get(reactor)!.get(station)!;
+  const job = await client.executeAsync(docId, "main", [
+    logObservation({ id, note }),
   ]);
   const done = await waitForJob(reactor, job);
   if (done.status === JobStatus.FAILED) {
@@ -159,14 +155,16 @@ async function main() {
   console.log("═══════════════════════════════════════════\n");
 
   process.stdout.write("Starting two reactors (documentDecisions on)...");
-  const reactorA = await buildReactor();
-  const reactorB = await buildReactor();
+  const stationA = await createSigner("positional-delete-demo", STATION_A);
+  const stationB = await createSigner("positional-delete-demo", STATION_B);
+  const reactorA = await buildReactor(stationA, stationB);
+  const reactorB = await buildReactor(stationB, stationA);
   console.log(" done\n");
 
   // Station A creates the log and records the first observation.
   const document = utils.createDocument();
   const docId = document.header.id;
-  await waitForJob(reactorA, await reactorA.create(document));
+  await waitForJob(reactorA, await reactorA.create(document, stationA));
   await log(reactorA, docId, STATION_A, "obs-wind", "wind 12 kn");
 
   // Station B receives the document and its history.
@@ -178,7 +176,7 @@ async function main() {
   await log(reactorB, docId, STATION_B, "obs-temp", "temp 18 °C");
 
   await sleep(15);
-  await waitForJob(reactorA, await reactorA.deleteDocument(docId));
+  await waitForJob(reactorA, await reactorA.deleteDocument(docId, stationA));
   console.log("[Station A] deleteDocument → ok (B doesn't know yet)");
 
   await log(reactorB, docId, STATION_B, "obs-humidity", "humidity 80 %");

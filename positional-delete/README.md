@@ -88,6 +88,13 @@ One operation, `LOG_OBSERVATION`, whose reducer only enforces id uniqueness. Del
 never touches model code: `DELETE_DOCUMENT` is a platform action on the `document`
 scope.
 
+`recordedBy` is the signer's address. Each station writes through a `ReactorClient`
+that signs with its own `RenownCryptoSigner` key (`buildSignedReactor` in
+`src/signers.ts`), and Station A signs the create and the delete by passing its
+signer to `reactor.create` and `reactor.deleteDocument`. A reactor that verifies
+signatures refuses an unsigned write to a v2-required document, and
+`utils.createDocument()` returns one on those releases.
+
 ## Tests
 
 ```sh

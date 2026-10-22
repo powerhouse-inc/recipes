@@ -13,6 +13,7 @@
     "@electric-sql/pglite": "^0.4.0",
     "@powerhousedao/reactor": "catalog:",
     "@powerhousedao/shared": "catalog:",
+    "@renown/sdk": "catalog:",
     "document-model": "catalog:"
   },
   "devDependencies": {

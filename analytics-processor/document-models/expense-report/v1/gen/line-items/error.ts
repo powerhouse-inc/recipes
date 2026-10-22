@@ -20,6 +20,8 @@ export class LineItemNotFound extends Error implements ReducerError {
 
 export const errors = {
   AddLineItem: { DuplicateLineItem },
+
   UpdateLineItem: { LineItemNotFound },
+
   DeleteLineItem: { LineItemNotFound },
 };

@@ -22,6 +22,11 @@ import {
   submitExpense,
   utils as expenseUtils,
 } from "document-models/expense-report/v1";
+import {
+  buildSignedReactor,
+  createSigner,
+  type SignedReactor,
+} from "./signers.js";
 
 const CLERK = "0xCccCcCcCCCcCcccCCccCcCccCCCCccCCcCCcCcC1";
 const MANAGER = "0xMmMmmMMmMmMMMMmmMMmmmmmmMMmmMMmmMmmMmMM2";
@@ -78,20 +83,6 @@ function quietLogger(): ILogger {
   };
 }
 
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "auth-preflight", key: `did:test:${address}` },
-        signatures: [],
-      },
-    },
-  };
-}
-
 async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
   for (;;) {
     const status = await reactor.getJobStatus(job.id);
@@ -106,7 +97,7 @@ async function waitForJob(reactor: IReactor, job: JobInfo): Promise<JobInfo> {
 }
 
 async function attempt(
-  reactor: IReactor,
+  { reactor, clients }: SignedReactor,
   docId: string,
   caller: string,
   action: Action,
@@ -114,7 +105,7 @@ async function attempt(
   await sleep(10);
   const done = await waitForJob(
     reactor,
-    await reactor.execute(docId, "main", [signedBy(action, caller)]),
+    await clients.get(caller)!.executeAsync(docId, "main", [action]),
   );
   return done.status === JobStatus.FAILED ? "deny" : "allow";
 }
@@ -141,33 +132,34 @@ async function main() {
 
   process.stdout.write("Starting reactor and client...");
   const t0 = performance.now();
-  const module = await new ReactorClientBuilder()
-    .withReactorBuilder(
-      new ReactorBuilder()
-        .withDocumentModelSources([
-          ExpenseReport,
-          documentModelDocumentModelModule,
-        ])
-        .withLogger(quietLogger())
-        .withExecutorConfig({
-          featureFlags: {
-            documentDecisions: true,
-            authEnforcement: true,
-            authGroups: true,
-            authConditions: true,
-          },
-        }),
-    )
-    .buildModule();
-  const reactor: IReactor = module.reactor;
-  const client: IReactorClient = module.client;
+  const manager = await createSigner("auth-preflight", MANAGER);
+  const clerk = await createSigner("auth-preflight", CLERK);
+  const session = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([
+        ExpenseReport,
+        documentModelDocumentModelModule,
+      ])
+      .withLogger(quietLogger())
+      .withExecutorConfig({
+        featureFlags: {
+          documentDecisions: true,
+          authEnforcement: true,
+          authGroups: true,
+          authConditions: true,
+        },
+      }),
+    [manager, clerk],
+  );
+  const reactor: IReactor = session.reactor;
+  const client: IReactorClient = session.module.client;
   console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 
   const document = expenseUtils.createDocument();
   const expenseId = document.header.id;
-  await waitForJob(reactor, await reactor.create(document));
+  await waitForJob(reactor, await reactor.create(document, manager));
   await attempt(
-    reactor,
+    session,
     expenseId,
     MANAGER,
     initializeAuth({ version: 1, grants: policy() }),
@@ -197,7 +189,7 @@ async function main() {
   console.log("  candidate                       predicted   actual");
   console.log("  ─────────────────────────────   ─────────   ──────");
   for (const [i, c] of candidates.entries()) {
-    const actual = await attempt(reactor, expenseId, CLERK, actionFor(c));
+    const actual = await attempt(session, expenseId, CLERK, actionFor(c));
     const verdict = predicted.evaluations[i];
     const mark = verdict.decision === actual ? "" : "   MISMATCH";
     console.log(
@@ -247,9 +239,14 @@ async function main() {
   });
   console.log(`  Asked as the clerk: ${beforeChange.evaluations[0].decision}`);
   console.log("  ...the manager now revokes the clerk's grant...");
-  await attempt(reactor, expenseId, MANAGER, removeGrant({ id: "g-clerk-small" }));
+  await attempt(
+    session,
+    expenseId,
+    MANAGER,
+    removeGrant({ id: "g-clerk-small" }),
+  );
   const outcome = await attempt(
-    reactor,
+    session,
     expenseId,
     CLERK,
     submitExpense({ id: "e9", memo: "pens", amountCents: 900 }),

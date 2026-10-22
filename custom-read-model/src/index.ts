@@ -2,6 +2,7 @@ import {
   ReactorBuilder,
   ReactorEventTypes,
   JobAwaiter,
+  JobStatus,
   type JobReadReadyEvent,
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
@@ -9,6 +10,11 @@ import {
   driveDocumentModelModule,
   driveCreateDocument,
 } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { DocumentCountReadModel } from "./document-count-read-model.js";
 
 /**
@@ -72,9 +78,20 @@ async function main() {
   // 4. Create a drive document — this triggers the full job lifecycle:
   //    JOB_PENDING → JOB_RUNNING → JOB_WRITE_READY → (preReady read models) → JOB_READ_READY → (postReady processors)
   console.log("Creating drive document...");
+  //    The create is signed: a reactor that verifies refuses unsigned writes.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "custom-read-model-demo",
+  );
   const driveDoc = driveCreateDocument();
-  const driveJob = await reactor.create(driveDoc);
-  await jobAwaiter.waitForJob(driveJob.id);
+  const driveJob = await jobAwaiter.waitForJob(
+    (await reactor.create(driveDoc, signer)).id,
+  );
+  if (driveJob.status === JobStatus.FAILED) {
+    throw new Error(`drive creation failed: ${driveJob.error?.message}`);
+  }
   console.log(`  Drive created: ${driveDoc.header.id}\n`);
 
   // 5. Show final state of the materialized view

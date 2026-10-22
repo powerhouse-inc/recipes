@@ -8,7 +8,6 @@ import {
   AuthEnforcementDisabledError,
   JobStatus,
   ReactorBuilder,
-  ReactorClientBuilder,
   type ActionCandidate,
   type IReactor,
   type IReactorClient,
@@ -20,7 +19,7 @@ import {
   removeGrant,
   type Grant,
 } from "@powerhousedao/shared/document-model";
-import type { Action, ILogger } from "document-model";
+import type { Action, ILogger, ISigner } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
 import {
   approveExpense,
@@ -28,7 +27,8 @@ import {
   submitExpense,
   utils as expenseUtils,
 } from "document-models/expense-report/v1";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { buildSignedReactor, createSigner } from "../src/signers.js";
 
 const CLERK = "0xCccCcCcCCCcCcccCCccCcCccCCCCccCCcCCcCcC1";
 const MANAGER = "0xMmMmmMMmMmMMMMmmMMmmmmmmMMmmMMmmMmmMmMM2";
@@ -97,34 +97,29 @@ function quietLogger(): ILogger {
   };
 }
 
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "auth-preflight-test", key: `did:test:${address}` },
-        signatures: [],
-      },
-    },
-  };
-}
-
 type Vault = { reactor: IReactor; client: IReactorClient };
 
+const signers = new Map<string, ISigner>();
+const clientsOf = new WeakMap<IReactor, Map<string, IReactorClient>>();
+
+beforeAll(async () => {
+  for (const address of [MANAGER, CLERK]) {
+    signers.set(address, await createSigner("auth-preflight-test", address));
+  }
+});
+
 async function boot(flags: Partial<typeof ALL_FLAGS>): Promise<Vault> {
-  const module = await new ReactorClientBuilder()
-    .withReactorBuilder(
-      new ReactorBuilder()
-        .withDocumentModelSources([
-          ExpenseReport,
-          documentModelDocumentModelModule,
-        ])
-        .withLogger(quietLogger())
-        .withExecutorConfig({ featureFlags: flags }),
-    )
-    .buildModule();
+  const { module, clients } = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([
+        ExpenseReport,
+        documentModelDocumentModelModule,
+      ])
+      .withLogger(quietLogger())
+      .withExecutorConfig({ featureFlags: flags }),
+    [...signers.values()],
+  );
+  clientsOf.set(module.reactor, clients);
   return { reactor: module.reactor, client: module.client };
 }
 
@@ -151,7 +146,9 @@ async function attempt(
   await sleep(10); // every operation gets its own millisecond
   const done = await settle(
     reactor,
-    await reactor.execute(docId, "main", [signedBy(action, caller)]),
+    await clientsOf.get(reactor)!.get(caller)!.executeAsync(docId, "main", [
+      action,
+    ]),
   );
   return done.status === JobStatus.FAILED ? "deny" : "allow";
 }
@@ -177,7 +174,8 @@ function candidate(
 
 async function policied(vault: Vault, extra: Grant[] = []): Promise<string> {
   const document = expenseUtils.createDocument();
-  await settle(vault.reactor, await vault.reactor.create(document));
+  const manager = signers.get(MANAGER);
+  await settle(vault.reactor, await vault.reactor.create(document, manager));
   await execute(
     vault.reactor,
     document.header.id,
@@ -436,7 +434,8 @@ describe("a reactor without authEnforcement", () => {
 
   it("refuses to answer rather than answering 'denied'", async () => {
     const document = expenseUtils.createDocument();
-    await settle(vault.reactor, await vault.reactor.create(document));
+    const manager = signers.get(MANAGER);
+  await settle(vault.reactor, await vault.reactor.create(document, manager));
 
     const asking = vault.client.evaluateActions(
       document.header.id,

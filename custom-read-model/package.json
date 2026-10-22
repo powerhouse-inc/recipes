@@ -11,9 +11,10 @@
     "start": "node --import tsx src/index.ts"
   },
   "dependencies": {
-    "document-model": "catalog:",
+    "@powerhousedao/reactor": "catalog:",
     "@powerhousedao/shared": "catalog:",
-    "@powerhousedao/reactor": "catalog:"
+    "@renown/sdk": "catalog:",
+    "document-model": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

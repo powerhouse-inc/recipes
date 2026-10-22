@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import type { Reducer, StateReducer } from "document-model";
-// at document-model@6.0.2-staging.2 these are only exported from the /core subpath
-import { createReducer, isDocumentAction } from "document-model/core";
+import { createReducer, isDocumentAction } from "document-model";
 import type { ExpenseReportPHState } from "document-models/expense-report/v1";
 
 import { expenseReportLineItemsOperations } from "../src/reducers/line-items.js";

@@ -16,6 +16,7 @@
     "@powerhousedao/reactor-browser": "catalog:",
     "@powerhousedao/reactor-group": "catalog:",
     "@powerhousedao/shared": "catalog:",
+    "@renown/sdk": "catalog:",
     "document-model": "catalog:",
     "zod": "^4.3.6"
   },
@@ -23,6 +24,7 @@
     "@powerhousedao/ph-cli": "catalog:",
     "@types/node": "^22.0.0",
     "tsx": "^4.0.0",
+    "vite": "^8.0.10",
     "vitest": "^4.1.0"
   }
 }

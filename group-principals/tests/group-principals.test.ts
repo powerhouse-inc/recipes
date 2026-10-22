@@ -8,6 +8,7 @@ import {
   JobStatus,
   ReactorBuilder,
   type IReactor,
+  type IReactorClient,
   type JobInfo,
 } from "@powerhousedao/reactor";
 import {
@@ -23,7 +24,7 @@ import {
   sortOperations,
   type Grant,
 } from "@powerhousedao/shared/document-model";
-import type { Action, ILogger, Operation } from "document-model";
+import type { Action, ILogger, ISigner, Operation } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
 import {
   approveExpense,
@@ -31,7 +32,8 @@ import {
   submitExpense,
   utils as expenseUtils,
 } from "document-models/expense-report/v1";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { buildSignedReactor, createSigner } from "../src/signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -87,36 +89,36 @@ function quietLogger(): ILogger {
   };
 }
 
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "group-principals-test", key: `did:test:${address}` },
-        signatures: [],
-      },
-    },
-  };
-}
+const signers = new Map<string, ISigner>();
+const clientsOf = new WeakMap<IReactor, Map<string, IReactorClient>>();
 
+beforeAll(async () => {
+  for (const address of [ALICE, BOB, CAROL]) {
+    signers.set(address, await createSigner("group-principals-tests", address));
+  }
+});
+
+/** A reactor that trusts every principal's key, with a signing client each. */
 async function buildReactor(): Promise<IReactor> {
-  return new ReactorBuilder()
-    .withDocumentModelSources([
-      ExpenseReport,
-      ReactorGroup,
-      documentModelDocumentModelModule,
-    ])
-    .withLogger(quietLogger())
-    .withExecutorConfig({
-      featureFlags: {
-        documentDecisions: true,
-        authEnforcement: true,
-        authGroups: true,
-      },
-    })
-    .build();
+  const { reactor, clients } = await buildSignedReactor(
+    new ReactorBuilder()
+      .withDocumentModelSources([
+        ExpenseReport,
+        ReactorGroup,
+        documentModelDocumentModelModule,
+      ])
+      .withLogger(quietLogger())
+      .withExecutorConfig({
+        featureFlags: {
+          documentDecisions: true,
+          authEnforcement: true,
+          authGroups: true,
+        },
+      }),
+    [...signers.values()],
+  );
+  clientsOf.set(reactor, clients);
+  return reactor;
 }
 
 async function settle(reactor: IReactor, job: JobInfo): Promise<void> {
@@ -139,7 +141,9 @@ async function execute(
   await sleep(10); // give every operation its own millisecond
   await settle(
     reactor,
-    await reactor.execute(docId, "main", [signedBy(action, caller)]),
+    await clientsOf.get(reactor)!.get(caller)!.executeAsync(docId, "main", [
+      action,
+    ]),
   );
 }
 
@@ -184,7 +188,7 @@ describe("group principals", () => {
 
     const roster = groupUtils.createDocument();
     rosterId = roster.header.id;
-    await settle(reactor, await reactor.create(roster));
+    await settle(reactor, await reactor.create(roster, signers.get(ALICE)));
     await execute(
       reactor,
       rosterId,
@@ -195,7 +199,7 @@ describe("group principals", () => {
 
     const expense = expenseUtils.createDocument();
     expenseId = expense.header.id;
-    await settle(reactor, await reactor.create(expense));
+    await settle(reactor, await reactor.create(expense, signers.get(ALICE)));
     await execute(
       reactor,
       expenseId,

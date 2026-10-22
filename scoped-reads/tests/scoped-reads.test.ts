@@ -1,7 +1,6 @@
 import {
   JobStatus,
   ReactorBuilder,
-  ReactorClientBuilder,
   type IReactor,
   type IReactorClient,
   type JobInfo,
@@ -20,13 +19,14 @@ import {
 } from "@powerhousedao/shared/document-model";
 import type { Action, ILogger } from "document-model";
 import { documentModelDocumentModelModule } from "document-model";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   addReviewNote,
   ExpenseReport,
   submitExpense,
   utils as expenseUtils,
 } from "document-models/expense-report/v1";
+import { buildSignedReactor, createSigner } from "../src/signers.js";
 
 const ALICE = "0xAAaAAaAaAAAAaaaAaAAaaAaAAAaAaAaAAAAAaAA0";
 const BOB = "0xBBBbbbBBbBbBBBBbbBBbbbbbBBbbBBbbBbbBbBB1";
@@ -52,31 +52,6 @@ function quietLogger(): ILogger {
     info: drop,
     warn: drop,
     error: drop,
-  };
-}
-
-function signerFor(address: string): ISigner {
-  return {
-    user: { address, networkId: "eip155", chainId: 1 },
-    app: { name: "scoped-reads", key: `did:test:${address}` },
-    publicKey: {} as CryptoKey,
-    sign: () => Promise.resolve(new Uint8Array(0)),
-    verify: () => Promise.resolve(),
-    signAction: () => Promise.resolve(["", "", "", "", ""] as never),
-  } as ISigner;
-}
-
-function signedBy<A extends Action>(action: A, address: string): A {
-  return {
-    ...action,
-    context: {
-      ...action.context,
-      signer: {
-        user: { address, networkId: "eip155", chainId: 1 },
-        app: { name: "scoped-reads", key: `did:test:${address}` },
-        signatures: [],
-      },
-    },
   };
 }
 
@@ -132,6 +107,16 @@ function expensesIn(document: PHDocument): unknown[] {
   return state.global?.expenses ?? [];
 }
 
+// Alice first: she is the host, and the client every read goes through.
+const signers = new Map<string, ISigner>();
+const clientsOf = new WeakMap<IReactor, Map<string, IReactorClient>>();
+
+beforeAll(async () => {
+  for (const address of [ALICE, BOB, CAROL]) {
+    signers.set(address, await createSigner("scoped-reads", address));
+  }
+});
+
 type Fixture = {
   reactor: IReactor;
   client: IReactorClient;
@@ -167,9 +152,8 @@ describe("scoped reads", () => {
     action: Action,
   ): Promise<JobInfo> {
     await sleep(15);
-    const job = await reactor.execute(docId, "main", [
-      signedBy(action, caller),
-    ]);
+    const client = clientsOf.get(reactor)!.get(caller)!;
+    const job = await client.executeAsync(docId, "main", [action]);
     return waitForJob(reactor, job);
   }
 
@@ -177,26 +161,25 @@ describe("scoped reads", () => {
   async function boot(
     flags: Partial<typeof ALL_FLAGS> = ALL_FLAGS,
   ): Promise<Fixture> {
-    const module = await new ReactorClientBuilder()
-      .withReactorBuilder(
-        new ReactorBuilder()
-          .withDocumentModelSources([
-            ExpenseReport,
-            ReactorGroup,
-            documentModelDocumentModelModule,
-          ])
-          .withLogger(quietLogger())
-          .withExecutorConfig({ featureFlags: flags }),
-      )
-      .withSigner(signerFor(ALICE))
-      .buildModule();
+    const { module, clients } = await buildSignedReactor(
+      new ReactorBuilder()
+        .withDocumentModelSources([
+          ExpenseReport,
+          ReactorGroup,
+          documentModelDocumentModelModule,
+        ])
+        .withLogger(quietLogger())
+        .withExecutorConfig({ featureFlags: flags }),
+      [...signers.values()],
+    );
 
     const reactor = module.reactor;
+    clientsOf.set(reactor, clients);
     live = reactor;
 
     const roster = groupUtils.createDocument();
     const rosterId = roster.header.id;
-    await waitForJob(reactor, await reactor.create(roster));
+    await waitForJob(reactor, await reactor.create(roster, signers.get(ALICE)));
     await step(
       reactor,
       rosterId,
@@ -218,7 +201,7 @@ describe("scoped reads", () => {
 
     const report = expenseUtils.createDocument();
     const reportId = report.header.id;
-    await waitForJob(reactor, await reactor.create(report));
+    await waitForJob(reactor, await reactor.create(report, signers.get(ALICE)));
     await step(
       reactor,
       reportId,

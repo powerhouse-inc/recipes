@@ -54,9 +54,14 @@ export class AddressAlreadyAdmin extends Error implements ReducerError {
 
 export const errors = {
   Bootstrap: { NotAuthorized, AlreadyBootstrapped },
+
   GrantAdmin: { NotAuthorized, NotAdmin },
+
   RevokeAdmin: { NotAuthorized, NotAdmin, CannotRevokeCreator, LastAdmin },
+
   AddMember: { NotAuthorized, NotAdmin, AddressAlreadyAdmin },
+
   RemoveMember: { NotAuthorized, NotAdmin },
+
   WriteNote: { NotAuthorized },
 };

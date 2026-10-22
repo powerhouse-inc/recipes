@@ -48,7 +48,15 @@ if (!address) throw new NotAuthorized("User is not authenticated");
 
 Role-mutating ops additionally call `requireAdmin(state, address)`, which throws `NotAdmin`. `v1/gen/reducer.ts` wraps the state reducer with `createReducer`, whose default `baseReducer` catches the throw and records `error.message` as `operation.error` on the resulting document. Callers inspect the operation log to detect rejection.
 
-The full implementation lives in `document-models/role-based-auth/v1/src/reducers/access.ts`, which codegen does not touch.
+The full implementation lives in `document-models/role-based-auth/v1/src/reducers/access.ts`. Codegen keeps its reducer bodies when it regenerates the model.
+
+## Regenerating the model
+
+```sh
+pnpm generate
+```
+
+This runs the catalog `ph-cli` against `document-models/role-based-auth/role-based-auth.json` and rewrites everything under `v1/gen/`, along with `v1/hooks.ts`, which imports `@powerhousedao/reactor-browser`. Edit the spec and regenerate rather than editing generated files.
 
 ## Running
 
@@ -65,4 +73,4 @@ The demo runs in order: Alice bootstraps, Bob is rejected from `writeNote`, Alic
 pnpm test
 ```
 
-The suite in `document-models/role-based-auth/v1/tests/access.test.ts` covers the single-bootstrap invariant, missing-signer rejection, and the creator-cannot-be-demoted rule.
+The suite in `document-models/role-based-auth/v1/tests/access.test.ts` covers the single-bootstrap invariant, missing-signer rejection, and the creator-cannot-be-demoted rule. `v1/tests/document-model.test.ts` is the codegen scaffold that checks document creation and the state and document type guards.

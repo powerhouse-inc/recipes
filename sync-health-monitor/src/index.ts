@@ -7,9 +7,14 @@ import {
   type IEventBus,
   type ReactorModule,
 } from "@powerhousedao/reactor";
-import { documentModelDocumentModelModule } from "document-model";
+import { documentModelDocumentModelModule, type ISigner } from "document-model";
 import { driveDocumentModelModule, driveCreateDocument } from "@powerhousedao/shared/document-drive";
 
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { SyncHealthMonitor } from "./health-monitor.js";
 import {
   createInternalChannelFactory,
@@ -54,6 +59,14 @@ async function main() {
   ]);
 
   const reactorA: IReactor = moduleA.reactor;
+  // Creates are signed: a reactor that verifies refuses unsigned writes.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "sync-health-monitor-demo",
+  );
+
   const eventBusA: IEventBus = moduleA.eventBus;
 
   const jobAwaiter = new JobAwaiter(eventBusA, (jobId, signal) =>
@@ -77,7 +90,7 @@ async function main() {
   // ------------------------------------------------------------------
   const driveDoc = driveCreateDocument();
   const driveId = driveDoc.header.id;
-  const driveJob = await reactorA.create(driveDoc);
+  const driveJob = await reactorA.create(driveDoc, signer);
   await jobAwaiter.waitForJob(driveJob.id);
 
   const jobAwaiterB = new JobAwaiter(moduleB.eventBus, (jobId, signal) =>
@@ -110,7 +123,14 @@ async function main() {
   // ------------------------------------------------------------------
   // 7. Generate sync traffic in phases
   // ------------------------------------------------------------------
-  await runDemo(moduleA, moduleB, reactorA, jobAwaiter, channelRegistry);
+  await runDemo(
+    moduleA,
+    moduleB,
+    reactorA,
+    jobAwaiter,
+    channelRegistry,
+    signer,
+  );
 
   // ------------------------------------------------------------------
   // 8. Keep dashboard running until Ctrl+C
@@ -138,13 +158,14 @@ async function runDemo(
   reactor: IReactor,
   jobAwaiter: JobAwaiter,
   channelRegistry: Map<string, InternalChannel>,
+  signer: ISigner,
 ) {
   // Phase 1 — Normal sync: create a document model document
   await sleep(3000);
   const docA = await import("document-model").then((m) =>
     m.documentModelCreateDocument(),
   );
-  const job1 = await reactor.create(docA);
+  const job1 = await reactor.create(docA, signer);
   await jobAwaiter.waitForJob(job1.id);
   // Dashboard should show: successCount +1
 
@@ -174,7 +195,7 @@ async function runDemo(
     m.documentModelCreateDocument(),
   );
   try {
-    const job2 = await reactor.create(docB);
+    const job2 = await reactor.create(docB, signer);
     await jobAwaiter.waitForJob(job2.id);
   } catch {
     // expected — sync may fail but job itself succeeds locally
@@ -190,7 +211,7 @@ async function runDemo(
   const docC = await import("document-model").then((m) =>
     m.documentModelCreateDocument(),
   );
-  const job3 = await reactor.create(docC);
+  const job3 = await reactor.create(docC, signer);
   await jobAwaiter.waitForJob(job3.id);
   // Dashboard should show: successCount +1
 }

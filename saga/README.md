@@ -4,7 +4,7 @@ Saga pattern via Reactor processor: operations on one document trigger operation
 
 ## What it demonstrates
 
-- **`IProcessor` as a saga coordinator**: `SagaProcessor.onOperations` reacts to incoming operations and dispatches the follow-up actions on other documents through `IReactor.execute()`
+- **`IProcessor` as a saga coordinator**: `SagaProcessor.onOperations` reacts to incoming operations and dispatches the follow-up actions on other documents through `IReactorClient.executeAsync()`, which signs each one with the client's signer (a reactor that verifies signatures refuses unsigned writes)
 - **Saga correlation via DB**: a `saga_id` ties every step together, tracked entirely in the processor's own `saga_log` table (no changes to document interfaces)
 - A re-entrancy guard keeps the processor from reacting to its own dispatched operations. `SagaProcessor` sets a `processing` flag while it dispatches, and `onOperations` returns immediately whenever that flag is already set (`src/processor.ts`).
 

@@ -6,6 +6,11 @@ import {
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
 import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import { exportWithReactor } from "./export-reactor.js";
 import { exportWithClient } from "./export-client.js";
 
@@ -36,6 +41,13 @@ async function main() {
   ];
 
   const t0 = performance.now();
+  // Writes are signed: a reactor that verifies refuses unsigned ones.
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "document-snapshot-exporter",
+  );
 
   if (mode === "reactor") {
     // Build the low-level reactor directly. This gives us an IReactor
@@ -49,6 +61,7 @@ async function main() {
     const result = await exportWithReactor(
       reactorModule.reactor,
       reactorModule.eventBus,
+      signer,
       outDir,
     );
 
@@ -67,6 +80,7 @@ async function main() {
       .withReactorBuilder(
         new ReactorBuilder().withDocumentModelSources(documentModels),
       )
+      .withSigner(signer)
       .buildModule();
     console.log(` done (${((performance.now() - t0) / 1000).toFixed(1)}s)\n`);
 

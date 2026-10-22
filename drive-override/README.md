@@ -4,7 +4,7 @@ A custom container document that tracks its children via the `ADD_RELATIONSHIP` 
 
 ## What it demonstrates
 
-- `reactor.execute(containerId, "main", [addRelationshipAction(...)])` links 10,000 child documents to the container, in batches of 100. The container model keeps no `nodes[]` array.
+- `client.executeAsync(containerId, "main", [addRelationshipAction(...)])` links 10,000 child documents to the container, in batches of 100. The container model keeps no `nodes[]` array. The `ReactorClient` is built with `withSigner`, so each action is signed for the container it lands in, and every create passes the same signer to `reactor.create`. A reactor that verifies signatures refuses unsigned writes.
 - Reading children back is a paged call: `documentIndexer.getOutgoing(containerId, ["contains"], { cursor, limit })`, advancing `cursor` until `nextCursor` is empty.
 - The graph runs both ways. `documentIndexer.getIncoming(childId)` returns the container as a parent.
 
@@ -31,7 +31,7 @@ That is the entire schema.
 |---|---|
 | `SET_METADATA({ name, description? })` | Sets the container's display metadata. |
 
-Children are added by dispatching `addRelationshipAction(containerId, childId, "contains")` directly to `reactor.execute()`, not through the container's own reducer.
+Children are added by dispatching `addRelationshipAction(containerId, childId, "contains")` through `client.executeAsync()`, not through the container's own reducer.
 
 ## GraphQL
 

@@ -1,26 +1,30 @@
+/**
+ * WARNING: DO NOT EDIT
+ * This file is auto-generated and updated by codegen
+ */
 import { createAction } from "document-model";
 import {
+  AddMemberInputSchema,
   BootstrapInputSchema,
   GrantAdminInputSchema,
-  RevokeAdminInputSchema,
-  AddMemberInputSchema,
   RemoveMemberInputSchema,
+  RevokeAdminInputSchema,
   WriteNoteInputSchema,
 } from "../schema/zod.js";
 import type {
+  AddMemberInput,
   BootstrapInput,
   GrantAdminInput,
-  RevokeAdminInput,
-  AddMemberInput,
   RemoveMemberInput,
+  RevokeAdminInput,
   WriteNoteInput,
 } from "../types.js";
 import type {
+  AddMemberAction,
   BootstrapAction,
   GrantAdminAction,
-  RevokeAdminAction,
-  AddMemberAction,
   RemoveMemberAction,
+  RevokeAdminAction,
   WriteNoteAction,
 } from "./actions.js";
 

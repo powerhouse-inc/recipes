@@ -3,7 +3,9 @@ import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   ReactorBuilder,
+  ReactorClientBuilder,
   JobAwaiter,
+  JobStatus,
   type IReactor,
 } from "@powerhousedao/reactor";
 import { documentModelDocumentModelModule } from "document-model";
@@ -13,6 +15,11 @@ import {
   Payment,
   type PaymentDocument,
 } from "document-models/payment/v1";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
 import {
   WebhookBridge,
   createWebhookServer,
@@ -53,12 +60,21 @@ describe("WebhookBridge over HTTP", () => {
   let documentId: string;
 
   beforeAll(async () => {
-    const built = await new ReactorBuilder()
-      .withDocumentModelSources([
-        documentModelDocumentModelModule,
-        driveDocumentModelModule,
-        Payment,
-      ])
+    const signer = new RenownCryptoSigner(
+      await new RenownCryptoBuilder()
+        .withKeyPairStorage(new MemoryKeyStorage())
+        .build(),
+      "inbound-webhook-bridge-test",
+    );
+    const built = await new ReactorClientBuilder()
+      .withReactorBuilder(
+        new ReactorBuilder().withDocumentModelSources([
+          documentModelDocumentModelModule,
+          driveDocumentModelModule,
+          Payment,
+        ]),
+      )
+      .withSigner(signer)
       .buildModule();
     reactor = built.reactor;
 
@@ -68,12 +84,12 @@ describe("WebhookBridge over HTTP", () => {
     const doc = createPaymentDocument({
       global: { orderId: ORDER_ID, amountCents: 4200, currency: "usd" },
     });
-    const job = await reactor.create(doc);
-    await awaiter.waitForJob(job.id);
+    const job = await awaiter.waitForJob((await reactor.create(doc, signer)).id);
+    if (job.status === JobStatus.FAILED) throw new Error(job.error?.message);
     awaiter.shutdown();
     documentId = doc.header.id;
 
-    bridge = new WebhookBridge(reactor, built.eventBus, async (orderId) =>
+    bridge = new WebhookBridge(built.client, built.eventBus, async (orderId) =>
       orderId === ORDER_ID ? documentId : null,
     );
     server = createWebhookServer({ secret: SECRET, bridge });
