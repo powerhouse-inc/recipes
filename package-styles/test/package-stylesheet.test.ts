@@ -45,6 +45,18 @@ describe("dist/style.css from ph build", () => {
     expect([...classes(css)].sort()).toEqual(["bg-brand", "text-red-700"]);
   });
 
+  it("skips dist/browser's source maps, so a class named in a comment stays out", () => {
+    // The map keeps editors/index.ts's comments; the bundle drops them.
+    const map = JSON.parse(
+      readFileSync(
+        join(recipeDir, "dist/browser/editors/index.js.map"),
+        "utf8",
+      ),
+    ) as { sourcesContent?: string[] };
+    expect(map.sourcesContent?.join("\n")).toMatch(/\bunderline\b/);
+    expect(classes(css)).not.toContain("underline");
+  });
+
   it("ships the package's own token, which bg-brand reads", () => {
     const brand = declarations(css, "--color-brand");
     expect(brand.map((d) => d.value)).toEqual(["#f60"]);
