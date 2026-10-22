@@ -27,8 +27,14 @@ first, so no one can probe for document ids. Webhook endpoints are flat and toke
 POST /webhooks/2f7c0b9d41a8e35c6d0f1b8e7a4c92d0
 ```
 
-`endpointFor(key)` mints the token, keyed by document id, so `request.key`
-names the document.
+`endpointFor(key)` mints the token, keyed by document id (a slug in the route
+is resolved first), so `request.key` names the document.
+
+Stripe sends every event on the account to every endpoint registered on it,
+and gives each endpoint its own signing secret. So a document applies only
+the events for the customer its first activation recorded, and acknowledges
+the rest. The manifest's single `STRIPE_WEBHOOK_SECRET` verifies one
+document's endpoint; with more than one document, override `secretFor`.
 
 ## A subgraph, not a processor
 
@@ -43,6 +49,10 @@ export class SubscriptionWebhooksSubgraph extends BaseSubgraph {
     this.endpoints = await registerSubscriptionEndpoints(this.http, {
       reactorClient: this.reactorClient,
       secretFor: (id) => this.secretFor(id),
+      access: {
+        canManage: (id, user) => this.mayManage(id, user),
+        canRead: (id, user) => this.mayRead(id, user),
+      },
     });
   }
 }
@@ -89,7 +99,9 @@ then disables the endpoint.
 The event maps by what Stripe reports, not by its type. A subscription event
 follows `data.object.status` (`active` and `trialing` activate, `past_due` and
 `unpaid` mark it past due, `canceled` cancels), and the plan and seats come
-from `items.data[0]`.
+from `items.data[0]`. Stripe does not order events, and this document keeps no
+watermark: an event its state refuses (a payment failure before the
+activation) is acknowledged and not retried.
 
 ## Two dedupe layers
 
