@@ -29,8 +29,9 @@ export default function Editor({
 
 ## Requirements
 
-Needs a Powerhouse release that includes
-[powerhouse#3261](https://github.com/powerhouse-inc/powerhouse/pull/3261).
+Needs Powerhouse 6.2.3-dev.70 or later, the first release with
+[powerhouse#3261](https://github.com/powerhouse-inc/powerhouse/pull/3261). The
+workspace catalog pins 6.2.3-dev.71.
 Editors written this way need a Connect with the same change.
 
 ## Run

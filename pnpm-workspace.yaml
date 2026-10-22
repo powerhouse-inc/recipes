@@ -40,6 +40,9 @@ allowBuilds:
 # their own CSS through Connect's package stylesheet entry
 # (@powerhousedao/connect/tailwind.css, powerhouse#3262), and ph build no longer
 # scans dist/browser's source maps for class names (f3bfe645e9).
+# It also carries the typed editor props editor-props is written against:
+# EditorProps<TDocument, TAction>, EditorModule's document and action type
+# parameters, and the DocumentDispatch export (powerhouse#3261).
 # 6.2.3-dev.71 carries what connect-routes runs against: Connect's studio boots
 # in a project that installs it (powerhouse#3266, #3265) and connect-core ships
 # its route files compiled (powerhouse#3268).
@@ -120,8 +123,8 @@ packages:
   - document-acl
   - document-snapshot-exporter
   - document-versioning
-  - editor-props
   - drive-override
+  - editor-props
   - external-feed-ingest
   - full-text-search
   - group-principals
