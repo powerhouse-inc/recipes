@@ -4,7 +4,7 @@
  * `MemoryWebhookStore`, all listening on a real socket (see `host.ts`). Every
  * request below is an actual HTTP request, so the refusals asserted here are
  * core's — the token lookup, the replay window, the HMAC over the received
- * octets, dedupe, the method check and the rate limit.
+ * octets, dedupe and the method check.
  */
 import {
   ReactorBuilder,
@@ -336,24 +336,6 @@ describe("a delivery", () => {
 
     expect(response.status).toBe(405);
   });
-
-  it("is shed once the declared rate is exhausted", async () => {
-    const documentId = await newSubscription();
-    const url = await endpointFor(documentId);
-
-    // `rateLimit: { perMinute: 120 }` is a token bucket of that capacity, so
-    // the first 120 get through to the method check and the next is shed. The
-    // loop rather than a fixed count because the bucket refills as it runs.
-    let attempts = 0;
-    let status = 0;
-    while (attempts < 200 && status !== 429) {
-      status = (await fetch(url, { method: "GET" })).status;
-      attempts += 1;
-    }
-
-    expect(status).toBe(429);
-    expect(attempts).toBeGreaterThan(120);
-  }, 60_000);
 });
 
 describe("a redelivery", () => {

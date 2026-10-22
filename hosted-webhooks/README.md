@@ -75,7 +75,6 @@ const endpoints = await scope.webhooks.register({
   name: "stripe",
   // Fixed for the family. Anything a document configures goes in policyFor.
   defaults: { methods: ["POST"] },
-  rateLimit: { perMinute: 120 },
   policyFor: async (documentId) => {
     const document = await load(documentId);
     if (!document) return undefined;
@@ -83,7 +82,7 @@ const endpoints = await scope.webhooks.register({
     return {
       dedupe: { field: "id", ttlSeconds: 3600 },
       verify: {
-        scheme: "stripe",
+        scheme: "hmac-timestamped",
         secret: await secretFor(documentId),
         toleranceSeconds: 300,
       },
@@ -95,8 +94,8 @@ const endpoints = await scope.webhooks.register({
 
 `undefined` disarms the endpoint, which core answers as an unknown token:
 `404 {"error":"Unknown endpoint"}`. By `onRequest`, a delivery is
-rate-limited, method-checked, size-capped, verified against the exact octets
-and de-duplicated. It answers `200` to an event it ignores: Stripe retries a
+method-checked, size-capped, verified against the exact octets and
+de-duplicated. It answers `200` to an event it ignores: Stripe retries a
 4xx, then disables the endpoint.
 
 ## Two dedupe layers
@@ -115,7 +114,7 @@ repeats across events.
 
 ```sh
 pnpm start   # nine deliveries against one document, three of which stick
-pnpm test    # verification, redelivery, disarming, rate limiting, the routes
+pnpm test    # verification, redelivery, disarming, the routes
 ```
 
 Both speak real HTTP to core's own stack: the Express adapter,

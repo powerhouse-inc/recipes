@@ -95,7 +95,7 @@ export async function registerSubscriptionEndpoints(
       // accepted unverified: the endpoint is configured as signed, and there is
       // nothing to verify against.
       verify: {
-        scheme: "stripe",
+        scheme: "hmac-timestamped",
         secret: await secretFor(documentId),
         toleranceSeconds: 300,
       },
@@ -103,8 +103,8 @@ export async function registerSubscriptionEndpoints(
   };
 
   /**
-   * A delivery core has already rate-limited, verified against the raw bytes,
-   * de-duplicated and method-checked. What is left is what the event means.
+   * A delivery core has already method-checked, size-capped, verified against
+   * the raw bytes and de-duplicated. What is left is what the event means.
    *
    * `request.key` is the document id this endpoint was minted for, so there is
    * no provider id to map back to a document, and the id is not in the URL.
@@ -158,9 +158,6 @@ export async function registerSubscriptionEndpoints(
     // in `policyFor`. The split is the point: `defaults` is a property of the
     // integration, `policyFor` is what the document configures.
     defaults: { methods: ["POST"] },
-    // The ceiling core applies per token, per registration. Capacity is the
-    // declared rate, so this bounds a runaway provider at 120 a minute.
-    rateLimit: { perMinute: 120 },
     policyFor,
     onRequest,
   });
@@ -196,7 +193,7 @@ export async function registerSubscriptionEndpoints(
       async (_request, ctx) => {
         const document = await load(ctx.params.id!);
         if (!document) return json(404, { error: "unknown subscription" });
-        if (!ctx.actor?.user && ctx.actor?.authEnabled) {
+        if (!ctx.user && ctx.authEnabled) {
           return json(401, { error: "sign in to read a subscription" });
         }
         const state = document.state.global;
