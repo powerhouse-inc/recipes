@@ -12,8 +12,10 @@ import {
   type IReactorClient,
 } from "@powerhousedao/reactor";
 import {
+  AuthorizationPolicy,
   AuthService,
   type AuthContext,
+  type IAuthorizationService,
   type IHttpScope,
 } from "@powerhousedao/reactor-api";
 import { driveDocumentModelModule } from "@powerhousedao/shared/document-drive";
@@ -36,6 +38,14 @@ import { SubscriptionWebhooksSubgraph } from "./subgraph.js";
 const PACKAGE_NAME = "@powerhousedao/example-hosted-webhooks";
 const SECRET = "whsec_test_secret";
 const OPERATOR_BEARER = "operator-token";
+const OPERATOR = "0xoperator";
+/** Signed in, and owns nothing. */
+const STRANGER_BEARER = "stranger-token";
+const STRANGER = "0xstranger";
+const USERS: Record<string, string> = {
+  [OPERATOR_BEARER]: OPERATOR,
+  [STRANGER_BEARER]: STRANGER,
+};
 
 /**
  * Core's `AuthService`, with only the credential check swapped out: minting a
@@ -51,23 +61,49 @@ class TestAuthService extends AuthService {
   ): Promise<AuthContext | Response> {
     const token = authorization?.split(" ")[1];
     if (!token) return super.verifyBearer(authorization);
-    if (token !== OPERATOR_BEARER) {
+    const address = USERS[token];
+    if (!address) {
       return new Response(JSON.stringify({ error: "Verification failed" }), {
         status: 401,
       });
     }
     return {
       user: {
-        address: "0xoperator",
+        address,
         chainId: 1,
         networkId: "eip155",
-        appKey: "did:key:operator",
+        appKey: `did:key:${address}`,
       },
       admins: [],
       auth_enabled: true,
     };
   }
 }
+
+/**
+ * The reactor's authorization service, as it answers under the
+ * DOCUMENT_PERMISSIONS policy, reduced to one owner per document: only the
+ * owner may read or manage it. Standing up the real one needs the host's
+ * permission tables, which are not this recipe's subject; what is tested here
+ * is that the routes ask it, and ask it before saying whether a document
+ * exists.
+ */
+const owners = new Map<string, string>();
+
+const ownerOnly: IAuthorizationService = {
+  config: {
+    admins: [],
+    defaultProtection: true,
+    policy: AuthorizationPolicy.DOCUMENT_PERMISSIONS,
+  },
+  isSupremeAdmin: () => false,
+  canCreate: (address) => address !== undefined,
+  canRead: (id, address) => Promise.resolve(owners.get(id) === address),
+  canWrite: (id, address) => Promise.resolve(owners.get(id) === address),
+  canManage: (id, address) => Promise.resolve(owners.get(id) === address),
+  canMutate: (id, _type, address) =>
+    Promise.resolve(owners.get(id) === address),
+};
 
 /** One signing secret per document, which is what `policyFor` resolves. */
 const secrets = new Map<string, string>();
@@ -125,7 +161,11 @@ async function bootPackage(): Promise<{
   });
   const packageScope = booted.scopeFor(PACKAGE_NAME);
   const packageSubgraph = new TestSubgraph(
-    subgraphArgs({ http: packageScope, reactorClient: faultyClient(client) }),
+    subgraphArgs({
+      http: packageScope,
+      reactorClient: faultyClient(client),
+      authorizationService: ownerOnly,
+    }),
   );
   await packageSubgraph.onSetup();
   return { host: booted, scope: packageScope, subgraph: packageSubgraph };
@@ -134,6 +174,7 @@ async function bootPackage(): Promise<{
 async function newSubscription(): Promise<string> {
   const document = await client.create(createSubscriptionDocument());
   secrets.set(document.header.id, SECRET);
+  owners.set(document.header.id, OPERATOR);
   return document.header.id;
 }
 
@@ -324,6 +365,43 @@ describe("the endpoint URL", () => {
     });
 
     expect(response.status).toBe(404);
+  });
+
+  it("is refused to a signed-in caller who does not manage the document", async () => {
+    const documentId = await newSubscription();
+
+    const asStranger = await api(
+      "POST",
+      `subscriptions/${documentId}/endpoint`,
+      { bearer: STRANGER_BEARER },
+    );
+    const missing = await api(
+      "POST",
+      "subscriptions/does-not-exist/endpoint",
+      { bearer: OPERATOR_BEARER },
+    );
+
+    // Not 403: "exists, but not yours" would tell a stranger the id is real.
+    expect(asStranger.status).toBe(404);
+    expect(await asStranger.json()).toEqual(await missing.json());
+  });
+
+  it("cannot be revoked by a caller who does not manage the document", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+
+    const revoke = await api(
+      "DELETE",
+      `subscriptions/${documentId}/endpoint`,
+      { bearer: STRANGER_BEARER },
+    );
+    expect(revoke.status).toBe(404);
+
+    const delivery = await send(
+      url,
+      stripeEvent("customer.subscription.created", "evt_still_armed"),
+    );
+    expect(delivery.status).toBe(200);
   });
 
   it("stops answering once revoked", async () => {
@@ -780,6 +858,27 @@ describe("the read route", () => {
       lastFailureReason: null,
       appliedEvents: 1,
     });
+  });
+
+  it("asks for sign-in before saying whether a document exists", async () => {
+    const response = await api("GET", "subscriptions/does-not-exist");
+
+    expect(response.status).toBe(401);
+  });
+
+  it("answers a signed-in stranger exactly as an unknown document", async () => {
+    const documentId = await newSubscription();
+
+    const asStranger = await api("GET", `subscriptions/${documentId}`, {
+      bearer: STRANGER_BEARER,
+    });
+    const missing = await api("GET", "subscriptions/does-not-exist", {
+      bearer: OPERATOR_BEARER,
+    });
+
+    expect(asStranger.status).toBe(404);
+    expect(missing.status).toBe(404);
+    expect(await asStranger.json()).toEqual(await missing.json());
   });
 
   it("reaches the handler without a bearer, which answers 401 itself", async () => {

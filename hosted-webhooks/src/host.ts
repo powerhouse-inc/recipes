@@ -15,6 +15,7 @@
  * reimplementation of it.
  */
 import {
+  AuthorizationPolicy,
   CORE_PACKAGE_NAME,
   createHttpAdapter,
   HttpRouteService,
@@ -22,6 +23,7 @@ import {
   WEBHOOK_SEGMENT,
   WebhookService,
   type AuthService,
+  type IAuthorizationService,
   type IHttpScope,
   type SubgraphArgs,
 } from "@powerhousedao/reactor-api";
@@ -105,14 +107,37 @@ export async function startHost(options: HostOptions = {}): Promise<ReactorHost>
 }
 
 /**
- * The `SubgraphArgs` a reactor injects, narrowed to the two fields this
- * package's `onSetup` reads. The rest — the GraphQL manager, the relational
- * db, the sync manager, the authorization service — is plumbing the reactor
- * owns and this recipe never touches, so standing it up outside one would
- * teach nothing. One cast, in one place, rather than at every call site.
+ * The `SubgraphArgs` a reactor injects, narrowed to the fields this package
+ * reads. The rest — the GraphQL manager, the relational db, the sync manager —
+ * is plumbing the reactor owns and this recipe never touches, so standing it
+ * up outside one would teach nothing. One cast, in one place, rather than at
+ * every call site.
  */
 export function subgraphArgs(
-  args: Pick<SubgraphArgs, "http" | "reactorClient">,
+  args: Pick<SubgraphArgs, "http" | "reactorClient" | "authorizationService">,
 ): SubgraphArgs {
   return args as unknown as SubgraphArgs;
+}
+
+/**
+ * The authorization service a reactor with authentication disabled hands its
+ * subgraphs: core's OPEN policy, under which every caller, anonymous included,
+ * may do everything. Core's own constructor for it is not exported, so this is
+ * the same answers spelled out.
+ */
+export function openAuthorization(): IAuthorizationService {
+  const allow = () => Promise.resolve(true);
+  return {
+    config: {
+      admins: [],
+      defaultProtection: false,
+      policy: AuthorizationPolicy.OPEN,
+    },
+    isSupremeAdmin: () => true,
+    canCreate: () => true,
+    canRead: allow,
+    canWrite: allow,
+    canManage: allow,
+    canMutate: allow,
+  };
 }

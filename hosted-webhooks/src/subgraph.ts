@@ -1,4 +1,9 @@
-import { BaseSubgraph, type SubgraphArgs } from "@powerhousedao/reactor-api";
+import {
+  BaseSubgraph,
+  type CanonicalDocumentId,
+  type RouteUser,
+  type SubgraphArgs,
+} from "@powerhousedao/reactor-api";
 import {
   registerSubscriptionEndpoints,
   type SubscriptionEndpoints,
@@ -32,7 +37,55 @@ export class SubscriptionWebhooksSubgraph extends BaseSubgraph {
     this.endpoints = await registerSubscriptionEndpoints(this.http, {
       reactorClient: this.reactorClient,
       secretFor: (documentId) => this.secretFor(documentId),
+      access: {
+        canManage: (documentId, user) => this.mayManage(documentId, user),
+        canRead: (documentId, user) => this.mayRead(documentId, user),
+      },
     });
+  }
+
+  /**
+   * Who may mint or revoke a subscription's endpoint, and who may read it.
+   * Ownership is the reactor's own: `canManage` is true for a host admin, the
+   * document's owner, or a holder of an ADMIN grant on it, and `canRead`
+   * follows the document's protection. Under the host's policy that means
+   * OPEN (auth disabled) allows everyone, ADMIN_ONLY allows the ADMINS list,
+   * and DOCUMENT_PERMISSIONS decides per document. Override these to apply a
+   * different rule; `user` is undefined for an anonymous caller.
+   */
+  protected async mayManage(
+    documentId: string,
+    user: RouteUser | undefined,
+  ): Promise<boolean> {
+    const id = await this.canonicalId(documentId);
+    return (
+      id !== undefined && this.authorizationService.canManage(id, user?.address)
+    );
+  }
+
+  protected async mayRead(
+    documentId: string,
+    user: RouteUser | undefined,
+  ): Promise<boolean> {
+    const id = await this.canonicalId(documentId);
+    return (
+      id !== undefined && this.authorizationService.canRead(id, user?.address)
+    );
+  }
+
+  /**
+   * The authorization service keys on the canonical id, so a slug is resolved
+   * first. An id that does not resolve is refused, the same as one the caller
+   * may not see.
+   */
+  private async canonicalId(
+    documentId: string,
+  ): Promise<CanonicalDocumentId | undefined> {
+    try {
+      return await this.resolveCanonicalDocumentId(documentId, {});
+    } catch {
+      return undefined;
+    }
   }
 
   /**

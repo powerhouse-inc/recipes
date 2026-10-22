@@ -2,6 +2,7 @@ import type { IReactorClient } from "@powerhousedao/reactor";
 import type {
   IHttpScope,
   IWebhookEndpoints,
+  RouteUser,
   ScopedRouteHandle,
   WebhookPolicy,
   WebhookReply,
@@ -33,7 +34,28 @@ export interface SubscriptionEndpointDeps {
    * the host keeps secrets, never from the document's public state.
    */
   secretFor: (documentId: string) => Promise<string | undefined>;
+  /**
+   * Who may do what to one subscription. Signing in only proves who the
+   * caller is; these say whether that caller owns this document. The subgraph
+   * answers them with the reactor's own authorization service, so they follow
+   * the host's policy.
+   */
+  access: SubscriptionAccess;
 }
+
+export interface SubscriptionAccess {
+  /** Mint or revoke the document's Stripe endpoint. */
+  canManage(documentId: string, user: RouteUser | undefined): Promise<boolean>;
+  /** Read the state the deliveries produced. */
+  canRead(documentId: string, user: RouteUser | undefined): Promise<boolean>;
+}
+
+/**
+ * The answer for a document the caller may not touch, and for one that does
+ * not exist. They are the same answer on purpose: a different one for "exists,
+ * but not yours" would let any signed-in caller probe for document ids.
+ */
+const UNKNOWN_SUBSCRIPTION = { error: "unknown subscription" };
 
 export interface SubscriptionEndpoints {
   endpoints: IWebhookEndpoints;
@@ -97,7 +119,7 @@ export async function registerSubscriptionEndpoints(
   scope: IHttpScope,
   deps: SubscriptionEndpointDeps,
 ): Promise<SubscriptionEndpoints> {
-  const { reactorClient, secretFor } = deps;
+  const { reactorClient, secretFor, access } = deps;
 
   /**
    * The document, or undefined when it does not exist. Any other failure
@@ -238,11 +260,16 @@ export async function registerSubscriptionEndpoints(
     /**
      * The URL to paste into Stripe. Minting is idempotent per document, so
      * asking twice returns the same endpoint, and the document id is not in it.
+     * The route's default `renown` auth has already refused a caller with no
+     * bearer; what is left is whether this caller manages this document.
      */
     scope.post("subscriptions/:id/endpoint", async (_request, ctx) => {
       const documentId = ctx.params.id!;
-      if (!(await load(documentId))) {
-        return json(404, { error: "unknown subscription" });
+      if (
+        !(await access.canManage(documentId, ctx.user)) ||
+        !(await load(documentId))
+      ) {
+        return json(404, UNKNOWN_SUBSCRIPTION);
       }
       const minted = await endpoints.endpointFor(documentId);
       return json(200, { url: minted.url, createdAt: minted.createdAt });
@@ -250,24 +277,34 @@ export async function registerSubscriptionEndpoints(
 
     /** Retires the URL. A later mint for the same document issues a new token. */
     scope.delete("subscriptions/:id/endpoint", async (_request, ctx) => {
-      await endpoints.revoke(ctx.params.id!);
+      const documentId = ctx.params.id!;
+      if (!(await access.canManage(documentId, ctx.user))) {
+        return json(404, UNKNOWN_SUBSCRIPTION);
+      }
+      await endpoints.revoke(documentId);
       return new Response(null, { status: 204 });
     }),
 
     /**
      * The state the deliveries have produced. `renown-optional` because the
      * handler makes its own decision about who may read a document: an
-     * anonymous caller arrives as an actor with no user instead of a 401.
+     * anonymous caller arrives with no user instead of a 401. Sign-in is
+     * checked first, then access, then existence, so neither an anonymous
+     * caller nor a signed-in stranger learns which ids exist.
      */
     scope.get(
       "subscriptions/:id",
       { auth: "renown-optional" },
       async (_request, ctx) => {
-        const document = await load(ctx.params.id!);
-        if (!document) return json(404, { error: "unknown subscription" });
         if (!ctx.user && ctx.authEnabled) {
           return json(401, { error: "sign in to read a subscription" });
         }
+        const documentId = ctx.params.id!;
+        if (!(await access.canRead(documentId, ctx.user))) {
+          return json(404, UNKNOWN_SUBSCRIPTION);
+        }
+        const document = await load(documentId);
+        if (!document) return json(404, UNKNOWN_SUBSCRIPTION);
         const state = document.state.global;
         return json(200, {
           customerId: state.customerId,

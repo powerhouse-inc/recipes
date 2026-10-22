@@ -11,7 +11,7 @@ import {
   Subscription,
   type SubscriptionDocument,
 } from "document-models/subscription/v1";
-import { startHost, subgraphArgs } from "./host.js";
+import { openAuthorization, startHost, subgraphArgs } from "./host.js";
 import { stripeSignature } from "./stripe-signature.js";
 import { SubscriptionWebhooksSubgraph } from "./subgraph.js";
 
@@ -64,7 +64,12 @@ async function main() {
   // Exactly what the reactor does when it loads this package: construct the
   // subgraph with its namespaced scope, then run onSetup.
   const subgraph = new SubscriptionWebhooksSubgraph(
-    subgraphArgs({ http: scope, reactorClient: client }),
+    subgraphArgs({
+      http: scope,
+      reactorClient: client,
+      // Auth is disabled on this host, so the reactor's policy is OPEN.
+      authorizationService: openAuthorization(),
+    }),
   );
   process.env.STRIPE_WEBHOOK_SECRET = SECRET;
   await subgraph.onSetup();
