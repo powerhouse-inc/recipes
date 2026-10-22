@@ -65,6 +65,7 @@ const subscriptionObject = z
 const invoiceObject = z
   .object({
     object: z.literal("invoice"),
+    customer: z.string().min(1),
     attempt_count: z.number().int().nonnegative().nullish(),
     next_payment_attempt: z.number().int().nullish(),
     last_finalization_error: z
@@ -141,6 +142,23 @@ export function parseStripeEvent(body: unknown): ParseResult {
     };
   }
   return { ok: true, event: { kind: "unhandled", id, type } };
+}
+
+/**
+ * The Stripe customer an event is about, or undefined for an event this
+ * endpoint does not read. Stripe sends every event on the account to every
+ * endpoint registered on it, so this is how a delivery is matched to the one
+ * customer a document follows.
+ */
+export function customerOf(event: StripeEvent): string | undefined {
+  switch (event.kind) {
+    case "subscription":
+      return event.subscription.customer;
+    case "invoice.payment_failed":
+      return event.invoice.customer;
+    case "unhandled":
+      return undefined;
+  }
 }
 
 /**

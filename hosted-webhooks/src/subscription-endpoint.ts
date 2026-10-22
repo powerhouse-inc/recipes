@@ -9,7 +9,11 @@ import type {
   WebhookRequest,
 } from "@powerhousedao/reactor-api";
 import type { SubscriptionDocument } from "document-models/subscription/v1";
-import { actionForEvent, parseStripeEvent } from "./stripe-events.js";
+import {
+  actionForEvent,
+  customerOf,
+  parseStripeEvent,
+} from "./stripe-events.js";
 
 /** The endpoint family's name. It distinguishes families, and never appears in a URL. */
 const ENDPOINT_NAME = "stripe";
@@ -216,6 +220,15 @@ export async function registerSubscriptionEndpoints(
     // history.
     if (document.state.global.processedEventIds.includes(event.id)) {
       return reply({ duplicate: event.id });
+    }
+
+    // Stripe sends every event on the account to every endpoint registered on
+    // it, whatever subscription the event is about. A document follows the
+    // customer its first activation recorded, and acknowledges the rest
+    // without applying them: they belong to another document's endpoint.
+    const bound = document.state.global.customerId;
+    if (bound && customerOf(event) !== bound) {
+      return reply({ ignored: event.type, reason: "another customer" });
     }
 
     // Canceled is final, and the reducer refuses every action on it. Answering

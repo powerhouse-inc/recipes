@@ -761,6 +761,46 @@ describe("a delivery the package could not process", () => {
   });
 });
 
+describe("an event about another customer", () => {
+  it("is acknowledged and not applied, since Stripe sends every endpoint everything", async () => {
+    const documentId = await newSubscription();
+    const url = await endpointFor(documentId);
+    await send(
+      url,
+      stripeEvent("customer.subscription.created", "evt_mine", {
+        customer: "cus_mine",
+      }),
+    );
+
+    const theirs = [
+      stripeEvent("customer.subscription.created", "evt_theirs_1", {
+        customer: "cus_theirs",
+        quantity: 9,
+      }),
+      stripeEvent("invoice.payment_failed", "evt_theirs_2", {
+        customer: "cus_theirs",
+      }),
+      stripeEvent("customer.subscription.deleted", "evt_theirs_3", {
+        customer: "cus_theirs",
+      }),
+    ];
+    for (const body of theirs) {
+      const response = await send(url, body);
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        reason: "another customer",
+      });
+    }
+
+    expect(await state(documentId)).toMatchObject({
+      customerId: "cus_mine",
+      seats: 1,
+      status: "ACTIVE",
+      processedEventIds: ["evt_mine"],
+    });
+  });
+});
+
 describe("an event type the endpoint does not act on", () => {
   it("is acknowledged rather than retried", async () => {
     const documentId = await newSubscription();
@@ -789,7 +829,12 @@ describe("a canceled subscription", () => {
         quantity: 1,
       }),
     );
-    await send(url, stripeEvent("customer.subscription.deleted", "evt_b"));
+    await send(
+      url,
+      stripeEvent("customer.subscription.deleted", "evt_b", {
+        customer: "cus_2",
+      }),
+    );
     expect(await state(documentId)).toMatchObject({ status: "CANCELED" });
 
     // A late event for a canceled subscription is not an error Stripe can fix,
@@ -797,7 +842,7 @@ describe("a canceled subscription", () => {
     // toward disabling the endpoint.
     const late = await send(
       url,
-      stripeEvent("invoice.payment_failed", "evt_c"),
+      stripeEvent("invoice.payment_failed", "evt_c", { customer: "cus_2" }),
     );
 
     expect(late.status).toBe(200);
