@@ -125,9 +125,12 @@ export async function registerSubscriptionEndpoints(
     // A load that fails rather than finding nothing throws through here, and
     // core answers 500. That is safe to retry: core resolves the policy before
     // it records the delivery's dedupe key, so Stripe's retry is processed.
+    // Only a document that does not exist disarms its endpoint. A canceled
+    // subscription stays armed: Stripe keeps delivering after the cancel
+    // (retries of earlier events, late invoices), and a 404 for those is a
+    // 4xx Stripe retries and then counts toward disabling the endpoint.
     const document = await load(documentId);
     if (!document) return undefined;
-    if (document.state.global.status === "CANCELED") return undefined;
 
     return {
       // Stripe's event id is the top-level `id`, so a bare field name reaches
@@ -191,6 +194,12 @@ export async function registerSubscriptionEndpoints(
     // history.
     if (document.state.global.processedEventIds.includes(event.id)) {
       return reply({ duplicate: event.id });
+    }
+
+    // Canceled is final, and the reducer refuses every action on it. Answering
+    // here says so without writing a refused operation into history.
+    if (document.state.global.status === "CANCELED") {
+      return reply({ rejected: action.type, status: "CANCELED" });
     }
 
     // `execute` throws only when the write itself failed: the job errored,

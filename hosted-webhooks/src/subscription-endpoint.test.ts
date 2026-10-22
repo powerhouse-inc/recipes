@@ -484,8 +484,8 @@ describe("an event type the endpoint does not act on", () => {
   });
 });
 
-describe("a disarmed endpoint", () => {
-  it("answers exactly as a token that was never minted", async () => {
+describe("a canceled subscription", () => {
+  it("keeps its endpoint armed and acknowledges later deliveries", async () => {
     const documentId = await newSubscription();
     const url = await endpointFor(documentId);
     await send(
@@ -498,15 +498,42 @@ describe("a disarmed endpoint", () => {
     await send(url, stripeEvent("customer.subscription.deleted", "evt_b"));
     expect(await state(documentId)).toMatchObject({ status: "CANCELED" });
 
+    // A late event for a canceled subscription is not an error Stripe can fix,
+    // so it is answered 200 rather than a 4xx Stripe would retry and count
+    // toward disabling the endpoint.
+    const late = await send(
+      url,
+      stripeEvent("invoice.payment_failed", "evt_c"),
+    );
+
+    expect(late.status).toBe(200);
+    expect(await late.json()).toEqual({
+      rejected: "MARK_PAST_DUE",
+      status: "CANCELED",
+    });
+    expect((await state(documentId)).processedEventIds).toEqual([
+      "evt_a",
+      "evt_b",
+    ]);
+  });
+});
+
+describe("a disarmed endpoint", () => {
+  it("answers exactly as a token that was never minted", async () => {
+    // Minted for a key with no document behind it: `policyFor` returns
+    // undefined, which is what disarming is.
+    const url = await endpointFor("not-a-subscription");
+
     const disarmed = await send(
       url,
-      stripeEvent("customer.subscription.created", "evt_c"),
+      stripeEvent("customer.subscription.created", "evt_disarmed"),
     );
     const unknown = await send(
       `${host.publicUrl}/webhooks/${"f".repeat(32)}`,
       "{}",
     );
 
+    expect(disarmed.status).toBe(404);
     expect(disarmed.status).toBe(unknown.status);
     expect(await disarmed.text()).toBe(await unknown.text());
   });
