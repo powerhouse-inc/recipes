@@ -74,14 +74,19 @@ The tests need the same Powerhouse release as the steps above.
 
 ## Migrating an existing project
 
-`ph migrate` removes the old package-CSS imports, creates `hosts/connect/style.css` if missing,
-and warns when the root `style.css` sets custom properties or `:root`, `html`, `body` or `.dark`
-rules. It does not move them: move the ones that are this Connect's theme into the host file,
-or they ship with the package and re-theme every Connect that installs it. The warning also
-fires on the package's own tokens, such as this recipe's `--color-brand`. Keep those in the
-root file.
+`ph migrate` removes the old package-CSS imports and moves Connect's theme overrides out of
+the root `style.css` into `hosts/connect/style.css`. It moves the design system's and core's
+semantic tokens set under `:root`, `html`, `:host`, `.dark` or `[data-theme]`, because
+`ph build` ships `style.css` to every Connect that loads the package. The package's own tokens,
+such as this recipe's `--color-brand`, stay in the root file. Running it again changes nothing.
+
+It moves rules only into a host file that is new or still empty, and only top-level rules with
+theme selectors. Otherwise it leaves `style.css` as it is and warns, naming each rule and token,
+so move those by hand. It also does not cover design-system palette overrides inside the
+package's own `@theme` block, or selectors like `:root:not(.dark)`.
 
 A Tailwind host that imported `@powerhousedao/connect-core/theme.css` for core's classes now
 imports `@powerhousedao/connect-core/tailwind.css`.
 
-Source: [powerhouse#3262](https://github.com/powerhouse-inc/powerhouse/pull/3262).
+Source: [powerhouse#3262](https://github.com/powerhouse-inc/powerhouse/pull/3262) and
+[powerhouse#3283](https://github.com/powerhouse-inc/powerhouse/pull/3283).
