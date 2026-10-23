@@ -40,4 +40,28 @@ describe("withHost", () => {
     ).rejects.toThrow("boom");
     expect(stop).toHaveBeenCalledOnce();
   });
+
+  it("removes the data dir when spawnHost rejects", async () => {
+    let dataDir = "";
+    const spawnHost: SpawnHost = async (options) => {
+      dataDir = options.dataDir;
+      throw new Error("not ready");
+    };
+    await expect(
+      withHost(spawnHost, { projectRoot: ".", host: "sb" }, async () => 1),
+    ).rejects.toThrow("not ready");
+    expect(existsSync(dataDir)).toBe(false);
+  });
+
+  it("removes the data dir and keeps the callback's error when stop fails", async () => {
+    const { spawnHost, stop } = fakeSpawnHost();
+    stop.mockRejectedValueOnce(new Error("stop failed"));
+    let dataDir = "";
+    await expect(
+      withHost(spawnHost, { projectRoot: ".", host: "sb" }, async (host) => {
+        dataDir = host.dataDir;
+      }),
+    ).rejects.toThrow("stop failed");
+    expect(existsSync(dataDir)).toBe(false);
+  });
 });

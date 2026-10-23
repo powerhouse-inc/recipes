@@ -40,11 +40,14 @@ export async function withHost<T>(
   use: (host: SpawnedHost) => Promise<T>,
 ): Promise<T> {
   const dataDir = await mkdtemp(join(tmpdir(), "ph-spawn-"));
-  const host = await spawnHost({ ...options, dataDir });
   try {
-    return await use(host);
+    const host = await spawnHost({ ...options, dataDir });
+    try {
+      return await use(host);
+    } finally {
+      await host.stop();
+    }
   } finally {
-    await host.stop();
     await rm(dataDir, { recursive: true, force: true });
   }
 }

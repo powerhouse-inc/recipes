@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "start": "node --import tsx src/demo.ts <projectRoot> <host>"
+    "start": "node --import tsx src/demo.ts"
   },
   "dependencies": {
     "@powerhousedao/host-core": "catalog:"
