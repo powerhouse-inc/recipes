@@ -134,6 +134,7 @@ packages:
   - external-feed-ingest
   - full-text-search
   - group-principals
+  - host-check
   - host-output-tokens
   - hosted-webhooks
   - inbound-webhook-bridge
