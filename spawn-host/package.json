@@ -1,0 +1,21 @@
+{
+  "name": "@powerhousedao/example-spawn-host",
+  "version": "0.0.0",
+  "description": "Example: launching a ph run host from code with a clean env and its own data dir, then stopping it",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts <projectRoot> <host>"
+  },
+  "dependencies": {
+    "@powerhousedao/host-core": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}
