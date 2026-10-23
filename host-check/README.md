@@ -24,7 +24,7 @@ Finding out that a host file is wrong by running it means one failure per attemp
 | `hosts/needs-env` | A host whose storage directory is `{ $env: "REACTOR_DATA_DIR" }` |
 | `hosts/bad-runner` | A host naming a runner module the project does not install |
 | `src/check.ts` | `checkHosts`, a thin wrapper over `checkHost`, and `formatReport` |
-| `src/demo.ts` | Checks all three hosts under two environments and exits 1 on any issue |
+| `src/demo.ts` | Checks the hosts under three environments; two fail on purpose, so it exits 1 |
 
 ## Running
 
@@ -42,5 +42,7 @@ FEATURE_UNIFORM_RUNNERS_ENABLED=1 ph host check switchboard --env ci.env
 `--env <file>` replaces the shell environment for the check. Without it the check sees the project `.env` under the shell environment. The exit code is 1 on any issue.
 
 ## Requirements
+
+The hosts name `@powerhousedao/ph-cli/runners/switchboard`, so `ph-cli` is a dependency although `src` never imports it: `checkHost` resolves the runner from the project root. `ph host check` itself is not exercised here.
 
 Needs a `@powerhousedao/host-core` release that exports `checkHost` (powerhouse PR #3287). The latest published version at the time of writing, 6.2.3-dev.73, does not. Raise the `pnpm-workspace.yaml` catalog to the first release that does. This recipe has not been run against a published build.

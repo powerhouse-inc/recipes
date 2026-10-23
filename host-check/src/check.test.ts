@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { checkHosts, formatReport } from "./check.js";
 
 const only = async (host: string, env: Record<string, string>) =>
@@ -17,11 +17,11 @@ describe("host check", () => {
   });
 
   it("checks against the env it is given, not process.env", async () => {
-    process.env.REACTOR_WORKERS = "2";
+    vi.stubEnv("REACTOR_WORKERS", "2");
     try {
       expect((await only("switchboard", {})).issues).toEqual([]);
     } finally {
-      delete process.env.REACTOR_WORKERS;
+      vi.unstubAllEnvs();
     }
   });
 

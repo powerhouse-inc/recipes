@@ -1,4 +1,8 @@
-import { checkHost, type HostIssue } from "@powerhousedao/host-core";
+import {
+  checkHost,
+  type CheckHostResult,
+  type HostIssue,
+} from "@powerhousedao/host-core";
 import { fileURLToPath } from "node:url";
 
 export const projectRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -6,6 +10,8 @@ export const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 export interface HostReport {
   host: string;
   issues: HostIssue[];
+  /** `$output` tokens checked declared-only: a clean report does not cover them. */
+  deferred: CheckHostResult["deferred"];
 }
 
 /**
@@ -20,16 +26,31 @@ export async function checkHosts(
   return Promise.all(
     hosts.map(async (host) => ({
       host,
-      issues: (await checkHost(host, { projectRoot, env })).issues,
+      ...(await checkHost(host, { projectRoot, env })),
     })),
   );
 }
 
-/** One line per issue: its stage, the path inside the host file, the message. */
-export function formatReport({ host, issues }: HostReport): string {
-  if (issues.length === 0) return `hosts/${host}/host.js: ok`;
-  const lines = issues.map(
-    (i) => `  ${i.stage}  ${i.path ? `${i.path}: ` : ""}${i.message}`,
-  );
-  return [`hosts/${host}/host.js`, ...lines].join("\n");
+/** Issues grouped by the file they came from, with each hint under its issue. */
+export function formatReport({ host, issues, deferred }: HostReport): string {
+  if (issues.length === 0) {
+    const note =
+      deferred.length > 0
+        ? `\n  ${deferred.length} output token(s) checked declared-only`
+        : "";
+    return `hosts/${host}/host.js: ok${note}`;
+  }
+  const byFile = new Map<string, HostIssue[]>();
+  for (const issue of issues) {
+    byFile.set(issue.file, [...(byFile.get(issue.file) ?? []), issue]);
+  }
+  return [...byFile]
+    .map(([file, found]) => {
+      const lines = found.flatMap((i) => {
+        const line = `  ${i.stage}  ${i.path ? `${i.path}: ` : ""}${i.message}`;
+        return i.hint ? [line, `    hint: ${i.hint}`] : [line];
+      });
+      return [file, ...lines].join("\n");
+    })
+    .join("\n\n");
 }

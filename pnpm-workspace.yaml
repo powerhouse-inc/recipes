@@ -48,6 +48,9 @@ allowBuilds:
 # its route files compiled (powerhouse#3268).
 # It also carries the host-core output tokens host-output-tokens resolves:
 # resolveHostOutputs and the $output, $concat and $env tokens (powerhouse#3258).
+# host-check needs the first release after 6.2.3-dev.73 that carries checkHost
+# and ph host check (powerhouse#3287); the pin is not raised yet, so that recipe
+# does not build until it is.
 # 6.2.3-dev.0 onward carries the HTTP scope API hosted-webhooks uses
 # (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 catalog:
