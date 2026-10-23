@@ -74,16 +74,25 @@ The tests need the same Powerhouse release as the steps above.
 
 ## Migrating an existing project
 
-`ph migrate` removes the old package-CSS imports and moves Connect's theme overrides out of
-the root `style.css` into `hosts/connect/style.css`. It moves the design system's and core's
-semantic tokens set under `:root`, `html`, `:host`, `.dark` or `[data-theme]`, because
-`ph build` ships `style.css` to every Connect that loads the package. The package's own tokens,
-such as this recipe's `--color-brand`, stay in the root file. Running it again changes nothing.
+`ph migrate` removes the old package-CSS imports and creates `hosts/connect/style.css` if it
+is missing. It then moves Connect's theme overrides out of the root `style.css` into that file:
+the design system's and core's semantic tokens set under `:root`, `html`, `:host`, `.dark` or
+`[data-theme]`. `ph build` ships `style.css` to every Connect that loads the package, so these
+would re-theme them all. The package's own tokens, such as this recipe's `--color-brand`, stay
+in the root file. Running it again changes nothing.
 
-It moves rules only into a host file that is new or still empty, and only top-level rules with
-theme selectors. Otherwise it leaves `style.css` as it is and warns, naming each rule and token,
-so move those by hand. It also does not cover design-system palette overrides inside the
-package's own `@theme` block, or selectors like `:root:not(.dark)`.
+The move has conditions, checked per rule:
+
+- It moves only into a host file that is new or still empty. If the host file has rules of its
+  own, nothing moves and the warning names each rule and token.
+- Only top-level rules with theme selectors move. Rules that are nested, inside `@layer` or
+  `@media`, or whose selector also targets other elements (such as `:root, body`) stay in
+  `style.css` and are named in the warning. Move them by hand.
+- It still warns about `html` and `body` rules, which ship with the package.
+
+Two cases stay in `style.css` with no warning, so check for them yourself: design-system
+palette overrides inside the package's own `@theme` block, and selectors like
+`:root:not(.dark)`.
 
 A Tailwind host that imported `@powerhousedao/connect-core/theme.css` for core's classes now
 imports `@powerhousedao/connect-core/tailwind.css`.
