@@ -11,7 +11,8 @@
     "start": "node --import tsx src/demo.ts"
   },
   "dependencies": {
-    "@powerhousedao/host-core": "catalog:"
+    "@powerhousedao/host-core": "catalog:",
+    "@powerhousedao/ph-cli": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
