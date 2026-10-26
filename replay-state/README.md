@@ -4,16 +4,18 @@
 
 ## How it works
 
-The demo renames one document `Draft`, `Review`, `Final`. It then registers four processors with `startFrom: "beginning"`, one per mode, so each replays the same history. Each `DeliveryRecorder` records the document name found in `resultingState` for every operation it receives.
+The demo renames one document `Draft`, `Review`, `Final`. It then registers four processors with `startFrom: "beginning"`, one per mode, so each replays the same history. Each `DeliveryRecorder` records the scope, the action type and the document name found in `resultingState` for every operation it receives.
 
 | `replayState` | What the three renames delivered |
 |---------------|----------------------------------|
 | `latest` (default) | Three operations, each with `Final`, the document's latest state |
-| `collapse` | One delivery for the `SET_NAME` stream, with `Final`; the operations it covers are skipped |
+| `collapse` | One delivery, the last rename, with `Final`; the two before it are skipped |
 | `exact` | Three operations with `Draft`, `Review`, `Final`, the state at each revision. Slower |
 | `operations` | Three operations with no state |
 
-`CREATE_DOCUMENT` and `UPGRADE_DOCUMENT` operations are delivered too and are ignored by the table. Under `collapse` they arrive as their own deliveries, one per scope. After the processors catch up, a fourth rename (`Published`) shows the live case: a live delivery always carries the executor's state, whatever the mode.
+A replay stream is one document, scope and branch. The renames are in the `global` scope. `CREATE_DOCUMENT` and `UPGRADE_DOCUMENT` are in the `document` scope, a second stream, and the table leaves them out. `collapse` cuts that stream to its last operation too, so it arrives as `UPGRADE_DOCUMENT` alone.
+
+After the processors catch up, a fourth rename (`Published`) shows the live case. All four modes receive it with the executor's state: `replayState` applies only to replays.
 
 ## Choosing a mode
 
@@ -26,10 +28,10 @@ The demo renames one document `Draft`, `Review`, `Final`. It then registers four
 
 | Module | Purpose |
 |--------|---------|
-| `src/recorder.ts` | `DeliveryRecorder`: an `IProcessor` that records the name in each delivery's state |
-| `src/scenario.ts` | Builds the reactor, applies the renames, registers one processor per mode |
+| `src/recorder.ts` | `DeliveryRecorder`: an `IProcessor` that records the scope, action type and state name of each delivery |
+| `src/scenario.ts` | Builds the reactor, applies the renames, registers one processor per mode, applies the live rename |
 | `src/demo.ts` | Prints what each mode delivered |
-| `tests/replay-state.test.ts` | Asserts the table above |
+| `tests/replay-state.test.ts` | Asserts the table above and the live delivery for each mode |
 
 ## Run it
 

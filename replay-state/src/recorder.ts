@@ -4,6 +4,8 @@ import type { OperationWithContext } from "document-model";
 /** What one `onOperations` call saw for one operation. */
 export type Delivery = {
   ordinal: number;
+  /** The operation's scope; a replay stream is one document, scope and branch. */
+  scope: string;
   actionType: string;
   /** The name in `context.resultingState`, or `null` when no state came with it. */
   stateName: string | null;
@@ -21,6 +23,7 @@ export class DeliveryRecorder implements IProcessor {
     for (const { operation, context } of operations) {
       this.deliveries.push({
         ordinal: context.ordinal,
+        scope: context.scope,
         actionType: operation.action.type,
         stateName: readName(context.resultingState),
       });

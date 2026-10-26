@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Delivery } from "../src/recorder.js";
-import { runScenario, type ScenarioResult } from "../src/scenario.js";
+import { MODES, runScenario, type ScenarioResult } from "../src/scenario.js";
 
 const setNames = (deliveries: Delivery[]) =>
   deliveries.filter((d) => d.actionType === "SET_NAME");
@@ -16,10 +16,13 @@ describe("replayState", () => {
     expect(names).toEqual(["Final", "Final", "Final"]);
   });
 
-  it("collapse: one delivery per document stream (scope), with the latest state", () => {
-    const deliveries = setNames(result.replay.collapse);
-    expect(deliveries).toHaveLength(1);
-    expect(deliveries[0]!.stateName).toBe("Final");
+  it("collapse: one delivery per stream (scope), its last operation, with the latest state", () => {
+    expect(
+      result.replay.collapse.map((d) => [d.scope, d.actionType, d.stateName]),
+    ).toEqual([
+      ["document", "UPGRADE_DOCUMENT", "Final"],
+      ["global", "SET_NAME", "Final"],
+    ]);
   });
 
   it("exact: every operation carries the state at its own revision", () => {
@@ -33,8 +36,11 @@ describe("replayState", () => {
     expect(deliveries.every((d) => d.stateName === null)).toBe(true);
   });
 
-  it("a live delivery carries the executor's state whatever the mode", () => {
-    expect(result.live.actionType).toBe("SET_NAME");
-    expect(result.live.stateName).toBe("Published");
-  });
+  it.each(MODES)(
+    "%s: a live delivery carries the executor's state",
+    (mode) => {
+      expect(result.live[mode].actionType).toBe("SET_NAME");
+      expect(result.live[mode].stateName).toBe("Published");
+    },
+  );
 });

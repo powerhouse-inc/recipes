@@ -26,8 +26,8 @@ export type Mode = (typeof MODES)[number];
 export type ScenarioResult = {
   /** Deliveries each mode saw when it replayed the history from the start. */
   replay: Record<Mode, Delivery[]>;
-  /** The delivery a processor saw for an operation applied after it caught up. */
-  live: Delivery;
+  /** The delivery each mode saw for an operation applied after it caught up. */
+  live: Record<Mode, Delivery>;
 };
 
 const NAMES = ["Draft", "Review", "Final"];
@@ -116,12 +116,13 @@ export async function runScenario(): Promise<ScenarioResult> {
       setName("Published"),
     ]);
     await settle(liveJob.id);
-    await until(() =>
-      recorders.latest.deliveries.some((d) => d.stateName === "Published"),
-    );
-    const live = recorders.latest.deliveries.find(
-      (d) => d.stateName === "Published",
-    )!;
+    // The live operation is the first delivery after the replay.
+    const liveDelivery = (m: Mode) =>
+      recorders[m].deliveries[replay[m].length];
+    await until(() => MODES.every((m) => liveDelivery(m) !== undefined));
+    const live = Object.fromEntries(
+      MODES.map((m) => [m, liveDelivery(m)!]),
+    ) as Record<Mode, Delivery>;
 
     return { replay, live };
   } finally {
