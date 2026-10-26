@@ -13,7 +13,7 @@ The demo renames one document `Draft`, `Review`, `Final`. It then registers four
 | `exact` | Three operations with `Draft`, `Review`, `Final`, the state at each revision. Slower |
 | `operations` | Three operations with no state |
 
-`CREATE_DOCUMENT` and `UPGRADE_DOCUMENT` operations are delivered too and are ignored by the table. After the processors catch up, a fourth rename (`Published`) shows the live case: a live delivery always carries the executor's state, whatever the mode.
+`CREATE_DOCUMENT` and `UPGRADE_DOCUMENT` operations are delivered too and are ignored by the table. Under `collapse` they arrive as their own deliveries, one per scope. After the processors catch up, a fourth rename (`Published`) shows the live case: a live delivery always carries the executor's state, whatever the mode.
 
 ## Choosing a mode
 

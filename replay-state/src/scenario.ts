@@ -81,11 +81,10 @@ export async function runScenario(): Promise<ScenarioResult> {
 
     const recorders = {} as Record<Mode, DeliveryRecorder>;
     for (const mode of MODES) {
-      const processor = new DeliveryRecorder();
-      recorders[mode] = processor;
       await processorManager.registerFactory(`replay-${mode}`, () => [
         {
-          processor,
+          // One recorder per call, so a second call cannot interleave deliveries.
+          processor: (recorders[mode] = new DeliveryRecorder()),
           filter: {
             branch: ["main"],
             documentType: ["powerhouse/document-model"],
@@ -95,20 +94,34 @@ export async function runScenario(): Promise<ScenarioResult> {
         },
       ]);
     }
-    await until(() => MODES.every((m) => recorders[m].deliveries.length > 0));
+    // `collapse` delivers the three renames as one, the others as three.
+    const expected: Record<Mode, number> = {
+      latest: NAMES.length,
+      collapse: 1,
+      exact: NAMES.length,
+      operations: NAMES.length,
+    };
+    await until(() =>
+      MODES.every(
+        (m) => recorders[m]?.deliveries.filter(isRename).length >= expected[m],
+      ),
+    );
     await settleQuiet();
 
     const replay = Object.fromEntries(
       MODES.map((m) => [m, [...recorders[m].deliveries]]),
     ) as Record<Mode, Delivery[]>;
 
-    const before = recorders.latest.deliveries.length;
     const liveJob = await client.executeAsync(doc.header.id, "main", [
       setName("Published"),
     ]);
     await settle(liveJob.id);
-    await until(() => recorders.latest.deliveries.length > before);
-    const live = recorders.latest.deliveries[before]!;
+    await until(() =>
+      recorders.latest.deliveries.some((d) => d.stateName === "Published"),
+    );
+    const live = recorders.latest.deliveries.find(
+      (d) => d.stateName === "Published",
+    )!;
 
     return { replay, live };
   } finally {
@@ -116,6 +129,8 @@ export async function runScenario(): Promise<ScenarioResult> {
     reactor.kill();
   }
 }
+
+const isRename = (d: Delivery) => d.actionType === "SET_NAME";
 
 async function until(done: () => boolean, timeoutMs = 15_000): Promise<void> {
   const start = Date.now();
