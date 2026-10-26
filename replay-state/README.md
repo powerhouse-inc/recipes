@@ -1,6 +1,6 @@
 # Replay State
 
-`ProcessorRecord.replayState` chooses what `context.resultingState` holds when a processor is replayed. A replay is the first install, a catch-up after a restart, a rerun or a retry. The operation index keeps no resulting state, so the reactor has to supply it, and it can do so four ways.
+`ProcessorRecord.replayState` chooses what `context.resultingState` holds when a processor is replayed. A replay is the first install, a catch-up after a restart, a rerun or a retry. The operation index keeps no resulting state, so on a replay the reactor rebuilds it, and `replayState` picks one of four modes, one of which sends no state.
 
 ## How it works
 
