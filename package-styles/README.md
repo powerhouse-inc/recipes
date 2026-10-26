@@ -81,6 +81,10 @@ the design system's and core's semantic tokens set under `:root`, `html`, `:host
 would re-theme them all. The package's own tokens, such as this recipe's `--color-brand`, stay
 in the root file. Running it again changes nothing.
 
+The move needs powerhouse#3283, first published in `@powerhousedao/ph-cli` 6.2.3-dev.74.
+`ph migrate` runs the release it migrates to, so migrate to that one or later. Earlier
+releases, including 6.2.3, only warn and move nothing.
+
 The move has conditions, checked per rule:
 
 - It moves only into a host file that is new or still empty. If the host file has rules of its
