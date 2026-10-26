@@ -24,6 +24,8 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | Project | Description |
 |---------|-------------|
 | [host-output-tokens](./host-output-tokens) | `hosts/*/host.js` consuming another host's runtime values (bound port, drive URL) through plain-JSON `$output`, `$concat` and `$env` tokens |
+| [host-check](./host-check) | `checkHost` and `ph host check`: every load, declared, resolve, resolved and boot issue a host would hit under `ph run`, reported at once against an injected env |
+| [spawn-host](./spawn-host) | `spawnHost` launching `ph run <host>` as a child with a clean env, its own `PH_USER_DATA_DIR` and `PH_NO_DOTENV`, ready when its run record appears |
 
 ## Authorization
 

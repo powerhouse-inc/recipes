@@ -48,8 +48,9 @@ allowBuilds:
 # its route files compiled (powerhouse#3268).
 # It also carries the host-core output tokens host-output-tokens resolves:
 # resolveHostOutputs and the $output, $concat and $env tokens (powerhouse#3258).
-# 6.2.3-dev.77 carries ProcessorRecord.replayState, which replay-state sets
-# per processor (powerhouse#3289 documents it).
+# 6.2.3-dev.77 carries what host-check builds against: host-core's checkHost,
+# which runs the ph run pipeline up to the verb and returns every issue, and
+# the ph host check command over it (powerhouse#3287).
 # 6.2.3-dev.0 onward carries the HTTP scope API hosted-webhooks uses
 # (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 catalog:
@@ -104,7 +105,7 @@ minimumReleaseAgeExclude:
   - document-model@6.2.3-dev.77
 
 # powerhouse-vetra-packages, which Connect loads, imports these packages
-# without declaring them; 6.2.3-dev.71 still does. Without the extension it
+# without declaring them; 6.2.3-dev.77 still does. Without the extension it
 # resolves whatever copy pnpm hoists. With the whole family on the catalog that
 # copy is the same release, so the extension guards against drift rather than
 # fixing a mismatch. The key names one version: move it and the versions with
@@ -136,6 +137,7 @@ packages:
   - external-feed-ingest
   - full-text-search
   - group-principals
+  - host-check
   - host-output-tokens
   - hosted-webhooks
   - inbound-webhook-bridge
@@ -149,6 +151,7 @@ packages:
   - saga
   - scoped-reads
   - semantic-search
+  - spawn-host
   - signed-operations-verifier
   - subscription-cli
   - sync-health-monitor
