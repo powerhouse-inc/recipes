@@ -11,7 +11,7 @@ const environments = {
     env: {},
   },
   "REACTOR_DATA_DIR set: every host that can pass does": {
-    hosts: ["switchboard", "needs-env"],
+    hosts: ["switchboard", "needs-env", "connect"],
     env: { REACTOR_DATA_DIR: "./.ph/data" },
   },
 };
