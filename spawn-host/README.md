@@ -40,4 +40,4 @@ The fixture sets `runner.port: 0`. The switchboard reports the port the OS bound
 
 ## Requirements
 
-`@powerhousedao/host-core` 6.2.3-dev.74 or later, the first release that exports `spawnHost`. The recipe takes host-core and `@powerhousedao/ph-cli` from the workspace catalog; that ph-cli is the one `spawnHost` runs, and it needs the uniform runners (`@powerhousedao/ph-cli/runners/switchboard`).
+`@powerhousedao/host-core` 6.2.3-dev.74 or later, the first release that exports `spawnHost`. The recipe takes host-core and `@powerhousedao/ph-cli` from the workspace catalog; port 0 needs a ph-cli that includes powerhouse PR #3285 (later than 6.2.3-dev.77; older ones reject it). That ph-cli is the one `spawnHost` runs, and it needs the uniform runners (`@powerhousedao/ph-cli/runners/switchboard`).

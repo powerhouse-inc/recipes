@@ -1,4 +1,6 @@
 import { existsSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnHost, type SpawnedHost } from "@powerhousedao/host-core";
@@ -83,24 +85,33 @@ describe("withHost with the real spawnHost", () => {
   it(
     "gives two concurrent hosts their own ports",
     async () => {
-      const options = {
+      const opts = {
         projectRoot,
         host: "switchboard",
         readyTimeoutMs: READY_TIMEOUT_MS,
       };
-      await withHost(spawnHost, options, async (first) => {
-        await withHost(spawnHost, options, async (second) => {
-          const a = (first.outputs as SwitchboardOutputs).origin;
-          const b = (second.outputs as SwitchboardOutputs).origin;
-          expect(a).not.toBe(b);
-          for (const origin of [a, b]) {
-            const health = await fetch(`${origin}/health`, {
-              signal: AbortSignal.timeout(10_000),
-            });
-            expect(health.status).toBe(200);
-          }
-        });
-      });
+      // Both start at once, so a shared-resource race at boot would show.
+      const hosts = await Promise.all([
+        spawnHost({ ...opts, dataDir: await mkdtemp(join(tmpdir(), "ph-a-")) }),
+        spawnHost({ ...opts, dataDir: await mkdtemp(join(tmpdir(), "ph-b-")) }),
+      ]);
+      const origins = hosts.map(
+        (h) => (h.outputs as SwitchboardOutputs).origin,
+      );
+      try {
+        for (const origin of origins) {
+          const health = await fetch(`${origin}/health`, {
+            signal: AbortSignal.timeout(10_000),
+          });
+          expect(health.status).toBe(200);
+        }
+        expect(origins[0]).not.toBe(origins[1]);
+      } finally {
+        await Promise.all(hosts.map((h) => h.stop()));
+        await Promise.all(
+          hosts.map((h) => rm(h.dataDir, { recursive: true, force: true })),
+        );
+      }
     },
     TEST_TIMEOUT_MS,
   );
