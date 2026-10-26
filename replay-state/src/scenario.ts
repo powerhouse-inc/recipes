@@ -1,0 +1,145 @@
+import {
+  JobAwaiter,
+  JobStatus,
+  ReactorBuilder,
+  ReactorClientBuilder,
+} from "@powerhousedao/reactor";
+import {
+  documentModelCreateDocument,
+  documentModelDocumentModelModule,
+  setName,
+} from "document-model";
+import {
+  driveCreateDocument,
+  driveDocumentModelModule,
+} from "@powerhousedao/shared/document-drive";
+import {
+  MemoryKeyStorage,
+  RenownCryptoBuilder,
+  RenownCryptoSigner,
+} from "@renown/sdk/node";
+import { DeliveryRecorder, type Delivery } from "./recorder.js";
+
+export const MODES = ["latest", "collapse", "exact", "operations"] as const;
+export type Mode = (typeof MODES)[number];
+
+export type ScenarioResult = {
+  /** Deliveries each mode saw when it replayed the history from the start. */
+  replay: Record<Mode, Delivery[]>;
+  /** The delivery each mode saw for an operation applied after it caught up. */
+  live: Record<Mode, Delivery>;
+};
+
+const NAMES = ["Draft", "Review", "Final"];
+
+/**
+ * Applies three renames to one document, then registers one processor per
+ * `replayState` mode with `startFrom: "beginning"`, so each replays the same
+ * history. A fourth rename is applied once they have caught up and shows what
+ * a live delivery carries.
+ */
+export async function runScenario(): Promise<ScenarioResult> {
+  const signer = new RenownCryptoSigner(
+    await new RenownCryptoBuilder()
+      .withKeyPairStorage(new MemoryKeyStorage())
+      .build(),
+    "replay-state",
+  );
+  const clientModule = await new ReactorClientBuilder()
+    .withReactorBuilder(
+      new ReactorBuilder().withDocumentModelSources([
+        documentModelDocumentModelModule,
+        driveDocumentModelModule,
+      ]),
+    )
+    .withSigner(signer)
+    .buildModule();
+  const { client } = clientModule;
+  const { reactor, eventBus, processorManager } = clientModule.reactorModule!;
+
+  const awaiter = new JobAwaiter(eventBus, (jobId, signal) =>
+    reactor.getJobStatus(jobId, signal),
+  );
+  const settle = async (jobId: string) => {
+    const job = await awaiter.waitForJob(jobId);
+    if (job.status === JobStatus.FAILED) {
+      throw new Error(`job ${jobId} failed: ${job.error?.message}`);
+    }
+  };
+
+  try {
+    // A processor factory runs once per drive, so a drive has to exist.
+    await settle((await reactor.create(driveCreateDocument(), signer)).id);
+    const doc = documentModelCreateDocument();
+    await settle((await reactor.create(doc, signer)).id);
+    for (const name of NAMES) {
+      const job = await client.executeAsync(doc.header.id, "main", [
+        setName(name),
+      ]);
+      await settle(job.id);
+    }
+
+    const recorders = {} as Record<Mode, DeliveryRecorder>;
+    for (const mode of MODES) {
+      await processorManager.registerFactory(`replay-${mode}`, () => [
+        {
+          // One recorder per call, so a second call cannot interleave deliveries.
+          processor: (recorders[mode] = new DeliveryRecorder()),
+          filter: {
+            branch: ["main"],
+            documentType: ["powerhouse/document-model"],
+          },
+          startFrom: "beginning" as const,
+          replayState: mode,
+        },
+      ]);
+    }
+    // `collapse` delivers the three renames as one, the others as three.
+    const expected: Record<Mode, number> = {
+      latest: NAMES.length,
+      collapse: 1,
+      exact: NAMES.length,
+      operations: NAMES.length,
+    };
+    await until(() =>
+      MODES.every(
+        (m) => recorders[m]?.deliveries.filter(isRename).length >= expected[m],
+      ),
+    );
+    await settleQuiet();
+
+    const replay = Object.fromEntries(
+      MODES.map((m) => [m, [...recorders[m].deliveries]]),
+    ) as Record<Mode, Delivery[]>;
+
+    const liveJob = await client.executeAsync(doc.header.id, "main", [
+      setName("Published"),
+    ]);
+    await settle(liveJob.id);
+    // The live operation is the first delivery after the replay.
+    const liveDelivery = (m: Mode) =>
+      recorders[m].deliveries[replay[m].length];
+    await until(() => MODES.every((m) => liveDelivery(m) !== undefined));
+    const live = Object.fromEntries(
+      MODES.map((m) => [m, liveDelivery(m)!]),
+    ) as Record<Mode, Delivery>;
+
+    return { replay, live };
+  } finally {
+    awaiter.shutdown();
+    reactor.kill();
+  }
+}
+
+const isRename = (d: Delivery) => d.actionType === "SET_NAME";
+
+async function until(done: () => boolean, timeoutMs = 15_000): Promise<void> {
+  const start = Date.now();
+  while (!done()) {
+    if (Date.now() - start > timeoutMs) throw new Error("timed out");
+    await new Promise<void>((r) => setTimeout(r, 50));
+  }
+}
+
+/** Gives a mode that delivers several operations time to deliver all of them. */
+const settleQuiet = () => new Promise<void>((r) => setTimeout(r, 1000));
