@@ -38,4 +38,9 @@ pnpm start   # demo: prints the deliveries per mode
 pnpm test    # vitest against an in-process reactor
 ```
 
-Needs `@powerhousedao/reactor` 6.2.3-dev.77 or later, the first dev build that has `replayState`, and Node 24 or later.
+## Requirements
+
+| Requirement | Why |
+|-------------|-----|
+| `@powerhousedao/reactor` and `@powerhousedao/shared` 6.2.3-dev.75 or a later dev build | 6.2.3-dev.75 is the first build with `replayState`. The catalog pins 6.2.3-dev.77. The 6.2.3 release does not have it |
+| Node 24 or later | The published reactor calls `Error.isError`, which Node 22 does not have. On Node 22 the demo fails with `TypeError: Error.isError is not a function` |
