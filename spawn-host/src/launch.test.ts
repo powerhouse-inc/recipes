@@ -1,19 +1,36 @@
 import { existsSync } from "node:fs";
+import type { HostExit, RunRecord } from "@powerhousedao/host-core";
 import { describe, expect, it, vi } from "vitest";
 import { withHost, type SpawnHost } from "./launch.js";
 
 function fakeSpawnHost() {
-  const stop = vi.fn(async () => ({ code: 0, signal: null, forced: false }));
-  const spawnHost: SpawnHost = vi.fn(async ({ dataDir }) => ({
-    pid: 1,
-    dataDir,
-    outputs: { origin: "http://127.0.0.1:1" },
-    stop,
-  }));
+  const exit: HostExit = { code: 0, signal: null, forced: false };
+  const stop = vi.fn(async () => exit);
+  const spawnHost: SpawnHost = vi.fn(async ({ host, dataDir }) => {
+    const record: RunRecord = {
+      version: 2,
+      host,
+      projectName: "fake",
+      kind: "reactor",
+      verb: "run",
+      pid: 1,
+      startedAt: new Date(0).toISOString(),
+      outputs: { origin: "http://127.0.0.1:1" },
+    };
+    return {
+      pid: record.pid,
+      dataDir,
+      record,
+      outputs: record.outputs,
+      members: record.members,
+      exited: Promise.resolve(exit),
+      stop,
+    };
+  });
   return { spawnHost, stop };
 }
 
-describe("withHost", () => {
+describe("withHost with a fake spawnHost", () => {
   it("gives the callback a ready host and cleans up after it", async () => {
     const { spawnHost, stop } = fakeSpawnHost();
     let dataDir = "";
