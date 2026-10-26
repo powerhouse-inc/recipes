@@ -48,75 +48,75 @@ allowBuilds:
 # its route files compiled (powerhouse#3268).
 # It also carries the host-core output tokens host-output-tokens resolves:
 # resolveHostOutputs and the $output, $concat and $env tokens (powerhouse#3258).
-# host-check needs the first release after 6.2.3-dev.73 that carries checkHost
-# and ph host check (powerhouse#3287); the pin is not raised yet, so that recipe
-# does not build until it is.
+# 6.2.3-dev.77 carries what host-check builds against: host-core's checkHost,
+# which runs the ph run pipeline up to the verb and returns every issue, and
+# the ph host check command over it (powerhouse#3287).
 # 6.2.3-dev.0 onward carries the HTTP scope API hosted-webhooks uses
 # (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 catalog:
-  "@powerhousedao/analytics-engine-browser": 6.2.3-dev.71
-  "@powerhousedao/analytics-engine-core": 6.2.3-dev.71
-  "@powerhousedao/builder-tools": 6.2.3-dev.71
-  "@powerhousedao/connect": 6.2.3-dev.71
-  "@powerhousedao/design-system": 6.2.3-dev.71
-  "@powerhousedao/host-core": 6.2.3-dev.71
-  "@powerhousedao/ph-cli": 6.2.3-dev.71
-  "@powerhousedao/reactor": 6.2.3-dev.71
-  "@powerhousedao/reactor-api": 6.2.3-dev.71
-  "@powerhousedao/reactor-browser": 6.2.3-dev.71
-  "@powerhousedao/reactor-group": 6.2.3-dev.71
-  "@powerhousedao/shared": 6.2.3-dev.71
-  "@renown/sdk": 6.2.3-dev.71
-  document-model: 6.2.3-dev.71
+  "@powerhousedao/analytics-engine-browser": 6.2.3-dev.77
+  "@powerhousedao/analytics-engine-core": 6.2.3-dev.77
+  "@powerhousedao/builder-tools": 6.2.3-dev.77
+  "@powerhousedao/connect": 6.2.3-dev.77
+  "@powerhousedao/design-system": 6.2.3-dev.77
+  "@powerhousedao/host-core": 6.2.3-dev.77
+  "@powerhousedao/ph-cli": 6.2.3-dev.77
+  "@powerhousedao/reactor": 6.2.3-dev.77
+  "@powerhousedao/reactor-api": 6.2.3-dev.77
+  "@powerhousedao/reactor-browser": 6.2.3-dev.77
+  "@powerhousedao/reactor-group": 6.2.3-dev.77
+  "@powerhousedao/shared": 6.2.3-dev.77
+  "@renown/sdk": 6.2.3-dev.77
+  document-model: 6.2.3-dev.77
 
 minimumReleaseAgeExclude:
-  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.71'
-  - '@powerhousedao/analytics-engine-core@6.2.3-dev.71'
-  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.71'
-  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.71'
-  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.71'
-  - '@powerhousedao/builder-tools@6.2.3-dev.71'
-  - '@powerhousedao/codegen@6.2.3-dev.71'
-  - '@powerhousedao/common@6.2.3-dev.71'
-  - '@powerhousedao/config@6.2.3-dev.71'
-  - '@powerhousedao/connect-core@6.2.3-dev.71'
-  - '@powerhousedao/connect@6.2.3-dev.71'
-  - '@powerhousedao/design-system@6.2.3-dev.71'
-  - '@powerhousedao/host-core@6.2.3-dev.71'
-  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.71'
-  - '@powerhousedao/ph-cli@6.2.3-dev.71'
-  - '@powerhousedao/pieces-framework@6.2.3-dev.71'
-  - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.71'
-  - '@powerhousedao/reactor-api@6.2.3-dev.71'
-  - '@powerhousedao/reactor-attachments@6.2.3-dev.71'
-  - '@powerhousedao/reactor-browser@6.2.3-dev.71'
-  - '@powerhousedao/reactor-drive@6.2.3-dev.71'
-  - '@powerhousedao/reactor-group@6.2.3-dev.71'
-  - '@powerhousedao/reactor-mcp@6.2.3-dev.71'
-  - '@powerhousedao/reactor-privacy@6.2.3-dev.71'
-  - '@powerhousedao/reactor-router@6.2.3-dev.71'
-  - '@powerhousedao/reactor-workflow@6.2.3-dev.71'
-  - '@powerhousedao/reactor@6.2.3-dev.71'
-  - '@powerhousedao/shared@6.2.3-dev.71'
-  - '@powerhousedao/switchboard@6.2.3-dev.71'
-  - '@powerhousedao/vetra@6.2.3-dev.71'
-  - '@powerhousedao/workflow@6.2.3-dev.71'
-  - '@renown/sdk@6.2.3-dev.71'
-  - document-model@6.2.3-dev.71
+  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.77'
+  - '@powerhousedao/analytics-engine-core@6.2.3-dev.77'
+  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.77'
+  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.77'
+  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.77'
+  - '@powerhousedao/builder-tools@6.2.3-dev.77'
+  - '@powerhousedao/codegen@6.2.3-dev.77'
+  - '@powerhousedao/common@6.2.3-dev.77'
+  - '@powerhousedao/config@6.2.3-dev.77'
+  - '@powerhousedao/connect-core@6.2.3-dev.77'
+  - '@powerhousedao/connect@6.2.3-dev.77'
+  - '@powerhousedao/design-system@6.2.3-dev.77'
+  - '@powerhousedao/host-core@6.2.3-dev.77'
+  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.77'
+  - '@powerhousedao/ph-cli@6.2.3-dev.77'
+  - '@powerhousedao/pieces-framework@6.2.3-dev.77'
+  - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.77'
+  - '@powerhousedao/reactor-api@6.2.3-dev.77'
+  - '@powerhousedao/reactor-attachments@6.2.3-dev.77'
+  - '@powerhousedao/reactor-browser@6.2.3-dev.77'
+  - '@powerhousedao/reactor-drive@6.2.3-dev.77'
+  - '@powerhousedao/reactor-group@6.2.3-dev.77'
+  - '@powerhousedao/reactor-mcp@6.2.3-dev.77'
+  - '@powerhousedao/reactor-privacy@6.2.3-dev.77'
+  - '@powerhousedao/reactor-router@6.2.3-dev.77'
+  - '@powerhousedao/reactor-workflow@6.2.3-dev.77'
+  - '@powerhousedao/reactor@6.2.3-dev.77'
+  - '@powerhousedao/shared@6.2.3-dev.77'
+  - '@powerhousedao/switchboard@6.2.3-dev.77'
+  - '@powerhousedao/vetra@6.2.3-dev.77'
+  - '@powerhousedao/workflow@6.2.3-dev.77'
+  - '@renown/sdk@6.2.3-dev.77'
+  - document-model@6.2.3-dev.77
 
 # powerhouse-vetra-packages, which Connect loads, imports these packages
-# without declaring them; 6.2.3-dev.71 still does. Without the extension it
+# without declaring them; 6.2.3-dev.77 still does. Without the extension it
 # resolves whatever copy pnpm hoists. With the whole family on the catalog that
 # copy is the same release, so the extension guards against drift rather than
 # fixing a mismatch. The key names one version: move it and the versions with
 # the catalog, or the extension stops applying.
 packageExtensions:
-  '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.71':
+  '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.77':
     dependencies:
-      '@powerhousedao/design-system': 6.2.3-dev.71
-      '@powerhousedao/reactor-browser': 6.2.3-dev.71
-      '@powerhousedao/shared': 6.2.3-dev.71
-      document-model: 6.2.3-dev.71
+      '@powerhousedao/design-system': 6.2.3-dev.77
+      '@powerhousedao/reactor-browser': 6.2.3-dev.77
+      '@powerhousedao/shared': 6.2.3-dev.77
+      document-model: 6.2.3-dev.77
 
 packages:
   - analytics-processor
