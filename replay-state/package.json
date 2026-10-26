@@ -1,0 +1,24 @@
+{
+  "name": "@powerhousedao/example-replay-state",
+  "version": "0.0.0",
+  "description": "Example: ProcessorRecord.replayState, choosing what a replayed operation carries",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@powerhousedao/reactor": "catalog:",
+    "@powerhousedao/shared": "catalog:",
+    "@renown/sdk": "catalog:",
+    "document-model": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}
