@@ -150,6 +150,7 @@ packages:
   - saga
   - scoped-reads
   - semantic-search
+  - spawn-host
   - signed-operations-verifier
   - subscription-cli
   - sync-health-monitor
