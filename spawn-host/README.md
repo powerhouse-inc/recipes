@@ -21,11 +21,11 @@ Launching `ph run <host>` from code, for a test harness, a supervisor or a scrip
 
 | File | Purpose |
 |------|---------|
-| `hosts/switchboard/host.js` | A switchboard with its storage under `${userData}` and one drive, `recipes` |
+| `hosts/switchboard/host.js` | A switchboard on port 0 (the OS picks one) with its storage under `${userData}` and one drive, `recipes` |
 | `src/launch.ts` | `withHost`: spawn into a temp data dir, run a callback, always stop and delete |
 | `src/demo.ts` | Starts the fixture, prints its outputs, calls its GraphQL endpoint and drive URL, stops it |
 | `src/launch.test.ts` | `withHost` cleanup on success, a throwing callback, a rejecting `spawnHost` and a failing `stop`, with a fake `spawnHost` |
-| `src/spawn.test.ts` | The fixture through the real `spawnHost`: outputs answer, then the child exits 0, its data dir is gone and the project has no `.ph` |
+| `src/spawn.test.ts` | The fixture through the real `spawnHost`: outputs answer, then the child exits 0, its data dir is gone and the project has no `.ph`; two hosts at once get distinct ports |
 
 ## Running
 
@@ -33,6 +33,10 @@ Launching `ph run <host>` from code, for a test harness, a supervisor or a scrip
 pnpm test    # includes a real spawn, about 10 s
 pnpm start
 ```
+
+## Port 0
+
+The fixture sets `runner.port: 0`. The switchboard reports the port the OS bound, so `outputs.origin`, the endpoints, the drive URLs and the run record carry it instead of `:0`. Read the port from the outputs; no probe-then-bind race, so concurrent hosts are safe (powerhouse PR #3285).
 
 ## Requirements
 

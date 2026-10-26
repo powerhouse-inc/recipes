@@ -40,11 +40,11 @@ describe("withHost with the real spawnHost", () => {
             existsSync(join(host.dataDir, ".ph", "run", "switchboard.json")),
           ).toBe(true);
 
-          // The port comes from the outputs: the switchboard falls back to
-          // the next free port when its default is taken.
+          // The fixture asks for port 0, so the port exists only in the
+          // outputs.
           const { origin, endpoints, drives } =
             host.outputs as SwitchboardOutputs;
-          expect(origin).toMatch(/^http:\/\/localhost:\d+$/);
+          expect(origin).toMatch(/^http:\/\/localhost:[1-9]\d*$/);
           expect(endpoints.graphql).toBe(`${origin}/graphql`);
           expect(drives.recipes.url).toBe(`${origin}/d/recipes`);
 
@@ -76,6 +76,31 @@ describe("withHost with the real spawnHost", () => {
       expect(isRunning(host.pid)).toBe(false);
       expect(existsSync(host.dataDir)).toBe(false);
       expect(existsSync(join(projectRoot, ".ph"))).toBe(false);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "gives two concurrent hosts their own ports",
+    async () => {
+      const options = {
+        projectRoot,
+        host: "switchboard",
+        readyTimeoutMs: READY_TIMEOUT_MS,
+      };
+      await withHost(spawnHost, options, async (first) => {
+        await withHost(spawnHost, options, async (second) => {
+          const a = (first.outputs as SwitchboardOutputs).origin;
+          const b = (second.outputs as SwitchboardOutputs).origin;
+          expect(a).not.toBe(b);
+          for (const origin of [a, b]) {
+            const health = await fetch(`${origin}/health`, {
+              signal: AbortSignal.timeout(10_000),
+            });
+            expect(health.status).toBe(200);
+          }
+        });
+      });
     },
     TEST_TIMEOUT_MS,
   );
