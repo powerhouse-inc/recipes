@@ -64,6 +64,6 @@ Without `--env`, the check reads the project `.env` and the shell environment, a
 
 ## Requirements
 
-`@powerhousedao/host-core` and `@powerhousedao/ph-cli` 6.2.3-dev.77 from the workspace catalog. `checkHost` and `ph host check` are published from 6.2.3-dev.74 on.
+`@powerhousedao/host-core` and `@powerhousedao/ph-cli` 6.2.3-dev.78 from the workspace catalog. `checkHost` and `ph host check` are published from 6.2.3-dev.74 on.
 
 The hosts name `@powerhousedao/ph-cli/runners/switchboard` and `runners/connect`, so `ph-cli` is a dependency although `src` never imports it: `checkHost` resolves the runner from the project root.
