@@ -49,6 +49,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [custom-read-model](./custom-read-model) | Custom IReadModel with ReactorBuilder for a document-count-per-type materialized view |
 | [full-text-search](./full-text-search) | Maintains a PostgreSQL full-text search index over document state |
 | [relational-db-subgraph](./relational-db-subgraph) | RelationalDbProcessor recipe with Kysely migrations, typed schema, and a GraphQL subgraph for document catalog |
+| [replay-state](./replay-state) | `ProcessorRecord.replayState`: what a replayed operation carries (`latest`, `collapse`, `exact`, `operations`), shown side by side |
 | [saga](./saga) | Saga pattern via Reactor processor: operations on one document trigger operations on others |
 | [semantic-search](./semantic-search) | Embeds document state in-process (Transformers.js) into PGlite + pgvector and answers cosine-similarity queries |
 

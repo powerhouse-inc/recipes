@@ -27,7 +27,7 @@ Without `outputs`, `$output` tokens are checked as declared and listed in `defer
 | `hosts/bad-runner` | A host naming a runner module the project does not install |
 | `hosts/connect` | A Connect host whose drive URL reads the switchboard's output through `$output` |
 | `src/check.ts` | `checkHosts`, a thin wrapper over `checkHost`, and `formatReport` |
-| `src/demo.ts` | Checks the hosts under three environments; two fail on purpose, so it exits 1 |
+| `src/demo.ts` | Checks the hosts under three environments; two fail on purpose. It exits 1 only when a host reports stages other than the ones the scenario expects |
 
 What each host reports:
 

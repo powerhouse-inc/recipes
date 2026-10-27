@@ -48,6 +48,8 @@ allowBuilds:
 # its route files compiled (powerhouse#3268).
 # It also carries the host-core output tokens host-output-tokens resolves:
 # resolveHostOutputs and the $output, $concat and $env tokens (powerhouse#3258).
+# 6.2.3-dev.75 carries ProcessorRecord.replayState, which replay-state sets per
+# processor (powerhouse#3289 documents it).
 # 6.2.3-dev.77 carries what host-check builds against: host-core's checkHost,
 # which runs the ph run pipeline up to the verb and returns every issue, and
 # the ph host check command over it (powerhouse#3287).
@@ -145,6 +147,7 @@ packages:
   - positional-delete
   - rate-limiter
   - relational-db-subgraph
+  - replay-state
   - revocation-race
   - role-based-auth
   - saga
