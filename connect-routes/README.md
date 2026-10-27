@@ -19,7 +19,7 @@ Adding pages to Connect (the Powerhouse web app) from a project, with TanStack R
 
 ## Generating the route tree without a build
 
-`ph-cli generate connect-routes` writes `.ph/connect-routes.gen.ts`, the tree that `hosts/connect/routes/` type-checks against, and drops a stale one. `ph-cli build` runs the same step, so the command is for checking types (`tsc`, an editor) in a fresh checkout before any build. It does nothing in a project with no routes. Run it as `pnpm generate:routes`. Under `ph vetra --watch` the tree is kept up to date for you.
+`ph-cli generate connect-routes` writes `.ph/connect-routes.gen.ts`, the tree that `hosts/connect/routes/` type-checks against, and drops a stale one. `ph-cli build` runs the same step, so the command is for checking types (`tsc`, an editor) in a fresh checkout before any build. It does nothing in a project with no routes. Run it as `pnpm exec ph-cli generate connect-routes`. Under `ph vetra --watch` the tree is kept up to date for you.
 
 It first ships in the release that includes powerhouse PR #3293, after the 6.2.3-dev.77 the catalog pins. Bump the catalog before running it.
 
