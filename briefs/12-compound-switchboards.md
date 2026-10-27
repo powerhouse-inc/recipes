@@ -14,8 +14,11 @@ differently configured switchboards in one process possible, and nothing shows h
 
 ## Blocked on a release
 
-The catalog pins 6.2.3-dev.78, which predates #3314. Build this recipe once a dev
-release carries it, and bump the catalog in the same PR.
+The catalog pins 6.2.3-dev.78, which predates #3314 (merged 2026-10-27). Build this
+recipe once a published dev release carries it: check that
+`@powerhousedao/ph-cli` ships `schemas/runner-switchboard.schema.json` with a
+`switchboard` key under `config`. Then bump every `6.2.3-dev.78` entry in the
+`catalog` block of `pnpm-workspace.yaml` in the same PR.
 
 ## What it demonstrates
 
@@ -24,14 +27,19 @@ release carries it, and bump the catalog in the same PR.
 - Per-member `reactor.backends.main.storage` and `readModel.url`, plus
   `config.switchboard.storage.userDataDir`, so the members share no store.
 - Per-member `reactor.protocol` and `config.switchboard.auth` / `inspection`
-  that differ, observable through each member's endpoints (for example
-  `/graphql/inspection` answers on one member only).
+  that differ, observable through each member's endpoints. The fixture gives `a`
+  `inspection: { enabled: false }` and `b` `{ enabled: true, callsPerMinute: 7 }`;
+  POST `{ __typename }` to `/graphql/inspection` and expect `a` not to answer and
+  `b` to.
 - Operator env still winning: a shell variable overrides both members' file values.
-- Isolation: `process.env` is unchanged after the compound starts.
+- Isolation: `process.env` is unchanged after the compound starts. This holds only
+  for an in-process `runCompound` (the powerhouse test snapshots `process.env`
+  around it); a `spawnHost` child cannot touch the test's env, so assert it in a
+  separate in-process test or leave it out.
 
 ## Reference code
 
-In powerhouse at PR #3314:
+In powerhouse, merged by PR #3314 (find the merge commit from the PR page):
 
 - `clis/ph-cli/test/compound-switchboards.test.ts`: the two-member fixture and the
   isolation assertions to port.
@@ -48,8 +56,9 @@ In powerhouse at PR #3314:
 
 ## Pitfalls
 
-- Set `config.runtimeRecord` to true on the compound if `spawnHost` launches it;
-  `spawnHost` refuses compounds with `runtimeRecord: false`.
+- Do not copy `config.runtimeRecord: false` from the powerhouse fixture (it calls
+  `runCompound`, not `spawnHost`). `spawnHost` refuses a compound with that value;
+  leave it unset.
 - A `readModel.url` without `storage` logs a deprecation; give every member `storage`.
 - Code that imported `projectReactorToSwitchboard` or `SwitchboardReactorProjection`
   from host-core breaks; neither exists after #3314.
