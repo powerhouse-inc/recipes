@@ -130,6 +130,7 @@ packages:
   - audit-trail
   - auth-preflight
   - batch-progress
+  - compound-switchboards
   - connect-routes
   - db-migrate
   - cross-document-reactor

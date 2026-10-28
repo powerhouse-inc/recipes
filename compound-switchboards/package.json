@@ -1,0 +1,22 @@
+{
+  "name": "@powerhousedao/example-compound-switchboards",
+  "version": "0.0.0",
+  "description": "Example: two differently configured switchboards in one ph run process, each with its own reactor block and config.switchboard",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@powerhousedao/host-core": "catalog:",
+    "@powerhousedao/ph-cli": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}
