@@ -149,7 +149,8 @@ describe("config.switchboard is strict", () => {
     );
   });
 
-  it("accepts storage.userDataDir, which an env PH_USER_DATA_DIR overrides", () => {
+  // in-process.test.ts shows the env's PH_USER_DATA_DIR winning over it.
+  it("accepts storage.userDataDir", () => {
     expect(
       hostSchema.safeParse(
         withSwitchboard({ storage: { userDataDir: "/tmp/sb-a" } }),

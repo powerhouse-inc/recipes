@@ -2,7 +2,8 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import net from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCompound } from "@powerhousedao/host-core";
+import { loadHost, runCompound } from "@powerhousedao/host-core";
+import type { SwitchboardHost } from "@powerhousedao/ph-cli/runners/switchboard";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { inspectionAnswer, projectRoot } from "./stack.js";
 
@@ -76,14 +77,35 @@ vi.mock(serverModule, async (importOriginal) => {
   return { ...actual, startSwitchboard };
 });
 
-// hosts/stack/host.js, plus runtimeRecord: false so nothing is written to
-// the project's .ph/run. spawnHost refuses that flag; runCompound takes it.
-const stack = {
-  name: "stack",
-  runner: { module: "@powerhousedao/host-core/runners/compound" },
-  children: { a: { host: "sb-a" }, b: { host: "sb-b" } },
-  config: { runtimeRecord: false },
-};
+// hosts/sb-a/host.js as `ph run` loads it.
+const sbA = (await loadHost(projectRoot, "sb-a")).host as SwitchboardHost;
+
+/**
+ * hosts/stack/host.js, plus runtimeRecord: false so nothing is written to
+ * the project's .ph/run (spawnHost refuses that flag; runCompound takes it).
+ * Member a's wrapper also restates sb-a's config with its own
+ * storage.userDataDir, which the env's PH_USER_DATA_DIR overrides. A wrapper
+ * `config` replaces the member's, so it carries the rest of sb-a's too.
+ */
+function stackWith(ownUserDataDir: string) {
+  return {
+    name: "stack",
+    runner: { module: "@powerhousedao/host-core/runners/compound" },
+    children: {
+      a: {
+        host: "sb-a",
+        config: {
+          switchboard: {
+            ...sbA.config?.switchboard,
+            storage: { userDataDir: ownUserDataDir },
+          },
+        },
+      },
+      b: { host: "sb-b" },
+    },
+    config: { runtimeRecord: false },
+  };
+}
 
 async function isFree(port: number): Promise<boolean> {
   const server = net.createServer();
@@ -104,9 +126,16 @@ describe("the stack in this process", () => {
     "starts each member on its own config and leaves process.env alone",
     async () => {
       // As under spawnHost: PH_USER_DATA_DIR is the root `${userData}`
-      // resolves to, and no .env is read.
+      // resolves to, and no .env is read. The store variables name folders
+      // no member may use: each member's reactor block wins over them.
       userData = mkdtempSync(join(tmpdir(), "ph-stack-in-process-"));
-      const env = { PH_USER_DATA_DIR: userData, PH_NO_DOTENV: "1" };
+      const notUsed = (name: string) => join(userData!, "env", name);
+      const env = {
+        PH_USER_DATA_DIR: userData,
+        PH_NO_DOTENV: "1",
+        DATABASE_URL: notUsed("database-url"),
+        PH_SWITCHBOARD_DATABASE_URL: notUsed("switchboard-database-url"),
+      };
       const exit = vi.spyOn(process, "exit").mockImplementation(() => {
         throw new Error("the compound must not exit the process");
       });
@@ -115,7 +144,7 @@ describe("the stack in this process", () => {
 
       state.started = [];
       const run = await runCompound(
-        stack,
+        stackWith(notUsed("own-user-data")),
         { projectRoot, verb: "run", env },
         { projectName: "compound-switchboards", installSignalHandlers: false },
       );
@@ -131,7 +160,8 @@ describe("the stack in this process", () => {
           `http://localhost:${b.port}`,
         ]);
 
-        // Stores: from each member's reactor block.
+        // Stores: from each member's reactor block, not DATABASE_URL or
+        // PH_SWITCHBOARD_DATABASE_URL.
         const store = (member: string, name: string) =>
           join(userData!, ".ph", member, name);
         expect(a.config.storage).toMatchObject({
@@ -142,9 +172,10 @@ describe("the stack in this process", () => {
           reactor: { url: store("sb-b", "reactor") },
           readModel: { url: store("sb-b", "read-model") },
         });
-        // userDataDir: the env's, for both.
+        // userDataDir: the env's, for both, though a names its own.
         expect(a.config.storage.userDataDir).toBe(userData);
         expect(b.config.storage.userDataDir).toBe(userData);
+        expect(existsSync(join(userData!, "env"))).toBe(false);
 
         // Protocol: each member's own block and nothing else. b sets no
         // createSignaturePolicy and does not get a's "legacy" (in 6.2.3-dev.78
