@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@powerhousedao/host-core": "catalog:",
-    "@powerhousedao/ph-cli": "catalog:"
+    "@powerhousedao/ph-cli": "catalog:",
+    "@powerhousedao/switchboard": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -72,6 +72,7 @@ catalog:
   "@powerhousedao/reactor-browser": 6.2.3-dev.79
   "@powerhousedao/reactor-group": 6.2.3-dev.79
   "@powerhousedao/shared": 6.2.3-dev.79
+  "@powerhousedao/switchboard": 6.2.3-dev.79
   "@renown/sdk": 6.2.3-dev.79
   document-model: 6.2.3-dev.79
 
