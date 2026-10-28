@@ -47,3 +47,4 @@ pnpm audit:download && pnpm audit:extract   # tools/registry-audit
 | 9 | [ai-suggestions](./09-ai-suggestions.md) | Agent suggestions as first-class document state with human accept/dismiss resolution |
 | 10 | [derived-invariants](./10-derived-invariants.md) | Reducers recompute rollups after every mutation and auto-advance status at thresholds |
 | 11 | [phd-import](./11-phd-import.md) | CLI imports a `.phd` archive into a remote reactor by replaying its operations |
+| 12 | [compound-switchboards](./12-compound-switchboards.md) | Two switchboards in one `ph run` process, each on its own `config.switchboard`, no env between them |
