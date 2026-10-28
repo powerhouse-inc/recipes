@@ -21,19 +21,25 @@ Launching `ph run <host>` from code, for a test harness, a supervisor or a scrip
 
 | File | Purpose |
 |------|---------|
-| `hosts/switchboard/host.js` | A switchboard with its storage under `${userData}` and one drive, `recipes` |
+| `hosts/switchboard/host.js` | A switchboard on port 0 (the OS picks one) with its storage under `${userData}` and one drive, `recipes` |
 | `src/launch.ts` | `withHost`: spawn into a temp data dir, run a callback, always stop and delete |
 | `src/demo.ts` | Starts the fixture, prints its outputs, calls its GraphQL endpoint and drive URL, stops it |
 | `src/launch.test.ts` | `withHost` cleanup on success, a throwing callback, a rejecting `spawnHost` and a failing `stop`, with a fake `spawnHost` |
-| `src/spawn.test.ts` | The fixture through the real `spawnHost`: outputs answer, then the child exits 0, its data dir is gone and the project has no `.ph` |
+| `src/spawn.test.ts` | The fixture through the real `spawnHost`: outputs answer, then the child exits 0, its data dir is gone and the project has no `.ph`; two hosts at once get distinct ports |
 
 ## Running
 
 ```bash
-pnpm test    # includes a real spawn, about 10 s
+pnpm test    # includes three real spawns (one, then two at once), 20 to 45 s
 pnpm start
 ```
 
+## Port 0
+
+The fixture sets `runner.port: 0`. The switchboard reports the port the OS bound, so `outputs.origin`, the endpoints, the drive URLs and the run record carry it instead of `:0`. Read the port from the outputs; no probe-then-bind race, so concurrent hosts are safe (powerhouse PR #3285).
+
 ## Requirements
 
-`@powerhousedao/host-core` 6.2.3-dev.74 or later, the first release that exports `spawnHost`. The recipe takes host-core and `@powerhousedao/ph-cli` from the workspace catalog; that ph-cli is the one `spawnHost` runs, and it needs the uniform runners (`@powerhousedao/ph-cli/runners/switchboard`).
+`@powerhousedao/host-core` 6.2.3-dev.74 or later, the first release that exports `spawnHost`. The recipe takes host-core and `@powerhousedao/ph-cli` from the workspace catalog; port 0 needs `@powerhousedao/ph-cli` 6.2.3-dev.78 or later, the first release with powerhouse PR #3285 (older ones reject it). The catalog pins 6.2.3-dev.78. That ph-cli is the one `spawnHost` runs, and it needs the uniform runners (`@powerhousedao/ph-cli/runners/switchboard`).
+
+Node 24 or later: ph-cli and the switchboard declare `engines.node >=24.0.0`.

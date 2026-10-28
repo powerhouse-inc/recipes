@@ -1,4 +1,6 @@
 import { existsSync } from "node:fs";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnHost, type SpawnedHost } from "@powerhousedao/host-core";
@@ -40,11 +42,11 @@ describe("withHost with the real spawnHost", () => {
             existsSync(join(host.dataDir, ".ph", "run", "switchboard.json")),
           ).toBe(true);
 
-          // The port comes from the outputs: the switchboard falls back to
-          // the next free port when its default is taken.
+          // The fixture asks for port 0, so the port exists only in the
+          // outputs.
           const { origin, endpoints, drives } =
             host.outputs as SwitchboardOutputs;
-          expect(origin).toMatch(/^http:\/\/localhost:\d+$/);
+          expect(origin).toMatch(/^http:\/\/localhost:[1-9]\d*$/);
           expect(endpoints.graphql).toBe(`${origin}/graphql`);
           expect(drives.recipes.url).toBe(`${origin}/d/recipes`);
 
@@ -76,6 +78,40 @@ describe("withHost with the real spawnHost", () => {
       expect(isRunning(host.pid)).toBe(false);
       expect(existsSync(host.dataDir)).toBe(false);
       expect(existsSync(join(projectRoot, ".ph"))).toBe(false);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "gives two concurrent hosts their own ports",
+    async () => {
+      const opts = {
+        projectRoot,
+        host: "switchboard",
+        readyTimeoutMs: READY_TIMEOUT_MS,
+      };
+      // Both start at once, so a shared-resource race at boot would show.
+      const hosts = await Promise.all([
+        spawnHost({ ...opts, dataDir: await mkdtemp(join(tmpdir(), "ph-a-")) }),
+        spawnHost({ ...opts, dataDir: await mkdtemp(join(tmpdir(), "ph-b-")) }),
+      ]);
+      const origins = hosts.map(
+        (h) => (h.outputs as SwitchboardOutputs).origin,
+      );
+      try {
+        for (const origin of origins) {
+          const health = await fetch(`${origin}/health`, {
+            signal: AbortSignal.timeout(10_000),
+          });
+          expect(health.status).toBe(200);
+        }
+        expect(origins[0]).not.toBe(origins[1]);
+      } finally {
+        await Promise.all(hosts.map((h) => h.stop()));
+        await Promise.all(
+          hosts.map((h) => rm(h.dataDir, { recursive: true, force: true })),
+        );
+      }
     },
     TEST_TIMEOUT_MS,
   );
