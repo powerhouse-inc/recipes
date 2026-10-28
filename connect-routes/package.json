@@ -8,6 +8,7 @@
   "scripts": {
     "studio": "ph-cli connect studio",
     "build": "ph-cli build",
+    "generate:routes": "ph-cli generate connect-routes",
     "test": "vitest run && pnpm test:e2e",
     "test:e2e": "playwright install chromium && playwright test"
   },

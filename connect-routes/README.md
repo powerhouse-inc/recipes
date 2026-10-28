@@ -17,11 +17,23 @@ Adding pages to Connect (the Powerhouse web app) from a project, with TanStack R
 - Each route is code-split into its own chunk.
 - `@tanstack/react-router` must match the version in `@powerhousedao/connect`'s `package.json`.
 
+## Generating the route tree without a build
+
+`ph-cli generate connect-routes` writes two files into `.ph/`: `connect-routes.gen.ts`, the tree that `hosts/connect/routes/` type-checks against, and `connect-routes.package.ts`, the list of routes the package offers other Connects. `ph-cli build` runs the same step, so the command is for checking types (`tsc`, an editor) in a fresh checkout before any build. In this recipe `tsc` reports the routes' `createFileRoute` paths as errors until the tree exists. Run it as `pnpm generate:routes`.
+
+If `hosts/connect/routes/` is gone, the command deletes `connect-routes.package.ts` and rewrites an existing `connect-routes.gen.ts` with Connect's routes only, so `tsc` stops resolving the removed routes. It keeps that file. A project with none of the three (the routes folder and both files) is left unchanged.
+
+The command also fails if a route the package offers imports `@powerhousedao/connect`. Those routes import `@powerhousedao/connect-core` instead (powerhouse PR #3303). Only the host's own `_app.tsx` and overrides of Connect's routes may import `@powerhousedao/connect`.
+
+While Connect's dev server runs (`studio`, `ph vetra --watch`), it rewrites the tree as route files and folders are added and removed.
+
+The command first shipped in 6.2.3-dev.79 (powerhouse PR #3293), the release the catalog pins.
+
 ## Requirements
 
 Project routes shipped with `@powerhousedao/connect-core` (powerhouse PR #3254), first released in 6.2.3-dev.69. The recipe takes `@powerhousedao/connect`, `@powerhousedao/reactor-browser`, `@powerhousedao/ph-cli`, `@powerhousedao/design-system` and `document-model` from the workspace catalog, so they stay on one version: `ph-cli` generates the route tree, and the `reactor-browser` helpers the routes import first appear on this line.
 
-The catalog pins 6.2.3-dev.78. 6.2.3-dev.71 is the first release in which Connect's studio starts in a project that installs it from npm (powerhouse PRs #3265 and #3266) and connect-core ships its route files compiled (#3268). Connect 6.2.3-dev.70 and earlier do not start in an installed project, so `studio` and the Playwright tests need 6.2.3-dev.71 or later.
+The catalog pins 6.2.3-dev.79. 6.2.3-dev.71 is the first release in which Connect's studio starts in a project that installs it from npm (powerhouse PRs #3265 and #3266) and connect-core ships its route files compiled (#3268). Connect 6.2.3-dev.70 and earlier do not start in an installed project, so `studio` and the Playwright tests need 6.2.3-dev.71 or later.
 
 ## Running
 
