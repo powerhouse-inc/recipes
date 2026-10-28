@@ -9,7 +9,7 @@ Two switchboards in one `ph run` process, each configured on its own. Since powe
 | Layers | The reactor block, then `config.switchboard`, then the operator's env. A later layer wins key by key |
 | Operator env | Under `spawnHost` it is the `env` option: `spawnHost` sets `PH_NO_DOTENV=1`, so no `.env` is read. Under a shell `ph run`, shell values win over the project `.env`, and a `.env` value for a variable the reactor block sets is dropped |
 | Reactor store | From the member's `storage`. Only `PH_REACTOR_DATABASE_URL` set by the shell or `spawnHost`'s `env` overrides it; the same name in `.env`, or `PH_SWITCHBOARD_DATABASE_URL`, does not |
-| Read model | From the member's `readModel.url`. No env variable overrides it. A member without `readModel.url` takes `DATABASE_URL` from the env |
+| Read model | From the member's `readModel.url`. No env variable overrides it. A member without `readModel.url` takes `DATABASE_URL` (or `PH_SWITCHBOARD_DATABASE_URL`) from the env |
 | Protocol | From the member's `reactor.protocol`. An env variable that matches it, or that names a key the block leaves unset, is accepted. One that contradicts it fails the start, naming the variable and the member's host file |
 | `config.switchboard` keys | Strict. Unknown or misspelled keys are rejected. Keys the reactor block or the runner owns are not accepted (list below), and a key the reactor block also sets fails validation |
 | `userDataDir` | `PH_USER_DATA_DIR` is the last layer. `spawnHost` always sets it to `dataDir`, so every member gets that dir whatever `config.switchboard.storage.userDataDir` says |

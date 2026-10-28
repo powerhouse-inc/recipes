@@ -57,6 +57,11 @@ allowBuilds:
 # bound port, so runner.port: 0 works (powerhouse#3285).
 # 6.2.3-dev.79 carries ph-cli generate connect-routes, which connect-routes
 # runs as generate:routes (powerhouse#3293).
+# It also carries per-member switchboard config, which compound-switchboards
+# runs two of in one process: each member's reactor block and config.switchboard,
+# the operator's env over both, and no env written (powerhouse#3314).
+# @powerhousedao/switchboard is on the catalog so that recipe can mock and type
+# its server and config modules.
 # 6.2.3-dev.0 onward carries the HTTP scope API hosted-webhooks uses
 # (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 catalog:
