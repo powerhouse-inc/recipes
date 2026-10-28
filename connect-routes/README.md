@@ -19,9 +19,15 @@ Adding pages to Connect (the Powerhouse web app) from a project, with TanStack R
 
 ## Generating the route tree without a build
 
-`ph-cli generate connect-routes` writes `.ph/connect-routes.gen.ts`, the tree that `hosts/connect/routes/` type-checks against, and drops a stale one. `ph-cli build` runs the same step, so the command is for checking types (`tsc`, an editor) in a fresh checkout before any build. It does nothing in a project with no routes. Run it as `pnpm exec ph-cli generate connect-routes`. Under `ph vetra --watch` the tree is kept up to date for you.
+`ph-cli generate connect-routes` writes two files into `.ph/`: `connect-routes.gen.ts`, the tree that `hosts/connect/routes/` type-checks against, and `connect-routes.package.ts`, the list of routes the package offers other Connects. `ph-cli build` runs the same step, so the command is for checking types (`tsc`, an editor) in a fresh checkout before any build. In this recipe `tsc` reports the routes' `createFileRoute` paths as errors until the tree exists. Run it as `pnpm generate:routes`.
 
-It first ships in the release that includes powerhouse PR #3293, after the 6.2.3-dev.77 the catalog pins. Bump the catalog before running it.
+If `hosts/connect/routes/` is gone, the command deletes `connect-routes.package.ts` and rewrites an existing `connect-routes.gen.ts` with Connect's routes only, so `tsc` stops resolving the removed routes. It keeps that file. A project with none of the three (the routes folder and both files) is left unchanged.
+
+The command also fails if a route the package offers imports `@powerhousedao/connect`. Those routes import `@powerhousedao/connect-core` instead (powerhouse PR #3303). Only the host's own `_app.tsx` and overrides of Connect's routes may import `@powerhousedao/connect`.
+
+While Connect's dev server runs (`studio`, `ph vetra --watch`), it rewrites the tree as route files and folders are added and removed.
+
+The command first shipped in 6.2.3-dev.79 (powerhouse PR #3293), the release the catalog pins.
 
 ## Requirements
 
