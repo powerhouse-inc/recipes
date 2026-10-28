@@ -32,4 +32,4 @@ pnpm start
 
 ## Requirements
 
-Needs `@powerhousedao/host-core` 6.2.3-dev.71 or later, which exports `resolveHostOutputs` (powerhouse PR #3258). It is not exported from 6.2.3-dev.69 or earlier. The recipe takes host-core from the workspace catalog, which pins 6.2.3-dev.78.
+Needs `@powerhousedao/host-core` 6.2.3-dev.71 or later, which exports `resolveHostOutputs` (powerhouse PR #3258). It is not exported from 6.2.3-dev.69 or earlier. The recipe takes host-core from the workspace catalog, which pins 6.2.3-dev.79.
