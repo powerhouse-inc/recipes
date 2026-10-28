@@ -39,11 +39,11 @@ Both set `runner.port: 0`, `reactor.workflows: false` and `config.switchboard.pa
 |------|---------|
 | `hosts/stack/host.js` | The compound: children `a` (`sb-a`) and `b` (`sb-b`), runner `@powerhousedao/host-core/runners/compound` |
 | `hosts/sb-a/host.js`, `hosts/sb-b/host.js` | The members, runner `@powerhousedao/ph-cli/runners/switchboard`, configured as in the table above |
-| `src/stack.ts` | `withStack`: spawn the stack into a temp data dir with an operator env, run a callback, always stop and delete. `membersOf`, `inspectionAnswers`, `driveAnswers` |
+| `src/stack.ts` | `withStack`: spawn the stack into a temp data dir with an operator env, run a callback, always stop and delete. `membersOf`, `inspectionAnswer`, `driveStatus` |
 | `src/demo.ts` | Checks the stack under two envs, starts it, prints each member's origin, drives and inspection endpoint, then starts it again with `INSPECTION_ENABLED=false` |
 | `src/stack.test.ts` | The stack through the real `spawnHost`: distinct ports, each drive served by its own member only, separate store folders and keypairs, inspection off on `a` and on for `b`; `INSPECTION_ENABLED` over both members; a protocol-contradicting env failing the start |
 | `src/host-config.test.ts` | No server: `checkHost` on the compound, the switchboard runner's `hostSchema` on each rejected key, the `features.workflows` overlap, and `checkBoot` on a `readModel.url` without `storage` |
-| `src/in-process.test.ts` | `runCompound` in the test process with `startSwitchboard` wrapped to record the merged config each member starts with: per-member protocol, auth, inspection and stores, the shared `userDataDir`, `process.env` unchanged |
+| `src/in-process.test.ts` | `runCompound` in the test process with `startSwitchboard` wrapped to record the merged config each member starts with: per-member protocol, auth, inspection and stores (with `DATABASE_URL` and `PH_SWITCHBOARD_DATABASE_URL` in the env), the shared `userDataDir` (over member `a`'s own), `process.env` unchanged |
 
 ## Running
 
@@ -70,7 +70,7 @@ With `CREATE_SIGNATURE_POLICY: "v2-required"` the start fails. `sb-a` sets `"leg
 
 ## What a spawned test cannot see
 
-A `spawnHost` child exposes its run record, its endpoints and its data dir. The parsed config each member started with, and the parent's `process.env`, are only visible in the process that runs the compound. `src/in-process.test.ts` calls `runCompound` with `ctx.env` set to `PH_USER_DATA_DIR` (a temp dir) and `PH_NO_DOTENV`, and a compound object with `config.runtimeRecord: false` so nothing is written to the project's `.ph/run`. `spawnHost` refuses `runtimeRecord: false`, so `hosts/stack/host.js` leaves it unset.
+A `spawnHost` child exposes its run record, its endpoints and its data dir. The parsed config each member started with, and the parent's `process.env`, are only visible in the process that runs the compound. `src/in-process.test.ts` calls `runCompound` with `ctx.env` set to `PH_USER_DATA_DIR` (a temp dir), `PH_NO_DOTENV`, `DATABASE_URL` and `PH_SWITCHBOARD_DATABASE_URL`, and a compound object with `config.runtimeRecord: false` so nothing is written to the project's `.ph/run`. That object's wrapper for `a` restates sb-a's `config` with a `storage.userDataDir` of its own, since a wrapper `config` replaces the member's. `spawnHost` refuses `runtimeRecord: false`, so `hosts/stack/host.js` leaves it unset.
 
 The server module of `@powerhousedao/switchboard` still loads the project `.env` into `process.env` once, when it is imported, unless `process.env` itself has `PH_NO_DOTENV`. That is the server's, not the runner's. This recipe has no `.env`, so the test sees no change.
 
@@ -81,7 +81,7 @@ The server module of `@powerhousedao/switchboard` still loads the project `.env`
 - **Give `readModel.url` a `storage`.** A `readModel.url` without `storage` also holds the reactor store, which logs a deprecation at start; `checkBoot` and `ph host check` report it.
 - **One member's conflict stops the compound.** An env value that only one member contradicts still fails the whole start.
 - **Values are typed.** `config.switchboard.inspection.enabled` takes a boolean. The env strings (`"true"`, `"false"`) belong in the operator env only.
-- **Removed exports.** `projectReactorToSwitchboard` and `SwitchboardReactorProjection` are gone from `@powerhousedao/host-core` from 6.2.3-dev.79 on. The merge logic lives in ph-cli's `member-config`, which is not an exported subpath.
+- **Removed exports.** `projectReactorToSwitchboard` and `SwitchboardReactorProjection` are gone from `@powerhousedao/host-core` from 6.2.3-dev.79 on. In their place, `reactorBlockToSwitchboardConfig` and `SwitchboardReactorLayer` (from the package root and `@powerhousedao/host-core/projection`) map the reactor block to the switchboard config's first layer, with no env. The merge of the three layers lives in ph-cli's `member-config`, which is not an exported subpath.
 
 ## Requirements
 
