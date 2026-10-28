@@ -1,7 +1,7 @@
 import { checkHost } from "@powerhousedao/host-core";
 import {
-  driveAnswers,
-  inspectionAnswers,
+  driveStatus,
+  inspectionAnswer,
   projectRoot,
   withStack,
   type StackMembers,
@@ -12,9 +12,10 @@ async function printMembers(members: StackMembers): Promise<void> {
     const drives = Object.keys(outputs.drives);
     console.log(`  ${key}: ${outputs.origin}, drives ${drives.join(", ")}`);
     for (const slug of ["alpha", "beta"]) {
-      console.log(`    /d/${slug}: ${(await driveAnswers(outputs.origin, slug)) ? "served" : "not found"}`);
+      console.log(`    /d/${slug}: ${await driveStatus(outputs.origin, slug)}`);
     }
-    console.log(`    /graphql/inspection: ${(await inspectionAnswers(outputs.origin)) ? "answers" : "not mounted"}`);
+    const inspection = await inspectionAnswer(outputs.origin);
+    console.log(`    /graphql/inspection: ${inspection.status}${inspection.typename ? ` (${inspection.typename})` : ""}`);
   }
 }
 

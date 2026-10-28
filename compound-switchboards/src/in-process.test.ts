@@ -10,7 +10,7 @@ import {
 } from "@powerhousedao/switchboard/config";
 import type * as SwitchboardServer from "@powerhousedao/switchboard/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { inspectionAnswers, projectRoot } from "./stack.js";
+import { inspectionAnswer, projectRoot } from "./stack.js";
 
 // What a spawned child cannot show: the config each member's server was
 // started with, and process.env after both started. The compound runs in this
@@ -146,12 +146,13 @@ describe("the stack in this process", () => {
           enabled: true,
           callsPerMinute: 7,
         });
-        expect(
-          await inspectionAnswers(`http://localhost:${a.port}`),
-        ).toBe(false);
-        expect(
-          await inspectionAnswers(`http://localhost:${b.port}`),
-        ).toBe(true);
+        expect(await inspectionAnswer(`http://localhost:${a.port}`)).toEqual({
+          status: 404,
+        });
+        expect(await inspectionAnswer(`http://localhost:${b.port}`)).toEqual({
+          status: 200,
+          typename: "Query",
+        });
       } finally {
         await run.shutdown();
       }

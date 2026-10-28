@@ -9,8 +9,8 @@ import {
 } from "@powerhousedao/host-core";
 import { describe, expect, it } from "vitest";
 import {
-  driveAnswers,
-  inspectionAnswers,
+  driveStatus,
+  inspectionAnswer,
   projectRoot,
   READY_TIMEOUT_MS,
   withStack,
@@ -41,14 +41,17 @@ describe("ph run stack through spawnHost", () => {
         // Documents: each reactor holds only its own drive.
         expect(Object.keys(a.drives)).toEqual(["alpha"]);
         expect(Object.keys(b.drives)).toEqual(["beta"]);
-        expect(await driveAnswers(a.origin, "alpha")).toBe(true);
-        expect(await driveAnswers(a.origin, "beta")).toBe(false);
-        expect(await driveAnswers(b.origin, "beta")).toBe(true);
-        expect(await driveAnswers(b.origin, "alpha")).toBe(false);
+        expect(await driveStatus(a.origin, "alpha")).toBe(200);
+        expect(await driveStatus(a.origin, "beta")).toBe(404);
+        expect(await driveStatus(b.origin, "beta")).toBe(200);
+        expect(await driveStatus(b.origin, "alpha")).toBe(404);
 
-        // config.switchboard: inspection off on a, on for b.
-        expect(await inspectionAnswers(a.origin)).toBe(false);
-        expect(await inspectionAnswers(b.origin)).toBe(true);
+        // config.switchboard: inspection off on a (no route), on for b.
+        expect(await inspectionAnswer(a.origin)).toEqual({ status: 404 });
+        expect(await inspectionAnswer(b.origin)).toEqual({
+          status: 200,
+          typename: "Query",
+        });
 
         // Stores: each member's reactor and read model under its own folder
         // of the spawn's dataDir.
@@ -86,16 +89,16 @@ describe("ph run stack through spawnHost", () => {
       // inspection too; "1" is not a value the flag reads, so b keeps its own.
       const [off, notAFlag] = await Promise.all([
         withStack({ INSPECTION_ENABLED: "false" }, async (_host, { a, b }) => [
-          await inspectionAnswers(a.origin),
-          await inspectionAnswers(b.origin),
+          (await inspectionAnswer(a.origin)).status,
+          (await inspectionAnswer(b.origin)).status,
         ]),
         withStack({ INSPECTION_ENABLED: "1" }, async (_host, { a, b }) => [
-          await inspectionAnswers(a.origin),
-          await inspectionAnswers(b.origin),
+          (await inspectionAnswer(a.origin)).status,
+          (await inspectionAnswer(b.origin)).status,
         ]),
       ]);
-      expect(off).toEqual([false, false]);
-      expect(notAFlag).toEqual([false, true]);
+      expect(off).toEqual([404, 404]);
+      expect(notAFlag).toEqual([404, 200]);
     },
     TEST_TIMEOUT_MS,
   );

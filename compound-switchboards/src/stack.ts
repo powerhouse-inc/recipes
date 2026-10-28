@@ -61,25 +61,31 @@ export async function withStack<T>(
   }
 }
 
-/** Whether the member serves the inspection subgraph. A member with
- * inspection off has no route there and answers 404. */
-export async function inspectionAnswers(origin: string): Promise<boolean> {
+/** What the member's inspection subgraph answers `{ __typename }` with. A
+ * member with inspection off has no route there: status 404, no typename. */
+export async function inspectionAnswer(
+  origin: string,
+): Promise<{ status: number; typename?: string }> {
   const response = await fetch(`${origin}/graphql/inspection`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ query: "{ __typename }" }),
     signal: AbortSignal.timeout(10_000),
   });
-  return response.ok;
+  if (!response.ok) {
+    await response.body?.cancel();
+    return { status: response.status };
+  }
+  const body = (await response.json()) as { data?: { __typename?: string } };
+  return { status: response.status, typename: body.data?.__typename };
 }
 
-/** Whether the member serves a drive with this slug. */
-export async function driveAnswers(
-  origin: string,
-  slug: string,
-): Promise<boolean> {
+/** The status the member answers `/d/<slug>` with: 200 for a drive it
+ * serves, 404 for one it does not. */
+export async function driveStatus(origin: string, slug: string): Promise<number> {
   const response = await fetch(`${origin}/d/${slug}`, {
     signal: AbortSignal.timeout(10_000),
   });
-  return response.ok;
+  await response.body?.cancel();
+  return response.status;
 }
