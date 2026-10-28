@@ -144,8 +144,8 @@ export class WebhookBridge {
  * Why a raw `node:http` server rather than a GraphQL mutation resolver? HMAC
  * verification needs the exact bytes the provider signed. A GraphQL/JSON entry
  * point parses the body before your code sees it, so the bytes you'd re-encode
- * to verify are no longer guaranteed to match. The brief calls this out: when
- * raw-body access is awkward, prefer a small listener that controls the bytes.
+ * to verify are no longer guaranteed to match. When raw-body access is awkward,
+ * prefer a small listener that controls the bytes.
  */
 export function createWebhookServer(opts: {
   secret: string;

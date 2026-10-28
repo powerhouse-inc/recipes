@@ -13,8 +13,7 @@ This recipe is the inbound twin of [`discord-webhook-processor`](../discord-webh
 
 Always verify the raw body string, *then* parse it. This recipe uses a small
 `node:http` listener precisely so it controls the bytes. A GraphQL/JSON
-mutation resolver parses the body before your code runs, which is why
-[the brief](../briefs/04-inbound-webhook-bridge.md) recommends a dedicated
+mutation resolver parses the body before your code runs, so use a dedicated
 listener when raw-body access is awkward.
 
 ## How it works

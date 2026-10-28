@@ -4,8 +4,7 @@ A polling worker that pulls an off-platform feed into event-sourced documents
 **idempotently**. The trigger comes from outside the reactor, the
 `@powerhousedao/reactor` instance that stores the documents and applies
 operations to them. A deterministic in-process mock feed replaces the chain a
-production poller would page ([the brief](../briefs/05-external-feed-ingest.md)
-describes that poller), so the demo runs offline with no keys.
+production poller would page, so the demo runs offline with no keys.
 
 ## Where the checkpoint lives
 
