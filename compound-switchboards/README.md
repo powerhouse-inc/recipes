@@ -43,7 +43,7 @@ Both set `runner.port: 0`, `reactor.workflows: false` and `config.switchboard.pa
 | `src/demo.ts` | Checks the stack under two envs, starts it, prints each member's origin, drives and inspection endpoint, then starts it again with `INSPECTION_ENABLED=false` |
 | `src/stack.test.ts` | The stack through the real `spawnHost`: distinct ports, each drive served by its own member only, separate store folders and keypairs, inspection off on `a` and on for `b`; `INSPECTION_ENABLED` over both members; a protocol-contradicting env failing the start |
 | `src/host-config.test.ts` | No server: `checkHost` on the compound, the switchboard runner's `hostSchema` on each rejected key, the `features.workflows` overlap, and `checkBoot` on a `readModel.url` without `storage` |
-| `src/in-process.test.ts` | `runCompound` in the test process with `startSwitchboard` wrapped to record each member's config: per-member protocol, auth, inspection and stores, the shared `userDataDir`, `process.env` unchanged |
+| `src/in-process.test.ts` | `runCompound` in the test process with `startSwitchboard` wrapped to record the merged config each member starts with: per-member protocol, auth, inspection and stores, the shared `userDataDir`, `process.env` unchanged |
 
 ## Running
 
@@ -52,7 +52,7 @@ pnpm test    # four real compound starts (one, two at once, one that fails) and 
 pnpm start
 ```
 
-`vitest.config.ts` inlines `@powerhousedao/host-core` and ph-cli's switchboard runner chunks, so the `vi.mock` of `@powerhousedao/switchboard/server` in `in-process.test.ts` reaches the runner's import. It runs one test file at a time, since each file boots two switchboards.
+`vitest.config.ts` inlines `@powerhousedao/host-core` and ph-cli's switchboard runner chunks, so the `vi.mock` of `@powerhousedao/switchboard/server` in `in-process.test.ts` reaches the runner's import. The recipe does not depend on `@powerhousedao/switchboard`: the test mocks the copy ph-cli imports, found from ph-cli's own folder. It runs one test file at a time, since each file boots two switchboards.
 
 ## Operator env
 
@@ -85,6 +85,6 @@ The server module of `@powerhousedao/switchboard` still loads the project `.env`
 
 ## Requirements
 
-`@powerhousedao/host-core`, `@powerhousedao/ph-cli` and `@powerhousedao/switchboard` 6.2.3-dev.79 from the workspace catalog. That is the first release with powerhouse PR #3314. In 6.2.3-dev.78 and earlier the runner wrote each member's reactor block into `process.env`, only where a variable was unset, so the second switchboard in a process started with the first one's values. `@powerhousedao/switchboard` is a dependency only so `in-process.test.ts` can mock and type its server and config modules.
+`@powerhousedao/host-core` and `@powerhousedao/ph-cli` 6.2.3-dev.79 from the workspace catalog. That is the first release with powerhouse PR #3314. In 6.2.3-dev.78 and earlier the runner wrote each member's reactor block into `process.env`, only where a variable was unset, so the second switchboard in a process started with the first one's values.
 
 Node 24 or later: ph-cli and the switchboard declare `engines.node >=24.0.0`.

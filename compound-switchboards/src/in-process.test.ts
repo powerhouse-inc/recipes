@@ -3,12 +3,6 @@ import net from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runCompound } from "@powerhousedao/host-core";
-import {
-  switchboardConfigSchema,
-  type SwitchboardConfig,
-  type SwitchboardConfigInput,
-} from "@powerhousedao/switchboard/config";
-import type * as SwitchboardServer from "@powerhousedao/switchboard/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { inspectionAnswer, projectRoot } from "./stack.js";
 
@@ -18,33 +12,68 @@ import { inspectionAnswer, projectRoot } from "./stack.js";
 // own compound-switchboards test does. vitest.config.ts inlines host-core and
 // ph-cli's switchboard runner so the mock reaches the runner's import.
 
+/** The parts of a member's merged switchboard config this test reads. */
+interface MemberConfig {
+  storage: {
+    reactor?: { url?: string };
+    readModel?: { url?: string };
+    userDataDir?: string;
+  };
+  protocol?: Record<string, unknown>;
+  auth?: {
+    admins?: string[];
+    wsRecheckMs?: number;
+    documentPermissions?: { cacheTtlMs?: number };
+  };
+  inspection?: { enabled?: boolean; callsPerMinute?: number };
+}
+
 interface Started {
-  config: SwitchboardConfig;
+  config: MemberConfig;
   port: number;
 }
 
-const state = vi.hoisted(() => ({ started: [] as Started[] }));
+type StartSwitchboard = (
+  config: MemberConfig,
+  deps?: Record<string, unknown>,
+) => Promise<{ port: number }>;
 
-vi.mock("@powerhousedao/switchboard/server", async (importOriginal) => {
-  const actual = await importOriginal<typeof SwitchboardServer>();
-  return {
-    ...actual,
-    startSwitchboard: async (
-      config: SwitchboardConfigInput,
-      deps: SwitchboardServer.SwitchboardDeps = {},
-    ) => {
-      // ph-cli asks for fatalErrorShutdown, which exits the process.
-      const handle = await actual.startSwitchboard(config, {
-        ...deps,
-        fatalErrorShutdown: false,
-      });
-      state.started.push({
-        config: switchboardConfigSchema.parse(config),
-        port: handle.port,
-      });
-      return handle;
-    },
+// @powerhousedao/switchboard is ph-cli's dependency, not this recipe's. The
+// mock names the file ph-cli's runner imports: the "./server" export of the
+// switchboard that Node finds from ph-cli's own folder.
+const { serverModule, state } = await vi.hoisted(async () => {
+  const { createRequire } = await import("node:module");
+  const { existsSync, readFileSync, realpathSync } = await import("node:fs");
+  const { dirname, join } = await import("node:path");
+  const phCli = createRequire(import.meta.url).resolve(
+    "@powerhousedao/ph-cli/package.json",
+  );
+  const switchboard = createRequire(phCli)
+    .resolve.paths("@powerhousedao/switchboard")
+    ?.map((dir) => join(dir, "@powerhousedao/switchboard/package.json"))
+    .find((file) => existsSync(file));
+  if (!switchboard) throw new Error(`no @powerhousedao/switchboard next to ${phCli}`);
+  const { exports } = JSON.parse(readFileSync(switchboard, "utf8")) as {
+    exports: Record<string, { import: string }>;
   };
+  return {
+    serverModule: realpathSync(join(dirname(switchboard), exports["./server"].import)),
+    state: { started: [] as Started[] },
+  };
+});
+
+vi.mock(serverModule, async (importOriginal) => {
+  const actual = await importOriginal<{ startSwitchboard: StartSwitchboard }>();
+  const startSwitchboard: StartSwitchboard = async (config, deps = {}) => {
+    // ph-cli asks for fatalErrorShutdown, which exits the process.
+    const handle = await actual.startSwitchboard(config, {
+      ...deps,
+      fatalErrorShutdown: false,
+    });
+    state.started.push({ config, port: handle.port });
+    return handle;
+  };
+  return { ...actual, startSwitchboard };
 });
 
 // hosts/stack/host.js, plus runtimeRecord: false so nothing is written to
@@ -113,39 +142,27 @@ describe("the stack in this process", () => {
           reactor: { url: store("sb-b", "reactor") },
           readModel: { url: store("sb-b", "read-model") },
         });
-        // userDataDir: the env's, for both. PH_USER_DATA_DIR is the last
-        // layer, so a per-member storage.userDataDir would not hold here.
+        // userDataDir: the env's, for both.
         expect(a.config.storage.userDataDir).toBe(userData);
         expect(b.config.storage.userDataDir).toBe(userData);
 
-        // Protocol: each member's own block, defaults for what it leaves out.
-        expect(a.config.protocol).toMatchObject({
+        // Protocol: each member's own block and nothing else. b sets no
+        // createSignaturePolicy and does not get a's "legacy" (in 6.2.3-dev.78
+        // it did, through process.env).
+        expect(a.config.protocol).toEqual({
           featureFlags: { documentDecisions: true },
           createSignaturePolicy: "legacy",
-          unsupportedStoredDocuments: "refuse",
         });
-        expect(b.config.protocol).toMatchObject({
+        expect(b.config.protocol).toEqual({
           featureFlags: { documentDecisions: false },
-          createSignaturePolicy: "v2-required",
           unsupportedStoredDocuments: "read-only",
         });
 
         // config.switchboard: auth and inspection differ per member.
-        expect(a.config.auth).toMatchObject({
-          admins: ["0xa"],
-          wsRecheckMs: 1000,
-        });
-        expect(a.config.auth.documentPermissions.cacheTtlMs).toBeUndefined();
-        expect(b.config.auth).toMatchObject({
-          admins: [],
-          documentPermissions: { cacheTtlMs: 500 },
-        });
-        expect(b.config.auth.wsRecheckMs).toBeUndefined();
-        expect(a.config.inspection.enabled).toBe(false);
-        expect(b.config.inspection).toMatchObject({
-          enabled: true,
-          callsPerMinute: 7,
-        });
+        expect(a.config.auth).toEqual({ admins: ["0xa"], wsRecheckMs: 1000 });
+        expect(b.config.auth).toEqual({ documentPermissions: { cacheTtlMs: 500 } });
+        expect(a.config.inspection).toEqual({ enabled: false });
+        expect(b.config.inspection).toEqual({ enabled: true, callsPerMinute: 7 });
         expect(await inspectionAnswer(`http://localhost:${a.port}`)).toEqual({
           status: 404,
         });
