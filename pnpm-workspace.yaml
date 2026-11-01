@@ -105,6 +105,8 @@ minimumReleaseAgeExclude:
   - '@powerhousedao/reactor-privacy@6.2.3-dev.79'
   - '@powerhousedao/reactor-router@6.2.3-dev.79'
   - '@powerhousedao/reactor-workflow@6.2.3-dev.79'
+  - '@powerhousedao/reactor-workflow@6.2.3-dev.88'
+  - '@powerhousedao/pieces-framework@6.2.3-dev.88'
   - '@powerhousedao/reactor@6.2.3-dev.79'
   - '@powerhousedao/shared@6.2.3-dev.79'
   - '@powerhousedao/switchboard@6.2.3-dev.79'
@@ -165,3 +167,4 @@ packages:
   - signed-operations-verifier
   - subscription-cli
   - sync-health-monitor
+  - workflow-flow-control
