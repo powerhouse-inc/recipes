@@ -7,6 +7,7 @@ import {
   runWorkflow,
 } from "@powerhousedao/reactor-workflow/testing";
 import type { BlockExecution } from "@powerhousedao/reactor-workflow/testing";
+import { tmpdir } from "node:os";
 
 type Edge = { id: string; from: string; to: string; port: string };
 
@@ -87,7 +88,7 @@ class Recorder {
 export async function runOrders(orders: { id: string; status: string }[]) {
   const recorder = new Recorder();
   // Router and loop are core blocks the engine runs in process.
-  const core = new ActivepiecesBlockExecutor({ cacheDir: "/tmp/na" });
+  const core = new ActivepiecesBlockExecutor({ cacheDir: tmpdir() });
   const coreBlock = (name: string) =>
     blockKey({ pieceName: CORE_PIECE_NAME, kind: "action", name });
   const executor = new CompositeBlockExecutor(recorder, {

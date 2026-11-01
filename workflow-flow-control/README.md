@@ -2,6 +2,8 @@
 
 A workflow can branch and repeat without code. The Core router picks one of several named branches per run, and the Core loop runs its body once per item. This recipe builds a workflow of the two nested, then runs it through the engine's own coordinator (`runWorkflow` from `@powerhousedao/reactor-workflow/testing`). No reactor is started.
 
+Run `pnpm install` after the version moves, so `pnpm-lock.yaml` gains this recipe's importer (it is not in the lockfile yet).
+
 Needs `@powerhousedao/reactor-workflow` with router and loop blocks (powerhouse PR #3358). **That change is not in a published release yet: the version pinned in `package.json` must move to the first dev build that has it.**
 
 ## How it works

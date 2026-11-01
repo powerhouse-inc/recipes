@@ -15,9 +15,12 @@ describe("router inside a loop", () => {
       ["review", "o-3"],
       ["summary", undefined],
     ]);
-    expect(journal.filter((l) => l.startsWith("each_order["))).toContain(
-      "each_order[1]/route SUCCEEDED",
-    );
+    for (const i of [1, 2, 3]) {
+      expect(journal.filter((l) => l === `each_order[${i}]/route SUCCEEDED`)).toHaveLength(1);
+    }
+    // Only the branch taken runs: "paid" does not fall through to review.
+    expect(calls.filter((c) => c.step.id === "review")).toHaveLength(1);
+    expect(calls.at(-1)?.config).toEqual({ orders: 3 });
     expect(journal.at(-1)).toBe("summary SUCCEEDED");
   });
 
