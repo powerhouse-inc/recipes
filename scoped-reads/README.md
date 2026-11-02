@@ -14,11 +14,12 @@ straight from `IReactor`.
   `document`.
 - **Per scope, not per document**: four identities get three views, and a
   withheld scope is *absent* from `document.state` rather than present and
-  empty. `client.execute()` hands back a document gated as the client's own
-  identity.
+  empty. The document a write handle's `document()` returns is gated as the
+  client's own identity.
 - **The client reads as its signer**: Alice's client is built with her
   `RenownCryptoSigner` key (`buildSignedReactor` in `src/signers.ts`), so a
-  `client.get()` with no subject, and `client.execute()`, are gated as Alice.
+  `client.get()` with no subject, and the document the handle from
+  `client.write.execute()` returns, are gated as Alice.
   Bob and Carol write through clients of their own.
 - **The read gate carries no feature flag**: with `featureFlags: {}` the read
   is filtered, while admission waits on `authEnforcement`.
