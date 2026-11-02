@@ -11,8 +11,8 @@
     "start": "node --import tsx src/demo.ts"
   },
   "dependencies": {
-    "@powerhousedao/pieces-framework": "6.2.3-dev.88",
-    "@powerhousedao/reactor-workflow": "6.2.3-dev.88"
+    "@powerhousedao/pieces-framework": "6.2.3-dev.90",
+    "@powerhousedao/reactor-workflow": "6.2.3-dev.90"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
