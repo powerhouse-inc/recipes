@@ -311,9 +311,10 @@ describe("scoped reads", () => {
   it("gates the document a write hands back", async () => {
     const { client, reportId } = await boot();
 
-    const written = await client.execute(reportId, "main", [
+    const handle = await client.write.execute(reportId, "main", [
       submitExpense({ id: "e-3", memo: "Hotel", amountCents: 18000 }),
     ]);
+    const written = await handle.document();
 
     expect(Object.keys(written.state).sort()).toEqual([
       "auth",

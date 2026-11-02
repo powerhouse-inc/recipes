@@ -298,11 +298,12 @@ async function main() {
   );
 
   console.log("\n─── A write hands back a read ───────────────────────────\n");
-  const written = await client.execute(reportId, "main", [
+  const handle = await client.write.execute(reportId, "main", [
     submitExpense({ id: "e-3", memo: "Hotel", amountCents: 18000 }),
   ]);
-  console.log("   client.execute() returns the document gated as the client's");
-  console.log("   own identity (Alice):");
+  const written = await handle.document();
+  console.log("   The write handle's document() is gated as the client's own");
+  console.log("   identity (Alice):");
   console.log(`   ${Object.keys(written.state).sort().join(", ")}`);
   console.log("\n   She sees the scope she wrote, and not the notes her policy");
   console.log("   withholds. Returning it whole would have served exactly what");
