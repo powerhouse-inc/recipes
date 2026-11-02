@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "components": {
+    "analytics-processor": {
+      "paths": [
+        "analytics-processor/**"
+      ]
+    },
+    "anonymous-subscriptions": {
+      "paths": [
+        "anonymous-subscriptions/**"
+      ]
+    },
+    "audit-trail": {
+      "paths": [
+        "audit-trail/**"
+      ]
+    },
+    "auth-preflight": {
+      "paths": [
+        "auth-preflight/**"
+      ]
+    },
+    "batch-progress": {
+      "paths": [
+        "batch-progress/**"
+      ]
+    },
+    "compound-switchboards": {
+      "paths": [
+        "compound-switchboards/**"
+      ]
+    },
+    "connect-routes": {
+      "paths": [
+        "connect-routes/**"
+      ]
+    },
+    "cross-document-reactor": {
+      "paths": [
+        "cross-document-reactor/**"
+      ]
+    },
+    "custom-read-model": {
+      "paths": [
+        "custom-read-model/**"
+      ]
+    },
+    "db-migrate": {
+      "paths": [
+        "db-migrate/**"
+      ]
+    },
+    "discord-webhook-processor": {
+      "paths": [
+        "discord-webhook-processor/**"
+      ]
+    },
+    "document-acl": {
+      "paths": [
+        "document-acl/**"
+      ]
+    },
+    "document-snapshot-exporter": {
+      "paths": [
+        "document-snapshot-exporter/**"
+      ]
+    },
+    "document-versioning": {
+      "paths": [
+        "document-versioning/**"
+      ]
+    },
+    "drive-override": {
+      "paths": [
+        "drive-override/**"
+      ]
+    },
+    "editor-props": {
+      "paths": [
+        "editor-props/**"
+      ]
+    },
+    "external-feed-ingest": {
+      "paths": [
+        "external-feed-ingest/**"
+      ]
+    },
+    "full-text-search": {
+      "paths": [
+        "full-text-search/**"
+      ]
+    },
+    "group-principals": {
+      "paths": [
+        "group-principals/**"
+      ]
+    },
+    "host-check": {
+      "paths": [
+        "host-check/**"
+      ]
+    },
+    "host-output-tokens": {
+      "paths": [
+        "host-output-tokens/**"
+      ]
+    },
+    "hosted-webhooks": {
+      "paths": [
+        "hosted-webhooks/**"
+      ]
+    },
+    "inbound-webhook-bridge": {
+      "paths": [
+        "inbound-webhook-bridge/**"
+      ]
+    },
+    "package-styles": {
+      "paths": [
+        "package-styles/**"
+      ]
+    },
+    "positional-delete": {
+      "paths": [
+        "positional-delete/**"
+      ]
+    },
+    "rate-limiter": {
+      "paths": [
+        "rate-limiter/**"
+      ]
+    },
+    "relational-db-subgraph": {
+      "paths": [
+        "relational-db-subgraph/**"
+      ]
+    },
+    "replay-state": {
+      "paths": [
+        "replay-state/**"
+      ]
+    },
+    "revocation-race": {
+      "paths": [
+        "revocation-race/**"
+      ]
+    },
+    "role-based-auth": {
+      "paths": [
+        "role-based-auth/**"
+      ]
+    },
+    "saga": {
+      "paths": [
+        "saga/**"
+      ]
+    },
+    "scoped-reads": {
+      "paths": [
+        "scoped-reads/**"
+      ]
+    },
+    "semantic-search": {
+      "paths": [
+        "semantic-search/**"
+      ]
+    },
+    "signed-operations-verifier": {
+      "paths": [
+        "signed-operations-verifier/**"
+      ]
+    },
+    "spawn-host": {
+      "paths": [
+        "spawn-host/**"
+      ]
+    },
+    "subscription-cli": {
+      "paths": [
+        "subscription-cli/**"
+      ]
+    },
+    "sync-health-monitor": {
+      "paths": [
+        "sync-health-monitor/**"
+      ]
+    },
+    "undo-retract": {
+      "paths": [
+        "undo-retract/**"
+      ]
+    },
+    "repo": {
+      "description": "Root workspace files, shared config and tooling",
+      "paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "tsconfig.json",
+        "tsconfig.options.json",
+        "README.md",
+        "LICENSE",
+        ".gitignore",
+        ".mcp.json",
+        "auth-recipes-ideas.md",
+        ".github/**",
+        ".claude/**"
+      ]
+    }
+  },
+  "merge": {
+    "method": "merge"
+  },
+  "ci": {
+    "expected": [],
+    "keySteps": [],
+    "ignore": []
+  }
+}
