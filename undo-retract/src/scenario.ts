@@ -1,17 +1,9 @@
-import {
-  JobAwaiter,
-  JobStatus,
-  ReactorBuilder,
-  ReactorClientBuilder,
-} from "@powerhousedao/reactor";
+import { ReactorBuilder, ReactorClientBuilder } from "@powerhousedao/reactor";
 import type {
   DocumentModelDocument,
   Operation,
 } from "@powerhousedao/shared/document-model";
-import {
-  documentModelDocumentModelModule,
-  addModule,
-} from "document-model";
+import { documentModelDocumentModelModule, addModule } from "document-model";
 import {
   MemoryKeyStorage,
   RenownCryptoBuilder,
@@ -43,8 +35,9 @@ export type ScenarioResult = {
 
 /**
  * Adds two modules to one document, then undoes, redoes and undoes again through
- * `client.undo` and `client.redo`. `undoV3` is on by default, so the document
- * is created at base-reducer 3 and each undo or redo is stored as a `RETRACT`.
+ * `client.undo` and `client.redo`. `undoV3` is set explicitly: dev.90 predates the default flip, and
+ * without it the document is created at base-reducer 2, where `redo` fails.
+ * The document is created at base-reducer 3 and each undo or redo is stored as a `RETRACT`.
  */
 export async function runScenario(): Promise<ScenarioResult> {
   const signer = new RenownCryptoSigner(
@@ -62,17 +55,8 @@ export async function runScenario(): Promise<ScenarioResult> {
     .withSigner(signer)
     .buildModule();
   const { client } = clientModule;
-  const { reactor, eventBus } = clientModule.reactorModule!;
+  const { reactor } = clientModule.reactorModule!;
 
-  const awaiter = new JobAwaiter(eventBus, (jobId, signal) =>
-    reactor.getJobStatus(jobId, signal),
-  );
-  const settle = async (jobId: string) => {
-    const job = await awaiter.waitForJob(jobId);
-    if (job.status === JobStatus.FAILED) {
-      throw new Error(`job ${jobId} failed: ${job.error?.message}`);
-    }
-  };
   const stream = async (id: string): Promise<Operation[]> => {
     const page = await reactor.getOperations(id, {
       branch: "main",
@@ -101,7 +85,9 @@ export async function runScenario(): Promise<ScenarioResult> {
       ]);
       steps.push({
         label,
-        modules: document.state.global.specifications[0].modules.map((m) => m.id),
+        modules: document.state.global.specifications[0].modules.map(
+          (m) => m.id,
+        ),
         ...availability,
         undoTarget: targets.undoTarget,
         redoTarget: targets.redoTarget,
@@ -132,7 +118,7 @@ export async function runScenario(): Promise<ScenarioResult> {
       editIds: operations
         .filter((o) => o.action.type === "ADD_MODULE")
         .map((o) => o.action.id),
-      signerKey: operations[0]?.action.context?.signer?.app.key ?? "",
+      signerKey: operations[0].action.context!.signer!.app.key,
     };
   } finally {
     reactor.kill();
