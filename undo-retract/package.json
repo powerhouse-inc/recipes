@@ -1,0 +1,27 @@
+{
+  "name": "@powerhousedao/example-undo-retract",
+  "version": "0.0.0",
+  "description": "Example: undo on base-reducer 3 is a signed RETRACT that names the undone action by id",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@powerhousedao/reactor": "6.2.3-dev.90",
+    "@powerhousedao/shared": "6.2.3-dev.90",
+    "@renown/sdk": "6.2.3-dev.90",
+    "document-model": "6.2.3-dev.90"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
