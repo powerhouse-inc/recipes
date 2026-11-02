@@ -64,6 +64,12 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [hosted-webhooks](./hosted-webhooks) | `subgraph.http` routes under the package's npm name, and a per-document Stripe webhook at a token URL the reactor hosts |
 | [inbound-webhook-bridge](./inbound-webhook-bridge) | Standalone endpoint that verifies signed external webhooks against the raw bytes and dispatches them as payment-document actions |
 
+## Workflows
+
+| Project | Description |
+|---------|-------------|
+| [workflow-flow-control](./workflow-flow-control) | A workflow engine run with a Core router nested in a loop: each item takes its own branch, journaled per iteration |
+
 ## Events and subscriptions
 
 | Project | Description |

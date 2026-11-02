@@ -201,3 +201,4 @@ packages:
   - subscription-cli
   - sync-health-monitor
   - undo-retract
+  - workflow-flow-control
