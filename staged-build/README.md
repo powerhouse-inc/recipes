@@ -4,7 +4,7 @@ A failed, stopped or concurrent `ph build` used to leave `dist/` half written, a
 
 ## Status
 
-**Unverified.** No published `@powerhousedao/ph-cli` carries #3381 yet (dev.94 predates it), so these tests have not been run. The catalog still pins dev.79, which lacks the feature. Once a release includes it, point this recipe at that version, run the tests and remove this section. The release-approval commands are experimental and can change in any release.
+**Unverified.** The tests skip themselves on a ph-cli without `--prepack`. No published `@powerhousedao/ph-cli` carries #3381 yet (dev.94 predates it), so these tests have not been run. The catalog still pins dev.79, which lacks the feature. Once a release includes it, point this recipe at that version, run the tests and remove this section. The release-approval commands are experimental and can change in any release.
 
 ## How it works
 

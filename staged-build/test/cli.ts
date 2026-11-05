@@ -13,7 +13,11 @@ export function ph(...args: string[]) {
     shell: process.platform === "win32",
     env: { ...process.env, CI: "true", FORCE_COLOR: "0" },
     encoding: "utf8",
+    timeout: 110_000,
   });
+  if (result.error || result.status === null) {
+    throw new Error(`ph-cli ${args.join(" ")} did not run: ${result.error?.message ?? "no exit status"}`);
+  }
   return {
     status: result.status,
     output: `${result.stdout}\n${result.stderr}`,

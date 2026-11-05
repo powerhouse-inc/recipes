@@ -1,6 +1,6 @@
-import { appendFileSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { digestTree, ph, recipeDir } from "./cli.js";
 
 const dist = join(recipeDir, "dist");
@@ -8,12 +8,18 @@ const indexFile = join(recipeDir, "index.ts");
 const approvalFile = join(recipeDir, ".ph/build/release-approval.json");
 const original = readFileSync(indexFile, "utf8");
 
-afterEach(() => writeFileSync(indexFile, original));
+afterEach(() => {
+  writeFileSync(indexFile, original);
+  rmSync(approvalFile, { force: true });
+});
+
+// Releases before powerhouse#3381 have no staged build or --prepack.
+const supported = ph("model", "check", "--help").output.includes("--prepack");
 
 const stageDirs = () =>
   readdirSync(recipeDir).filter((name) => name.startsWith(".dist.ph-stage-"));
 
-describe("staged build", () => {
+describe.skipIf(!supported)("staged build", () => {
   beforeAll(() => {
     expect(ph("build").status).toBe(0);
   });
@@ -24,7 +30,8 @@ describe("staged build", () => {
 
     const result = ph("build");
 
-    expect(result.status).not.toBe(0);
+    expect(result.status).toBe(1);
+    expect(result.output).toMatch(/TS\d+/);
     expect(digestTree(dist)).toEqual(before);
     expect(stageDirs()).toEqual([]);
   });
@@ -39,7 +46,12 @@ describe("staged build", () => {
   });
 });
 
-describe("release approval", () => {
+describe.skipIf(!supported)("release approval", () => {
+  beforeEach(() => {
+    // Each test starts from a build that matches the unmodified source.
+    expect(ph("build").status).toBe(0);
+  });
+
   it("is written by build --release and verified by model check --prepack", () => {
     expect(ph("build", "--release").status).toBe(0);
     const approval = JSON.parse(readFileSync(approvalFile, "utf8"));
@@ -51,12 +63,15 @@ describe("release approval", () => {
 
   it("is refused once a published file changes", () => {
     expect(ph("build", "--release").status).toBe(0);
+    expect(existsSync(join(dist, "browser/index.js"))).toBe(true);
     appendFileSync(join(dist, "browser/index.js"), "\n// tampered\n");
 
     const check = ph("model", "check", "--prepack", "--json");
 
     expect(check.status).toBe(1);
-    expect(JSON.parse(check.output.trim().split("\n")[0]).decision).not.toBe("ok");
+    const report = JSON.parse(check.output.trim().split("\n")[0]);
+    expect(report.decision).toBe("stale");
+    expect(report.reasons.length).toBeGreaterThan(0);
   });
 
   it("goes stale when a plain build replaces dist/", () => {

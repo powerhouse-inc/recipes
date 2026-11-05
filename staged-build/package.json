@@ -2,6 +2,7 @@
   "name": "@powerhousedao/example-staged-build",
   "version": "0.0.0",
   "description": "Example: a staged ph build that leaves dist/ intact on failure, and a release approval that ph publish can verify",
+  "files": ["dist"],
   "license": "AGPL-3.0-only",
   "type": "module",
   "private": true,
