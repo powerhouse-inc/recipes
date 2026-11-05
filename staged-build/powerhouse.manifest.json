@@ -1,0 +1,9 @@
+{
+  "name": "@powerhousedao/example-staged-build",
+  "description": "A minimal package for watching ph build stage its output and record a release approval.",
+  "category": "Examples",
+  "documentModels": [],
+  "editors": [],
+  "processors": [],
+  "subgraphs": []
+}
