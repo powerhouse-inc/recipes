@@ -197,6 +197,7 @@ packages:
   - scoped-reads
   - semantic-search
   - spawn-host
+  - staged-build
   - signed-operations-verifier
   - subscription-cli
   - sync-health-monitor
