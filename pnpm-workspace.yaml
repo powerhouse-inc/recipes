@@ -64,6 +64,8 @@ allowBuilds:
 # (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 # undo-retract pins 6.2.3-dev.90 itself (powerhouse#3348 slices 1-4: write.undo,
 # undoRedoTargets); the catalog stays on dev.79 for the other recipes.
+# code-first-model pins 6.2.3-dev.102 itself: the first build where
+# defineDocumentModel accepts a model without scopes.local (powerhouse#3395).
 catalog:
   "@powerhousedao/analytics-engine-browser": 6.2.3-dev.79
   "@powerhousedao/analytics-engine-core": 6.2.3-dev.79
@@ -83,70 +85,103 @@ catalog:
 minimumReleaseAgeExclude:
   - '@powerhousedao/analytics-engine-browser@6.2.3-dev.79'
   - '@powerhousedao/analytics-engine-browser@6.2.3-dev.90'
+  - '@powerhousedao/analytics-engine-browser@6.2.3-dev.102'
   - '@powerhousedao/analytics-engine-core@6.2.3-dev.79'
   - '@powerhousedao/analytics-engine-core@6.2.3-dev.90'
+  - '@powerhousedao/analytics-engine-core@6.2.3-dev.102'
   - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.79'
   - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.90'
+  - '@powerhousedao/analytics-engine-graphql@6.2.3-dev.102'
   - '@powerhousedao/analytics-engine-knex@6.2.3-dev.79'
   - '@powerhousedao/analytics-engine-knex@6.2.3-dev.90'
+  - '@powerhousedao/analytics-engine-knex@6.2.3-dev.102'
   - '@powerhousedao/analytics-engine-pg@6.2.3-dev.79'
   - '@powerhousedao/analytics-engine-pg@6.2.3-dev.90'
+  - '@powerhousedao/analytics-engine-pg@6.2.3-dev.102'
   - '@powerhousedao/builder-tools@6.2.3-dev.79'
   - '@powerhousedao/builder-tools@6.2.3-dev.90'
+  - '@powerhousedao/builder-tools@6.2.3-dev.102'
   - '@powerhousedao/codegen@6.2.3-dev.79'
   - '@powerhousedao/codegen@6.2.3-dev.90'
+  - '@powerhousedao/codegen@6.2.3-dev.102'
   - '@powerhousedao/common@6.2.3-dev.79'
   - '@powerhousedao/common@6.2.3-dev.90'
+  - '@powerhousedao/common@6.2.3-dev.102'
   - '@powerhousedao/config@6.2.3-dev.79'
   - '@powerhousedao/config@6.2.3-dev.90'
+  - '@powerhousedao/config@6.2.3-dev.102'
   - '@powerhousedao/connect-core@6.2.3-dev.79'
   - '@powerhousedao/connect-core@6.2.3-dev.90'
+  - '@powerhousedao/connect-core@6.2.3-dev.102'
   - '@powerhousedao/connect@6.2.3-dev.79'
   - '@powerhousedao/connect@6.2.3-dev.90'
+  - '@powerhousedao/connect@6.2.3-dev.102'
   - '@powerhousedao/design-system@6.2.3-dev.79'
   - '@powerhousedao/design-system@6.2.3-dev.90'
+  - '@powerhousedao/design-system@6.2.3-dev.102'
   - '@powerhousedao/host-core@6.2.3-dev.79'
   - '@powerhousedao/host-core@6.2.3-dev.90'
+  - '@powerhousedao/host-core@6.2.3-dev.102'
   - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.79'
   - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.90'
+  - '@powerhousedao/opentelemetry-instrumentation-reactor@6.2.3-dev.102'
   - '@powerhousedao/ph-cli@6.2.3-dev.79'
   - '@powerhousedao/ph-cli@6.2.3-dev.90'
+  - '@powerhousedao/ph-cli@6.2.3-dev.102'
   - '@powerhousedao/pieces-framework@6.2.3-dev.79'
   - '@powerhousedao/pieces-framework@6.2.3-dev.90'
+  - '@powerhousedao/pieces-framework@6.2.3-dev.102'
   - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.79'
   - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.90'
+  - '@powerhousedao/powerhouse-vetra-packages@6.2.3-dev.102'
   - '@powerhousedao/reactor-api@6.2.3-dev.79'
   - '@powerhousedao/reactor-api@6.2.3-dev.90'
+  - '@powerhousedao/reactor-api@6.2.3-dev.102'
   - '@powerhousedao/reactor-attachments@6.2.3-dev.79'
   - '@powerhousedao/reactor-attachments@6.2.3-dev.90'
+  - '@powerhousedao/reactor-attachments@6.2.3-dev.102'
   - '@powerhousedao/reactor-browser@6.2.3-dev.79'
   - '@powerhousedao/reactor-browser@6.2.3-dev.90'
+  - '@powerhousedao/reactor-browser@6.2.3-dev.102'
   - '@powerhousedao/reactor-drive@6.2.3-dev.79'
   - '@powerhousedao/reactor-drive@6.2.3-dev.90'
+  - '@powerhousedao/reactor-drive@6.2.3-dev.102'
   - '@powerhousedao/reactor-group@6.2.3-dev.79'
   - '@powerhousedao/reactor-group@6.2.3-dev.90'
+  - '@powerhousedao/reactor-group@6.2.3-dev.102'
   - '@powerhousedao/reactor-mcp@6.2.3-dev.79'
   - '@powerhousedao/reactor-mcp@6.2.3-dev.90'
+  - '@powerhousedao/reactor-mcp@6.2.3-dev.102'
   - '@powerhousedao/reactor-privacy@6.2.3-dev.79'
   - '@powerhousedao/reactor-privacy@6.2.3-dev.90'
+  - '@powerhousedao/reactor-privacy@6.2.3-dev.102'
   - '@powerhousedao/reactor-router@6.2.3-dev.79'
   - '@powerhousedao/reactor-router@6.2.3-dev.90'
+  - '@powerhousedao/reactor-router@6.2.3-dev.102'
   - '@powerhousedao/reactor-workflow@6.2.3-dev.79'
   - '@powerhousedao/reactor-workflow@6.2.3-dev.90'
+  - '@powerhousedao/reactor-workflow@6.2.3-dev.102'
   - '@powerhousedao/reactor@6.2.3-dev.79'
   - '@powerhousedao/reactor@6.2.3-dev.90'
+  - '@powerhousedao/reactor@6.2.3-dev.102'
   - '@powerhousedao/shared@6.2.3-dev.79'
   - '@powerhousedao/shared@6.2.3-dev.90'
+  - '@powerhousedao/shared@6.2.3-dev.102'
   - '@powerhousedao/switchboard@6.2.3-dev.79'
   - '@powerhousedao/switchboard@6.2.3-dev.90'
+  - '@powerhousedao/switchboard@6.2.3-dev.102'
   - '@powerhousedao/vetra@6.2.3-dev.79'
   - '@powerhousedao/vetra@6.2.3-dev.90'
+  - '@powerhousedao/vetra@6.2.3-dev.102'
   - '@powerhousedao/workflow@6.2.3-dev.79'
   - '@powerhousedao/workflow@6.2.3-dev.90'
+  - '@powerhousedao/workflow@6.2.3-dev.102'
   - '@renown/sdk@6.2.3-dev.79'
   - '@renown/sdk@6.2.3-dev.90'
+  - '@renown/sdk@6.2.3-dev.102'
   - document-model@6.2.3-dev.79
   - document-model@6.2.3-dev.90
+  - document-model@6.2.3-dev.102
 
 # powerhouse-vetra-packages, which Connect loads, imports these packages
 # without declaring them; 6.2.3-dev.79 still does. Without the extension it
@@ -168,6 +203,7 @@ packages:
   - audit-trail
   - auth-preflight
   - batch-progress
+  - code-first-model
   - compound-switchboards
   - connect-routes
   - db-migrate
