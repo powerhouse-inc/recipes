@@ -22,6 +22,8 @@ describe("a code-first model without a local scope", () => {
     expect(document.state.local).toStrictEqual({});
   });
 
+  // `pnpm build` (tsc over tests/) checks this assertion; `vitest run` only
+  // executes it, so a type change shows up as a build error.
   it("types the local state as an empty record", () => {
     expectTypeOf<LocalStateOf<typeof Checklist>>().toEqualTypeOf<
       Record<string, never>

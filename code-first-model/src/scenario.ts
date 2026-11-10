@@ -67,6 +67,17 @@ export async function runScenario(): Promise<ScenarioResult> {
       addItem({ id: "post", label: "Post the letter" }),
       setItemDone({ id: "milk", done: true }),
     ]);
+    // A reducer error does not fail the job: the operation is stored with its
+    // error and the job still completes. The job's result summary is where a
+    // rejected action shows up, so check it before reading the state.
+    const { job } = await handle.readable;
+    const rejected =
+      job.result?.actions.filter((action) => action.kind !== "applied") ?? [];
+    if (rejected.length > 0) {
+      throw new Error(
+        `Checklist actions were rejected: ${JSON.stringify(rejected)}`,
+      );
+    }
     const document = (await handle.document()) as DocumentOf<typeof Checklist>;
 
     const [spec] = Checklist.documentModel.global.specifications;
@@ -85,6 +96,6 @@ export async function runScenario(): Promise<ScenarioResult> {
         JSON.stringify(spec!.state) === JSON.stringify(twinSpec!.state),
     };
   } finally {
-    reactorModule?.reactor.kill();
+    await reactorModule?.reactor.kill().completed;
   }
 }

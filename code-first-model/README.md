@@ -44,6 +44,7 @@ The last line compares the checklist's stored state specification with that of a
 ```bash
 pnpm install   # at the repo root
 pnpm start     # prints the output above
+pnpm build     # tsc, which also checks the type assertions in tests/
 pnpm test      # vitest: the model on its own, then in an in-process reactor
 ```
 
@@ -63,4 +64,4 @@ pnpm test      # vitest: the model on its own, then in an in-process reactor
 | `src/checklist/index.ts` | Materializes the family and exports `Checklist`, the version 1 module |
 | `src/scenario.ts` | Runs the checklist in an in-process reactor and compares it with the explicit-local twin |
 | `src/demo.ts` | Prints the scenario |
-| `tests/code-first-model.test.ts` | Asserts the empty local state and its type, the stored specification, the reducer, the missing-global diagnostic and the reactor run |
+| `tests/code-first-model.test.ts` | Asserts the empty local state and its type (checked by `pnpm build`), the stored specification, the reducer, the missing-global diagnostic and the reactor run |
