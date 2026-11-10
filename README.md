@@ -48,6 +48,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 |---------|-------------|
 | [analytics-processor](./analytics-processor) | Maps expense-report operations into the analytics-engine time-series store |
 | [audit-trail](./audit-trail) | Builds an immutable audit log from ActionSigner context |
+| [code-first-subgraph](./code-first-subgraph) | A `Subgraph` class whose schema is typed `ph` entries, served by reactor-api beside its schema-first twin with the same schema, answers and subscriptions |
 | [custom-read-model](./custom-read-model) | Custom IReadModel with ReactorBuilder for a document-count-per-type materialized view |
 | [full-text-search](./full-text-search) | Maintains a PostgreSQL full-text search index over document state |
 | [relational-db-subgraph](./relational-db-subgraph) | RelationalDbProcessor recipe with Kysely migrations, typed schema, and a GraphQL subgraph for document catalog |

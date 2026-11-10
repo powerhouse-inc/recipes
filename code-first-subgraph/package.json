@@ -1,0 +1,30 @@
+{
+  "name": "@powerhousedao/example-code-first-subgraph",
+  "version": "0.0.0",
+  "description": "Example: a code-first Subgraph class whose schema is typed ph entries, served beside its schema-first twin",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@powerhousedao/reactor": "6.2.3-dev.102",
+    "@powerhousedao/reactor-api": "6.2.3-dev.102",
+    "@powerhousedao/shared": "6.2.3-dev.102",
+    "@renown/sdk": "6.2.3-dev.102",
+    "document-model": "6.2.3-dev.102",
+    "graphql": "^16.11.0",
+    "graphql-tag": "^2.12.6",
+    "graphql-ws": "^6.0.6",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.0",
+    "vitest": "^4.1.0"
+  }
+}
