@@ -1,6 +1,6 @@
 /**
- * Each subgraph is served by a real reactor-api host: the code-first class,
- * its schema-first twin, and both in one package. Every check runs against
+ * Each subgraph is served by a real reactor-api host: the code-first class
+ * and its schema-first twin, each on its own host. Every check runs against
  * both twins, so a difference between them fails the suite.
  */
 import { afterEach, describe, expect, it } from "vitest";
@@ -137,4 +137,20 @@ describe.each(TWINS)("the %s subgraph", (_label, subgraph) => {
     });
     await events.return?.();
   }, 60_000);
+});
+
+describe("TicketDesk.watch", () => {
+  it("stops while it waits for a change that never comes", async () => {
+    const { TicketDesk } = await import("./desk.js");
+    const desk = new TicketDesk();
+    desk.open("Idle", "LOW", "anonymous");
+    const watch = desk.watch("t-1");
+    expect((await watch.next()).value).toMatchObject({ id: "t-1" });
+    const waiting = watch.next();
+    await expect(watch.return!()).resolves.toEqual({
+      done: true,
+      value: undefined,
+    });
+    await expect(waiting).resolves.toEqual({ done: true, value: undefined });
+  });
 });

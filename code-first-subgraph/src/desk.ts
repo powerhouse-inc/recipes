@@ -68,26 +68,53 @@ export class TicketDesk {
 
   /**
    * The ticket now, then again after each change to it, until the consumer
-   * stops iterating. A change that lands while the consumer is busy is not
+   * calls `return()`. A change that lands while the consumer is busy is not
    * lost: the next read sees the latest state.
+   *
+   * A hand-written iterator rather than an async generator: a generator
+   * parked on `await` ignores `return()` until its next `yield`, so a
+   * subscription to an idle ticket could never be stopped, and the host's
+   * shutdown waits on that `return()`.
    */
-  async *watch(id: string): AsyncGenerator<TicketRecord> {
-    let changed = Promise.resolve();
-    let wake = () => {};
+  watch(id: string): AsyncIterableIterator<TicketRecord> {
+    let pending = true; // the first read is the current state
+    let stopped = false;
+    let wake: (() => void) | undefined;
     const listener = (changedId: string) => {
-      if (changedId === id) wake();
+      if (changedId !== id) return;
+      pending = true;
+      wake?.();
     };
     this.#listeners.add(listener);
-    try {
-      for (;;) {
-        await changed;
-        changed = new Promise<void>((resolve) => (wake = resolve));
-        const ticket = this.get(id);
-        if (ticket) yield { ...ticket, comments: [...ticket.comments] };
-      }
-    } finally {
-      this.#listeners.delete(listener);
-    }
+
+    const iterator: AsyncIterableIterator<TicketRecord> = {
+      next: async () => {
+        while (!stopped) {
+          if (pending) {
+            pending = false;
+            const ticket = this.get(id);
+            if (ticket) {
+              return {
+                done: false,
+                value: { ...ticket, comments: [...ticket.comments] },
+              };
+            }
+            continue;
+          }
+          await new Promise<void>((resolve) => (wake = resolve));
+          wake = undefined;
+        }
+        return { done: true, value: undefined };
+      },
+      return: async () => {
+        stopped = true;
+        this.#listeners.delete(listener);
+        wake?.();
+        return { done: true, value: undefined };
+      },
+      [Symbol.asyncIterator]: () => iterator,
+    };
+    return iterator;
   }
 
   #require(id: string): TicketRecord {
