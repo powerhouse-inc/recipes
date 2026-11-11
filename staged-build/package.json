@@ -11,9 +11,12 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@powerhousedao/ph-cli": "catalog:",
-    "@types/node": "^22.0.0",
+    "@powerhousedao/ph-cli": "6.2.3-dev.102",
+    "@types/node": "^24.0.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
