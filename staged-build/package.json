@@ -3,6 +3,13 @@
   "version": "0.0.0",
   "description": "Example: a staged ph build that leaves dist/ intact on failure, and a release approval that ph publish can verify",
   "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "browser": "./dist/browser/index.js",
+      "node": "./dist/node/index.mjs"
+    }
+  },
   "license": "AGPL-3.0-only",
   "type": "module",
   "private": true,
@@ -11,8 +18,11 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@powerhousedao/connect": "6.2.3-dev.102",
     "@powerhousedao/ph-cli": "6.2.3-dev.102",
+    "@tailwindcss/cli": "4.2.2",
     "@types/node": "^24.0.0",
+    "tailwindcss": "4.2.2",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
   },
