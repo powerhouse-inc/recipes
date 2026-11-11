@@ -4,6 +4,7 @@
     { "path": "analytics-processor" },
     { "path": "audit-trail" },
     { "path": "batch-progress" },
+    { "path": "code-first-subgraph" },
     { "path": "cross-document-reactor" },
     { "path": "custom-read-model" },
     { "path": "discord-webhook-processor" },

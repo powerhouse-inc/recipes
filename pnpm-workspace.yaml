@@ -66,6 +66,9 @@ allowBuilds:
 # undoRedoTargets); the catalog stays on dev.79 for the other recipes.
 # code-first-model pins 6.2.3-dev.102 itself: the first build where
 # defineDocumentModel accepts a model without scopes.local (powerhouse#3395).
+# code-first-subgraph pins 6.2.3-dev.102 itself: the first dev release with
+# reactor-api's code-first Subgraph class and ph migrate --subgraphs
+# (powerhouse#3394).
 catalog:
   "@powerhousedao/analytics-engine-browser": 6.2.3-dev.79
   "@powerhousedao/analytics-engine-core": 6.2.3-dev.79
@@ -204,6 +207,7 @@ packages:
   - auth-preflight
   - batch-progress
   - code-first-model
+  - code-first-subgraph
   - compound-switchboards
   - connect-routes
   - db-migrate

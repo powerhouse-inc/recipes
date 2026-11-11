@@ -26,6 +26,11 @@
         "batch-progress/**"
       ]
     },
+    "code-first-subgraph": {
+      "paths": [
+        "code-first-subgraph/**"
+      ]
+    },
     "compound-switchboards": {
       "paths": [
         "compound-switchboards/**"
