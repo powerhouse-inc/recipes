@@ -4,17 +4,20 @@ A failed, stopped or concurrent `ph build` used to leave `dist/` half written, a
 
 ## Status
 
-**Unverified.** The tests skip themselves on a ph-cli without `--prepack`. No published `@powerhousedao/ph-cli` carries #3381 yet (dev.94 predates it), so these tests have not been run. The catalog still pins dev.79, which lacks the feature. Once a release includes it, point this recipe at that version, run the tests and remove this section. The release-approval commands are experimental and can change in any release.
+Runs against `@powerhousedao/ph-cli` 6.2.3-dev.102, the first published build with #3381, which this recipe pins itself (the workspace catalog stays on dev.79). The release-approval commands are experimental and can change in any release.
 
 ## How it works
 
 | Behavior | What the tests check |
 |----------|----------------------|
-| Staged build | `ph build` writes to `.dist.ph-stage-<run>` and renames it over `dist/` on success. A type error leaves `dist/` byte-identical and no stage directory behind |
-| Release approval | `ph build --release` writes `.ph/build/release-approval.json`, listing the files `npm pack` would publish with their SHA-256 |
-| Verification | `ph model check --prepack` exits 0 while the published files match the approval, and 1 once one of them changes. `ph publish --require-approval` makes the same decision before it contacts the registry |
+| Staged build | `ph build` writes to a sibling `.dist.ph-stage-<run>` and moves it into `dist/` only when every step succeeds, journaling the run under `.ph/build/runs` so a killed build is rolled back or finished on the next one. A type error exits 1, leaves `dist/` byte-identical, and leaves no `.dist.ph-stage-*` or `.dist.ph-old-*` directory behind |
+| Release approval | `ph build --release` packs the package, installs the tarball in a scratch consumer and imports every `exports` entry under the node and browser conditions, then writes `.ph/build/release-approval.json`, listing the files `npm pack` would publish with their SHA-256 |
+| Verification | `ph model check --prepack` exits 0 (`approved`) while the published files match the approval, and 1 (`stale`, naming the changed file) once one of them changes or a plain `ph build` replaces `dist/`. `--json` prints `{"decision", "reasons"}`. `ph publish --require-approval` makes the same decision before it contacts the registry |
 
-The package is as small as `ph build` allows: `index.ts` exports one constant. The tests edit it to break the build and restore it afterwards.
+The package is as small as `ph build` allows: `index.ts` exports one constant. The tests edit it to break the build and restore it afterwards. Even so, `ph build` needs a few things a bare package lacks:
+
+- `tailwindcss` and `@tailwindcss/cli`, and `@powerhousedao/connect` for the theme the stylesheet step imports: `ph build` always compiles `dist/style.css`.
+- An `exports` map pointing at `dist/`. Without one, the `--release` consumer check imports the package's bare name, finds no `index.js`, and writes no approval.
 
 ## Running
 

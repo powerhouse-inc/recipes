@@ -13,13 +13,14 @@ afterEach(() => {
   rmSync(approvalFile, { force: true });
 });
 
-// Releases before powerhouse#3381 have no staged build or --prepack.
-const supported = ph("model", "check", "--help").output.includes("--prepack");
+// The stage a run builds into, and the old output it retires while it
+// installs the stage. Both are siblings of dist/ and go when the run ends.
+const scratchDirs = () =>
+  readdirSync(recipeDir).filter(
+    (name) => name.startsWith(".dist.ph-stage-") || name.startsWith(".dist.ph-old-"),
+  );
 
-const stageDirs = () =>
-  readdirSync(recipeDir).filter((name) => name.startsWith(".dist.ph-stage-"));
-
-describe.skipIf(!supported)("staged build", () => {
+describe("staged build", () => {
   beforeAll(() => {
     expect(ph("build").status).toBe(0);
   });
@@ -33,7 +34,7 @@ describe.skipIf(!supported)("staged build", () => {
     expect(result.status).toBe(1);
     expect(result.output).toMatch(/TS\d+/);
     expect(digestTree(dist)).toEqual(before);
-    expect(stageDirs()).toEqual([]);
+    expect(scratchDirs()).toEqual([]);
   });
 
   it("swaps in the new output when the build passes", () => {
@@ -42,11 +43,11 @@ describe.skipIf(!supported)("staged build", () => {
     expect(ph("build").status).toBe(0);
     const built = readFileSync(join(dist, "browser/index.js"), "utf8");
     expect(built).toContain("added");
-    expect(stageDirs()).toEqual([]);
+    expect(scratchDirs()).toEqual([]);
   });
 });
 
-describe.skipIf(!supported)("release approval", () => {
+describe("release approval", () => {
   beforeEach(() => {
     // Each test starts from a build that matches the unmodified source.
     expect(ph("build").status).toBe(0);
@@ -71,7 +72,7 @@ describe.skipIf(!supported)("release approval", () => {
     expect(check.status).toBe(1);
     const report = JSON.parse(check.output.trim().split("\n")[0]);
     expect(report.decision).toBe("stale");
-    expect(report.reasons.length).toBeGreaterThan(0);
+    expect(report.reasons.join("\n")).toContain("dist/browser/index.js");
   });
 
   it("goes stale when a plain build replaces dist/", () => {
