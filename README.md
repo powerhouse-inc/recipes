@@ -7,6 +7,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 
 | Project | Description |
 |---------|-------------|
+| [code-first-model](./code-first-model) | A document model declared in TypeScript with `defineDocumentModel`, with `global` only: an omitted `local` scope is the empty one |
 | [document-versioning](./document-versioning) | Document model schema migration from v1 to v2 with an `UpgradeManifest` and a pure `upgradeReducer` |
 | [drive-override](./drive-override) | Custom container document that tracks children via the reactor's ADD_RELATIONSHIP action instead of document-drive's ADD_FILE |
 | [positional-delete](./positional-delete) | Deletion as a position in the merged operation order. Pre-delete operations survive sync |
@@ -49,6 +50,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 |---------|-------------|
 | [analytics-processor](./analytics-processor) | Maps expense-report operations into the analytics-engine time-series store |
 | [audit-trail](./audit-trail) | Builds an immutable audit log from ActionSigner context |
+| [code-first-subgraph](./code-first-subgraph) | A `Subgraph` class whose schema is typed `ph` entries, served by reactor-api beside its schema-first twin with the same schema, answers and subscriptions |
 | [custom-read-model](./custom-read-model) | Custom IReadModel with ReactorBuilder for a document-count-per-type materialized view |
 | [full-text-search](./full-text-search) | Maintains a PostgreSQL full-text search index over document state |
 | [relational-db-subgraph](./relational-db-subgraph) | RelationalDbProcessor recipe with Kysely migrations, typed schema, and a GraphQL subgraph for document catalog |
