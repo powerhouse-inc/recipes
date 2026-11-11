@@ -64,6 +64,8 @@ allowBuilds:
 # (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 # undo-retract pins 6.2.3-dev.90 itself (powerhouse#3348 slices 1-4: write.undo,
 # undoRedoTargets); the catalog stays on dev.79 for the other recipes.
+# staged-build pins @powerhousedao/ph-cli 6.2.3-dev.102 itself: the first build
+# with the staged ph build and the release approval (powerhouse#3381).
 # code-first-model pins 6.2.3-dev.102 itself: the first build where
 # defineDocumentModel accepts a model without scopes.local (powerhouse#3395).
 # code-first-subgraph pins 6.2.3-dev.102 itself: the first dev release with
@@ -131,6 +133,7 @@ minimumReleaseAgeExclude:
   - '@powerhousedao/ph-cli@6.2.3-dev.79'
   - '@powerhousedao/ph-cli@6.2.3-dev.90'
   - '@powerhousedao/ph-cli@6.2.3-dev.102'
+  - '@powerhousedao/ph-run@6.2.3-dev.102'
   - '@powerhousedao/pieces-framework@6.2.3-dev.79'
   - '@powerhousedao/pieces-framework@6.2.3-dev.90'
   - '@powerhousedao/pieces-framework@6.2.3-dev.102'
@@ -237,6 +240,7 @@ packages:
   - scoped-reads
   - semantic-search
   - spawn-host
+  - staged-build
   - signed-operations-verifier
   - subscription-cli
   - sync-health-monitor
