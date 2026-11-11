@@ -64,6 +64,8 @@ allowBuilds:
 # (subgraph.http, package routes and hosted webhooks, powerhouse#2980).
 # undo-retract pins 6.2.3-dev.90 itself (powerhouse#3348 slices 1-4: write.undo,
 # undoRedoTargets); the catalog stays on dev.79 for the other recipes.
+# code-first-model pins 6.2.3-dev.102 itself: the first build where
+# defineDocumentModel accepts a model without scopes.local (powerhouse#3395).
 # code-first-subgraph pins 6.2.3-dev.102 itself: the first dev release with
 # reactor-api's code-first Subgraph class and ph migrate --subgraphs
 # (powerhouse#3394).
@@ -204,6 +206,7 @@ packages:
   - audit-trail
   - auth-preflight
   - batch-progress
+  - code-first-model
   - code-first-subgraph
   - compound-switchboards
   - connect-routes
