@@ -1,0 +1,27 @@
+{
+  "name": "@powerhousedao/example-licensed-access",
+  "version": "0.0.0",
+  "description": "Example: a switchboard run with ACCESS=licensed, admitting only its admins and the callers Vetra's licence gate allows",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@powerhousedao/reactor": "6.2.3-dev.105",
+    "@powerhousedao/reactor-api": "6.2.3-dev.105",
+    "@renown/sdk": "6.2.3-dev.105",
+    "document-model": "6.2.3-dev.105",
+    "graphql-ws": "^6.0.6",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.0",
+    "vitest": "^4.1.0"
+  }
+}
