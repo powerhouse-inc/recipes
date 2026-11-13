@@ -37,7 +37,7 @@ line("Vetra received", {
 });
 line("document policy", a.policy);
 
-section("2. Cache and lapse (Vetra answers with ttlSeconds: 1)");
+section("2. Cache and lapse (Vetra answers with ttlSeconds: 3)");
 const c = await cacheAndLapse();
 line("holder, twice", `${c.first}, ${c.second}`);
 line("gate calls for both", c.callsWithinTtl);

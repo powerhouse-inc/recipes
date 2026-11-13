@@ -54,7 +54,7 @@ x-vetra-app-id: <VETRA_APP_ID>
 429, 5xx   Vetra is unavailable: grace applies
 ```
 
-The host caches each answer per address for `ttlSeconds`, clamped to 1–300 s. The stand-in answers with `ttlSeconds: 1` so that a lapse shows up within the demo.
+The host caches each answer per address for `ttlSeconds`, clamped to 1–300 s. The stand-in answers with `ttlSeconds: 1` (3 in the cache scenario) so that a lapse shows up within the demo.
 
 ## Grace while Vetra is down
 

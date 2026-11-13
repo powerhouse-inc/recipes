@@ -17,6 +17,7 @@ import {
   openSocket,
   STRANGER,
   type CloseInfo,
+  type SocketOutcome,
 } from "./callers.js";
 import { startHost, type HostEnv } from "./host.js";
 import { startFakeVetra, type FakeVetra } from "./vetra.js";
@@ -35,11 +36,14 @@ export function licensedEnv(vetra: FakeVetra, extra: HostEnv = {}): HostEnv {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Longer than the 1 s answer TTL the stand-in Vetra hands out. */
+/** Longer than the 1 s answer TTL the stand-in Vetra hands out by default. */
 const PAST_TTL_MS = 1_200;
 
-async function withVetra<T>(run: (vetra: FakeVetra) => Promise<T>) {
-  const vetra = await startFakeVetra({ token: GATE_TOKEN, ttlSeconds: 1 });
+async function withVetra<T>(
+  run: (vetra: FakeVetra) => Promise<T>,
+  ttlSeconds = 1,
+) {
+  const vetra = await startFakeVetra({ token: GATE_TOKEN, ttlSeconds });
   try {
     return await run(vetra);
   } finally {
@@ -89,6 +93,12 @@ export function admission() {
   });
 }
 
+/**
+ * Vetra answers with a 3 s TTL here, so the three requests before the revoke
+ * fall inside one cached answer even on a slow machine.
+ */
+const CACHE_TTL_SECONDS = 3;
+
 /** 2. Answers are cached for Vetra's `ttlSeconds`; a revoked licence lapses after it. */
 export function cacheAndLapse() {
   return withVetra(async (vetra) => {
@@ -100,11 +110,11 @@ export function cacheAndLapse() {
 
       vetra.revoke(HOLDER);
       const rightAfterRevoke = (await graphql(host.origin, HOLDER)).status;
-      await sleep(PAST_TTL_MS);
+      await sleep(CACHE_TTL_SECONDS * 1_000 + 200);
       const afterTtl = (await graphql(host.origin, HOLDER)).status;
       return { first, second, callsWithinTtl, rightAfterRevoke, afterTtl };
     });
-  });
+  }, CACHE_TTL_SECONDS);
 }
 
 /** 3. WebSockets: refused at connect, and closed at the recheck after a lapse. */
@@ -113,27 +123,36 @@ export function sockets() {
     vetra.grant(HOLDER);
     const env = licensedEnv(vetra, { WS_CREDENTIAL_RECHECK_INTERVAL_MS: "300" });
     return withHost(env, async (host) => {
-      const stranger = await openSocket(host.port, STRANGER);
-      const holder = await openSocket(host.port, HOLDER);
-      if (holder.kind !== "connected") {
-        throw new Error(`The holder's socket was refused: ${holder.reason}`);
+      const opened: SocketOutcome[] = [];
+      try {
+        const stranger = await openSocket(host.port, STRANGER);
+        opened.push(stranger);
+        const holder = await openSocket(host.port, HOLDER);
+        opened.push(holder);
+        if (holder.kind !== "connected") {
+          throw new Error(`The holder's socket was refused: ${holder.reason}`);
+        }
+        vetra.revoke(HOLDER);
+        const closed = await Promise.race([
+          holder.closed,
+          sleep(10_000).then(
+            (): CloseInfo => ({ code: 0, reason: "still open" }),
+          ),
+        ]);
+        return {
+          stranger:
+            stranger.kind === "refused"
+              ? { code: stranger.code, reason: stranger.reason }
+              : { code: 0, reason: "connected" },
+          holderConnected: true,
+          holderClosedAfterRevoke: closed,
+        };
+      } finally {
+        // A socket left open would keep the host's shutdown waiting.
+        for (const socket of opened) {
+          if (socket.kind === "connected") await socket.close();
+        }
       }
-      const startedAt = Date.now();
-      vetra.revoke(HOLDER);
-      const closed = await Promise.race([
-        holder.closed,
-        sleep(10_000).then((): CloseInfo => ({ code: 0, reason: "still open" })),
-      ]);
-      await holder.close();
-      return {
-        stranger:
-          stranger.kind === "refused"
-            ? { code: stranger.code, reason: stranger.reason }
-            : { code: 0, reason: "connected" },
-        holderConnected: true,
-        holderClosedAfterRevoke: closed,
-        closedWithinMs: Date.now() - startedAt,
-      };
     });
   });
 }
