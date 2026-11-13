@@ -71,6 +71,9 @@ allowBuilds:
 # code-first-subgraph pins 6.2.3-dev.102 itself: the first dev release with
 # reactor-api's code-first Subgraph class and ph migrate --subgraphs
 # (powerhouse#3394).
+# desktop-updates pins @powerhousedao/desktop itself. dev.104 is the latest
+# published and predates app.json updates (powerhouse#3400): move the pin to
+# the first release that has them.
 catalog:
   "@powerhousedao/analytics-engine-browser": 6.2.3-dev.79
   "@powerhousedao/analytics-engine-core": 6.2.3-dev.79
@@ -216,6 +219,7 @@ packages:
   - db-migrate
   - cross-document-reactor
   - custom-read-model
+  - desktop-updates
   - discord-webhook-processor
   - document-acl
   - document-snapshot-exporter

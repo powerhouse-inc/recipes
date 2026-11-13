@@ -1,0 +1,21 @@
+{
+  "name": "@powerhousedao/example-desktop-updates",
+  "version": "0.0.0",
+  "description": "Example: turning on desktop app updates in app.json, and the release folder and feed file a signed build leaves",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "start": "node --import tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@powerhousedao/desktop": "6.2.3-dev.104"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "vitest": "^4.1.0"
+  }
+}
