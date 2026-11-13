@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "node scripts/build.mjs",
     "test": "vitest run",
     "start": "node --import tsx src/demo.ts"
   },

@@ -1,8 +1,6 @@
-import {
-  collectRelease,
-  releaseBaseUrl,
-  releaseReport,
-} from "@powerhousedao/desktop";
+// A namespace import, not named ones: Node checks named imports when it links
+// the module, so on a release without #3400 the guard below would never run.
+import * as desktop from "@powerhousedao/desktop";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -22,6 +20,8 @@ if (!supported) {
   );
   process.exit(0);
 }
+
+const { collectRelease, releaseBaseUrl, releaseReport } = desktop;
 
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "desktop-updates-demo-"));
 try {
