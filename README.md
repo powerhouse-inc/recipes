@@ -31,6 +31,12 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [spawn-host](./spawn-host) | `spawnHost` launching `ph run <host>` as a child with a clean env, its own `PH_USER_DATA_DIR` and `PH_NO_DOTENV`, ready when its run record appears |
 | [compound-switchboards](./compound-switchboards) | Two switchboards in one `ph run` compound, each with its own reactor block and `config.switchboard`, the operator's env over both, and no env written between them |
 
+## Desktop apps
+
+| Project | Description |
+|---------|-------------|
+| [desktop-updates](./desktop-updates) | An `updates` block in `hosts/desktop/app.json` turning on the generated shell's updater, and the release folder with one `latest-<os>-<arch>.json` feed a signed build leaves |
+
 ## Authorization
 
 | Project | Description |

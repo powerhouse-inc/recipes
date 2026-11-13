@@ -1,0 +1,10 @@
+{
+  "identifier": "com.example.notes",
+  "productName": "Example Notes",
+  "icon": "./icon.png",
+  "window": { "title": "Example Notes", "width": 1200, "height": 800 },
+  "updates": {
+    "github": "example/notes",
+    "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJDNkNFN0U4MDQ3MjkyRDcKUldUWGtuSUU2T2RzdktHMkpyOHVOYWRzRk83WTNjWTByQlZTbDR3aFlRTWVkVklnVzJUNXA1cGUK"
+  }
+}
