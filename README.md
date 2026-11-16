@@ -39,6 +39,7 @@ Run `pnpm install` and `pnpm build` at the repo root before running any recipe.
 | [auth-preflight](./auth-preflight) | Asking the reactor what it would decide before submitting. One `evaluateActions` call answers a batch of candidate operations |
 | [document-acl](./document-acl) | Platform-enforced document ACLs via the auth scope, with zero authorization code in reducers |
 | [group-principals](./group-principals) | A `reactor-group` roster document decides who may approve via a `{ group }` grant |
+| [licensed-access](./licensed-access) | A switchboard run with `ACCESS=licensed`: only `ADMINS` and the callers Vetra's licence gate allows get in, with cached answers, a grace period while Vetra is down, and boot-time refusals |
 | [rate-limiter](./rate-limiter) | Reactor processor and auth gate that throttles users by signer address using a sliding window |
 | [revocation-race](./revocation-race) | Convergent authorization: a grant revocation races an approval across two reactors |
 | [role-based-auth](./role-based-auth) | Custom document model with creator-as-admin RBAC enforced inside the reducer via `action.context.signer` |
