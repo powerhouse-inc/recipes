@@ -17,7 +17,7 @@ Two switchboards in one `ph run` process, each configured on its own. Since powe
 | Outputs | The run record has no outputs of its own; `spawnHost` returns `outputs: undefined` and one entry per child in `members`, each with that switchboard's `origin`, `endpoints` and `drives` |
 | Shutdown | `stop()` resolves with exit code 143: the compound's SIGTERM handler shuts both members down and exits with 128 + 15. A single switchboard host exits 0 |
 
-The keys `config.switchboard` does not accept: `storage.reactor`, `storage.readModel`, `protocol` and `packages.dynamic` (set them in the reactor block), `server.port`, `server.dev`, `drive`, `remoteDrives` and `features.pluginHost` (the runner sets them from `runner.port`, the verb, `reactor.drives` and `runner.plugins`), and `logLevel` and `processorConfig` (process-wide, or not JSON). Of what the reactor block sets, only `features.workflows` (from `reactor.workflows`) is otherwise a `config.switchboard` key, so that is the overlap the conflict check catches.
+The keys `config.switchboard` does not accept: `storage.reactor`, `storage.readModel`, `protocol` and `packages.dynamic` (set them in the reactor block), `server.port`, `server.dev`, `drive`, `remoteDrives` and `features.pluginHost` (the runner sets them from `runner.port`, the verb, `reactor.drives` and `runner.plugins`), and `logLevel` and `processorConfig` (process-wide, or not JSON).
 
 ## The members
 
@@ -31,7 +31,7 @@ The keys `config.switchboard` does not accept: `storage.reactor`, `storage.readM
 | `config.switchboard.inspection` | `enabled: false` | `enabled: true`, `callsPerMinute: 7` |
 | `config.switchboard.identity` | default: `${userData}/.ph/.keypair.json` | `keypairPath: "${userData}/.ph/sb-b/.keypair.json"` |
 
-Both set `runner.port: 0`, `reactor.workflows: false` and `config.switchboard.packages.disableLocal: true`. `${userData}` resolves to `PH_USER_DATA_DIR`, which `spawnHost` sets to its `dataDir`.
+Both set `runner.port: 0` and `config.switchboard.packages.disableLocal: true`, and neither lists the workflows plugin under `runner.plugins`, so no workflows run. `${userData}` resolves to `PH_USER_DATA_DIR`, which `spawnHost` sets to its `dataDir`.
 
 ## Architecture
 
@@ -42,7 +42,7 @@ Both set `runner.port: 0`, `reactor.workflows: false` and `config.switchboard.pa
 | `src/stack.ts` | `withStack`: spawn the stack into a temp data dir with an operator env, run a callback, always stop and delete. `membersOf`, `inspectionAnswer`, `driveStatus` |
 | `src/demo.ts` | Checks the stack under two envs, starts it, prints each member's origin, drives and inspection endpoint, then starts it again with `INSPECTION_ENABLED=false` |
 | `src/stack.test.ts` | The stack through the real `spawnHost`: distinct ports, each drive served by its own member only, separate store folders and keypairs, inspection off on `a` and on for `b`; `INSPECTION_ENABLED` over both members; a protocol-contradicting env failing the start |
-| `src/host-config.test.ts` | No server: `checkHost` on the compound, the switchboard runner's `hostSchema` on each rejected key, the `features.workflows` overlap, and `checkBoot` on a `readModel.url` without `storage` |
+| `src/host-config.test.ts` | No server: `checkHost` on the compound, the switchboard runner's `hostSchema` on each rejected key, and `checkBoot` on a `readModel.url` without `storage` |
 | `src/in-process.test.ts` | `runCompound` in the test process with `startSwitchboard` wrapped to record the merged config each member starts with: per-member protocol, auth, inspection and stores (with `DATABASE_URL` and `PH_SWITCHBOARD_DATABASE_URL` in the env), the shared `userDataDir` (over member `a`'s own), `process.env` unchanged |
 
 ## Running

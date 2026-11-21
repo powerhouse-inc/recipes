@@ -17,7 +17,6 @@ export default {
       featureFlags: { documentDecisions: true },
       createSignaturePolicy: "legacy",
     },
-    workflows: false,
     drives: [{ slug: "alpha", name: "alpha" }],
   },
   config: {

@@ -17,7 +17,6 @@ export default {
       featureFlags: { documentDecisions: false },
       unsupportedStoredDocuments: "read-only",
     },
-    workflows: false,
     drives: [{ slug: "beta", name: "beta" }],
   },
   config: {

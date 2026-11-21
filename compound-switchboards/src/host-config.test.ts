@@ -135,20 +135,6 @@ describe("config.switchboard is strict", () => {
     );
   });
 
-  it("refuses a key the reactor block also sets", () => {
-    // sb-a's reactor block sets workflows: false, which is features.workflows.
-    const result = hostSchema.safeParse(
-      withSwitchboard({ features: { workflows: true } }),
-    );
-    expect(result.error?.issues).toContainEqual(
-      expect.objectContaining({
-        path: ["config", "switchboard"],
-        message:
-          "config.switchboard.features.workflows is also set by the reactor block; set it in one place.",
-      }),
-    );
-  });
-
   // in-process.test.ts shows the env's PH_USER_DATA_DIR winning over it.
   it("accepts storage.userDataDir", () => {
     expect(
