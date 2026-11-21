@@ -146,7 +146,7 @@ describe("config.switchboard is strict", () => {
 });
 
 describe("checkBoot on a member", () => {
-  it("warns when readModel.url has no storage beside it", async () => {
+  it("reports a readModel.url with no storage beside it", async () => {
     const legacy = hostSchema.parse({
       ...sbA,
       reactor: {
@@ -166,7 +166,7 @@ describe("checkBoot on a member", () => {
       {
         path: "reactor.backends",
         message: expect.stringContaining(
-          "reactor readModel.url (/tmp/read-model) also holds the reactor store, because no storage names one. This is deprecated",
+          "reactor readModel.url (/tmp/read-model) is the only store this host names",
         ),
       },
     ]);

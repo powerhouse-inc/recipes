@@ -78,7 +78,7 @@ The server module of `@powerhousedao/switchboard` still loads the project `.env`
 
 - **Isolation comes from the reactor block.** Give every member its own `storage` and `readModel.url`. A per-member `config.switchboard.storage.userDataDir` holds only when nothing sets `PH_USER_DATA_DIR`; under `spawnHost` both members share `dataDir`.
 - **Files under `<userData>/.ph` are shared.** With one `userDataDir`, both members use `<dataDir>/.ph/.renown.json`, and both use `<dataDir>/.ph/.keypair.json` unless one sets `config.switchboard.identity.keypairPath`, as `sb-b` does.
-- **Give `readModel.url` a `storage`.** A `readModel.url` without `storage` also holds the reactor store, which logs a deprecation at start; `checkBoot` and `ph host check` report it.
+- **Give `readModel.url` a `storage`.** A `readModel.url` without `storage` leaves the host with no reactor store. Before 6.4 the url held that store too; 6.4 refuses the start, and `checkBoot` and `ph host check` report it.
 - **One member's conflict stops the compound.** An env value that only one member contradicts still fails the whole start.
 - **Values are typed.** `config.switchboard.inspection.enabled` takes a boolean. The env strings (`"true"`, `"false"`) belong in the operator env only.
 - **Removed exports.** `projectReactorToSwitchboard` and `SwitchboardReactorProjection` are gone from `@powerhousedao/host-core` from 6.2.3-dev.79 on. In their place, `reactorBlockToSwitchboardConfig` and `SwitchboardReactorLayer` (from the package root and `@powerhousedao/host-core/projection`) map the reactor block to the switchboard config's first layer, with no env. The merge of the three layers lives in ph-cli's `member-config`, which is not an exported subpath.
